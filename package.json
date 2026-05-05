@@ -1,0 +1,28 @@
+{
+  "name": "obsidian-tag-curator",
+  "version": "0.0.1",
+  "description": "Vault-wide tag visibility and curation engine for Obsidian (display-only, file-safe, fully reversible).",
+  "main": "main.js",
+  "scripts": {
+    "dev": "node esbuild.config.mjs",
+    "build": "node esbuild.config.mjs production"
+  },
+  "keywords": [
+    "obsidian",
+    "obsidian-plugin",
+    "tags"
+  ],
+  "author": "jprisant",
+  "license": "Apache-2.0",
+  "devDependencies": {
+    "@types/node": "16.11.6",
+    "@typescript-eslint/eslint-plugin": "5.2.0",
+    "@typescript-eslint/parser": "5.2.0",
+    "builtin-modules": "3.2.0",
+    "esbuild": "0.13.12",
+    "obsidian": "latest",
+    "tslib": "2.4.0",
+    "typescript": "4.7.4"
+  },
+  "private": true
+}
