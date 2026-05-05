@@ -31,6 +31,19 @@ node_modules/
 .env.production.local
 coverage/
 
+# npm/yarn/pnpm/bun lock files and caches
+npm-debug.log*
+yarn.lock
+pnpm-lock.yaml
+bun.lockb
+*.tgz
+
+# Logs
+*.log
+
+# ESLint cache
+.eslintcache
+
 # Obsidian plugin build artifacts (committed only via release workflow)
 main.js
 *.js.map
