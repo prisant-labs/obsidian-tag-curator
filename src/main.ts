@@ -1,128 +1,75 @@
-import { App, Plugin, PluginSettingTab, Setting } from 'obsidian';
-
-interface TagCuratorSettings {
-	mySetting: string;
-}
-
-const DEFAULT_SETTINGS: TagCuratorSettings = {
-	mySetting: 'default'
-}
+import { App, Plugin } from 'obsidian';
+import { SettingsManager } from './storage/settings';
+import { TagMetaManager } from './storage/tagMeta';
+import { TagPaneObserver } from './observers/tagPaneObserver';
+import { TagCuratorSettingTab } from './ui/settingsTab';
 
 export default class TagCuratorPlugin extends Plugin {
-	settings: TagCuratorSettings;
+	settingsManager: SettingsManager;
+	tagMetaManager: TagMetaManager;
+	tagPaneObserver: TagPaneObserver;
 
 	async onload() {
-		await this.loadSettings();
+		console.log('Loading Tag Curator plugin');
 
-		// This adds a status bar item to the bottom of the screen. Does not work on mobile apps.
+		// Initialize managers
+		this.settingsManager = new SettingsManager(this);
+		this.tagMetaManager = new TagMetaManager(this.app, this);
+		this.tagPaneObserver = new TagPaneObserver(this.app, this);
+
+		// Load settings
+		await this.settingsManager.load();
+		await this.tagMetaManager.init();
+
+		// Initialize observers
+		this.tagPaneObserver.init();
+
+		// Update UI when settings change
+		this.settingsManager.onChanged(() => {
+			const rules = this.settingsManager.getActiveRules();
+			this.tagPaneObserver.updateRules(rules);
+		});
+
+		// Update filters when metadata changes
+		this.tagMetaManager.onChanged(() => {
+			const metadata = this.tagMetaManager.getAllTagMeta();
+			this.tagPaneObserver.updateTagMetadata(metadata);
+		});
+
+		// Add settings tab
+		this.addSettingTab(new TagCuratorSettingTab(this.app, this));
+
+		// Add status bar item
 		const statusBarItemEl = this.addStatusBarItem();
-		statusBarItemEl.setText('Tag Curator');
+		statusBarItemEl.setText('Tag Curator: Ready');
 
-		// This adds a simple command that can be triggered anywhere
+		// Add commands
 		this.addCommand({
-			id: 'open-sample-modal-simple',
-			name: 'Open sample modal',
+			id: 'toggle-tag-curator',
+			name: 'Toggle Tag Curator on/off',
 			callback: () => {
-				new SampleModal(this.app).open();
+				const settings = this.settingsManager.getSettings();
+				// For now, just log - full implementation in future versions
+				console.log('Tag Curator toggled');
 			}
 		});
-		// This adds an editor command that can perform some operation on the current editor instance
+
 		this.addCommand({
-			id: 'sample-editor-command',
-			name: 'Sample editor command',
-			editorCallback: (editor) => {
-				console.log(editor.getSelection());
-				editor.replaceSelection('Sample Editor Command');
-			}
-		});
-		// This adds a complex command that can check whether the current state of the app allows execution of the command
-		this.addCommand({
-			id: 'open-sample-modal-complex',
-			name: 'Open sample modal (complex)',
-			checkCallback: (checking: boolean) => {
-				// Conditions to check
-				const markdownView = this.app.workspace.getActiveViewOfType(MarkdownView);
-				if (markdownView) {
-					// If checking is true, we're simply "checking" if the command can be run.
-					// If checking is false, then we want to actually perform the operation.
-					if (!checking) {
-						new SampleModal(this.app).open();
-					}
-
-					// This command will only show up in Command Palette when the check function returns true
-					return true;
-				}
+			id: 'reload-presets',
+			name: 'Reload preset rules',
+			callback: async () => {
+				// Reapply all rules
+				const rules = this.settingsManager.getActiveRules();
+				this.tagPaneObserver.updateRules(rules);
 			}
 		});
 
-		// This adds a settings tab so the user can configure various aspects of the plugin
-		this.addSettingTab(new SampleSettingTab(this.app, this));
-
-		// If the plugin hooks up any global DOM events (on parts of the app that don't belong to this plugin)
-		// using this function will automatically remove the event listener when this plugin is disabled.
-		this.registerDomEvent(document, 'click', (evt: MouseEvent) => {
-			console.log('click', evt);
-		});
-
-		// When registering intervals, this function will automatically clear the interval when the plugin is disabled.
-		this.registerInterval(window.setInterval(() => console.log('setInterval'), 5 * 60 * 1000));
+		console.log('Tag Curator plugin loaded successfully');
 	}
 
 	onunload() {
-
-	}
-
-	async loadSettings() {
-		this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
-	}
-
-	async saveSettings() {
-		await this.saveData(this.settings);
-	}
-}
-
-import { Modal, MarkdownView } from 'obsidian';
-
-export class SampleModal extends Modal {
-	result: string;
-
-	constructor(app: App) {
-		super(app);
-	}
-
-	onOpen() {
-		const {contentEl} = this;
-		contentEl.setText('Woah!');
-	}
-
-	onClose() {
-		const {contentEl} = contentEl;
-		contentEl.empty();
-	}
-}
-
-export class SampleSettingTab extends PluginSettingTab {
-	plugin: TagCuratorPlugin;
-
-	constructor(app: App, plugin: TagCuratorPlugin) {
-		super(app, plugin);
-		this.plugin = plugin;
-	}
-
-	display(): void {
-		const {containerEl} = this;
-
-		containerEl.empty();
-
-		new Setting(containerEl)
-			.setName('Setting #1')
-			.setDesc('It\'s a secret')
-			.addText(text => text
-				.setPlaceholder('Enter your secret')
-				.setValue(this.plugin.settings.mySetting)
-				.onChange(async (value) => {
-					this.plugin.settings.mySetting = value;
-					await this.plugin.saveSettings();
-				}));
+		console.log('Unloading Tag Curator plugin');
+		this.tagPaneObserver.unload();
+		this.tagMetaManager.unload();
 	}
 }
