@@ -16,7 +16,7 @@ export const PRESETS: RulePreset[] = [
       priority: 100,
       match: {
         type: 'regex',
-        pattern: '^#[0-9A-Fa-f]{3,8}$',
+        pattern: '^[0-9A-Fa-f]{3,8}$',
       },
       action: 'hide',
       scopes: ['tag-pane'],
@@ -34,7 +34,7 @@ export const PRESETS: RulePreset[] = [
       priority: 95,
       match: {
         type: 'regex',
-        pattern: '^#[a-z]+-\\d+$|^#(top|bottom|navigation|content|main|header|footer|sidebar)$',
+        pattern: '^[a-z]+-\\d+$|^(top|bottom|navigation|content|main|header|footer|sidebar)$',
       },
       action: 'hide',
       scopes: ['tag-pane'],
@@ -52,7 +52,7 @@ export const PRESETS: RulePreset[] = [
       priority: 90,
       match: {
         type: 'regex',
-        pattern: '^#[a-zA-Z]$',
+        pattern: '^[a-zA-Z]$',
       },
       action: 'hide',
       scopes: ['tag-pane'],
@@ -89,7 +89,7 @@ export const PRESETS: RulePreset[] = [
       priority: 85,
       match: {
         type: 'regex',
-        pattern: '^#\\d+$',
+        pattern: '^\\d+$',
       },
       action: 'hide',
       scopes: ['tag-pane'],
