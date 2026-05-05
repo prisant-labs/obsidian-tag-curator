@@ -5,6 +5,7 @@
 import { App, PluginSettingTab, Setting, Notice } from 'obsidian';
 import TagCuratorPlugin from '../main';
 import { PRESETS } from '../engine/presets';
+import { RuleEditorModal } from './ruleEditor';
 
 export class TagCuratorSettingTab extends PluginSettingTab {
   plugin: TagCuratorPlugin;
@@ -27,6 +28,9 @@ export class TagCuratorSettingTab extends PluginSettingTab {
 
     // Presets
     this.displayPresets(containerEl);
+
+    // Custom Rules
+    this.displayCustomRules(containerEl);
 
     // About
     this.displayAbout(containerEl);
@@ -94,6 +98,69 @@ export class TagCuratorSettingTab extends PluginSettingTab {
               await this.plugin.settingsManager.togglePreset(preset.id, value);
             });
         });
+    }
+  }
+
+  private displayCustomRules(containerEl: HTMLElement) {
+    containerEl.createEl('h3', { text: 'Custom Rules' });
+
+    const settings = this.plugin.settingsManager.getSettings();
+
+    new Setting(containerEl)
+      .setName('Create new rule')
+      .setDesc('Add a custom rule to your configuration')
+      .addButton(button => {
+        button
+          .setButtonText('+ New Rule')
+          .onClick(() => {
+            const modal = new RuleEditorModal(this.app, this.plugin, undefined, async (rule) => {
+              await this.plugin.settingsManager.addRule(rule);
+              this.display(); // Refresh the settings display
+            });
+            modal.open();
+          });
+      });
+
+    // List existing custom rules
+    const customRules = this.plugin.settingsManager.getAllRules().filter(r => !PRESETS.some(p => p.id === r.id));
+
+    if (customRules.length > 0) {
+      containerEl.createEl('h4', { text: 'Your Rules' });
+
+      for (const rule of customRules) {
+        const isEnabled = settings.enabledRules.includes(rule.id);
+
+        new Setting(containerEl)
+          .setName(rule.name)
+          .setDesc(`${rule.match.type} - ${rule.notes || 'No description'}`)
+          .addToggle(toggle => {
+            toggle
+              .setValue(isEnabled)
+              .onChange(async value => {
+                await this.plugin.settingsManager.toggleRule(rule.id, value);
+              });
+          })
+          .addButton(button =>
+            button
+              .setButtonText('Edit')
+              .onClick(() => {
+                const modal = new RuleEditorModal(this.app, this.plugin, rule, async (updated) => {
+                  await this.plugin.settingsManager.updateRule(rule.id, updated);
+                  this.display(); // Refresh
+                });
+                modal.open();
+              })
+          )
+          .addButton(button =>
+            button
+              .setButtonText('Delete')
+              .setWarning()
+              .onClick(async () => {
+                await this.plugin.settingsManager.deleteRule(rule.id);
+                this.display(); // Refresh
+              })
+          );
+      }
     }
   }
 

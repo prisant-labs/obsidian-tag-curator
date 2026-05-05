@@ -68,7 +68,7 @@ var __async = (__this, __arguments, generator) => {
 __export(exports, {
   default: () => TagCuratorPlugin
 });
-var import_obsidian3 = __toModule(require("obsidian"));
+var import_obsidian4 = __toModule(require("obsidian"));
 
 // src/types.ts
 var DEFAULT_SETTINGS = {
@@ -593,8 +593,140 @@ var TagPaneObserver = class {
 };
 
 // src/ui/settingsTab.ts
+var import_obsidian2 = __toModule(require("obsidian"));
+
+// src/ui/ruleEditor.ts
 var import_obsidian = __toModule(require("obsidian"));
-var TagCuratorSettingTab = class extends import_obsidian.PluginSettingTab {
+var RuleEditorModal = class extends import_obsidian.Modal {
+  constructor(app, plugin, rule, onSave) {
+    super(app);
+    this.plugin = plugin;
+    this.isNew = !rule;
+    this.rule = rule || this.createNewRule();
+    this.onSave = onSave || (() => __async(this, null, function* () {
+    }));
+  }
+  createNewRule() {
+    return {
+      id: `rule-${Date.now()}`,
+      name: "New Rule",
+      enabled: true,
+      priority: 50,
+      match: {
+        type: "regex",
+        pattern: ""
+      },
+      action: "hide",
+      scopes: ["tag-pane"]
+    };
+  }
+  onOpen() {
+    const { contentEl } = this;
+    contentEl.empty();
+    contentEl.createEl("h2", {
+      text: this.isNew ? "Create Rule" : "Edit Rule"
+    });
+    this.buildForm(contentEl);
+  }
+  buildForm(contentEl) {
+    const form = contentEl.createDiv({ cls: "tag-curator-rule-form" });
+    new import_obsidian.Setting(form).setName("Rule Name").setDesc("A descriptive name for this rule").addText((text) => {
+      text.setValue(this.rule.name).onChange((value) => {
+        this.rule.name = value;
+      });
+    });
+    new import_obsidian.Setting(form).setName("Priority").setDesc("Higher priority rules are evaluated last (last match wins)").addSlider((slider) => {
+      slider.setLimits(0, 100, 5).setValue(this.rule.priority).onChange((value) => {
+        this.rule.priority = value;
+      });
+    });
+    new import_obsidian.Setting(form).setName("Match Type").setDesc("How to identify tags to apply this rule to").addDropdown((dropdown) => {
+      dropdown.addOption("regex", "Regex Pattern").addOption("frequency", "Frequency (count)").addOption("list", "Explicit List").setValue(this.rule.match.type).onChange((value) => {
+        this.rule.match.type = value;
+        this.onOpen();
+      });
+    });
+    this.buildMatchCriteria(form);
+    new import_obsidian.Setting(form).setName("Notes").setDesc("Optional comment about this rule").addTextArea((text) => {
+      text.setValue(this.rule.notes || "").onChange((value) => {
+        this.rule.notes = value;
+      });
+    });
+    new import_obsidian.Setting(form).setName("Test Tag").setDesc("Type a tag to see if this rule would match").addText((text) => {
+      text.setPlaceholder("#my-tag").onChange((value) => {
+        const tag = value.startsWith("#") ? value.slice(1) : value;
+        const matches = RuleEngine.testTag(tag, this.rule);
+        const result = form.querySelector(".test-result");
+        if (result) {
+          result.textContent = matches ? "Would match!" : "No match";
+          result.className = `test-result ${matches ? "match" : "no-match"}`;
+        }
+      });
+    });
+    const testResult = form.createDiv({
+      cls: "test-result no-match",
+      text: "No match"
+    });
+    new import_obsidian.Setting(form).setName("Enabled").setDesc("Turn this rule on or off").addToggle((toggle) => {
+      toggle.setValue(this.rule.enabled).onChange((value) => {
+        this.rule.enabled = value;
+      });
+    });
+    new import_obsidian.Setting(form).addButton((btn) => btn.setButtonText("Save Rule").setCta().onClick(() => __async(this, null, function* () {
+      yield this.onSave(this.rule);
+      this.close();
+    }))).addButton((btn) => btn.setButtonText("Cancel").onClick(() => this.close()));
+  }
+  buildMatchCriteria(form) {
+    const section = form.createDiv({ cls: "match-criteria-section" });
+    section.createEl("h3", { text: "Match Criteria" });
+    switch (this.rule.match.type) {
+      case "regex":
+        this.buildRegexCriteria(section);
+        break;
+      case "frequency":
+        this.buildFrequencyCriteria(section);
+        break;
+      case "list":
+        this.buildListCriteria(section);
+        break;
+    }
+  }
+  buildRegexCriteria(section) {
+    new import_obsidian.Setting(section).setName("Regex Pattern").setDesc("JavaScript-compatible regular expression").addText((text) => {
+      text.setPlaceholder("^#[0-9A-Fa-f]{3,8}$").setValue(this.rule.match.pattern || "").onChange((value) => {
+        this.rule.match.pattern = value;
+      });
+    });
+  }
+  buildFrequencyCriteria(section) {
+    new import_obsidian.Setting(section).setName("Operator").setDesc("How to compare tag count").addDropdown((dropdown) => {
+      dropdown.addOption("<", "Less than").addOption("<=", "Less than or equal").addOption("=", "Equal to").addOption(">=", "Greater than or equal").addOption(">", "Greater than").setValue(this.rule.match.operator || "<=").onChange((value) => {
+        this.rule.match.operator = value;
+      });
+    });
+    new import_obsidian.Setting(section).setName("Count Value").setDesc("Number of times tag appears").addText((text) => {
+      text.setPlaceholder("1").setValue(String(this.rule.match.value || 1)).onChange((value) => {
+        this.rule.match.value = parseInt(value) || 0;
+      });
+    });
+  }
+  buildListCriteria(section) {
+    new import_obsidian.Setting(section).setName("Tags (one per line)").setDesc("List of specific tags to match").addTextArea((text) => {
+      const listStr = (this.rule.match.list || []).join("\n");
+      text.setPlaceholder("#tag1\n#tag2\n#tag3").setValue(listStr).onChange((value) => {
+        this.rule.match.list = value.split("\n").map((t) => t.trim()).filter((t) => t.length > 0).map((t) => t.startsWith("#") ? t.slice(1) : t);
+      });
+    });
+  }
+  onClose() {
+    const { contentEl } = this;
+    contentEl.empty();
+  }
+};
+
+// src/ui/settingsTab.ts
+var TagCuratorSettingTab = class extends import_obsidian2.PluginSettingTab {
   constructor(app, plugin) {
     super(app, plugin);
     this.plugin = plugin;
@@ -605,24 +737,25 @@ var TagCuratorSettingTab = class extends import_obsidian.PluginSettingTab {
     containerEl.createEl("h2", { text: "Tag Curator Settings" });
     this.displayGeneralSettings(containerEl);
     this.displayPresets(containerEl);
+    this.displayCustomRules(containerEl);
     this.displayAbout(containerEl);
   }
   displayGeneralSettings(containerEl) {
     containerEl.createEl("h3", { text: "General" });
     const settings = this.plugin.settingsManager.getSettings();
-    new import_obsidian.Setting(containerEl).setName("Mode").setDesc("How Tag Curator filters tags").addDropdown((dropdown) => {
+    new import_obsidian2.Setting(containerEl).setName("Mode").setDesc("How Tag Curator filters tags").addDropdown((dropdown) => {
       dropdown.addOption("default", "Default (hide matched)").addOption("allow-only", "Allow-only (whitelist)").addOption("inbox", "Inbox (review mode)").setValue(settings.mode).onChange((value) => __async(this, null, function* () {
         yield this.plugin.settingsManager.updateSettings({
           mode: value
         });
       }));
     });
-    new import_obsidian.Setting(containerEl).setName("Debug logging").setDesc("Write rule evaluation logs to plugin folder").addToggle((toggle) => {
+    new import_obsidian2.Setting(containerEl).setName("Debug logging").setDesc("Write rule evaluation logs to plugin folder").addToggle((toggle) => {
       toggle.setValue(settings.debugLog).onChange((value) => __async(this, null, function* () {
         yield this.plugin.settingsManager.updateSettings({ debugLog: value });
       }));
     });
-    new import_obsidian.Setting(containerEl).setName("Dry run mode").setDesc("Show what rules would hide without actually hiding").addToggle((toggle) => {
+    new import_obsidian2.Setting(containerEl).setName("Dry run mode").setDesc("Show what rules would hide without actually hiding").addToggle((toggle) => {
       toggle.setValue(settings.dryRun).onChange((value) => __async(this, null, function* () {
         yield this.plugin.settingsManager.updateSettings({ dryRun: value });
       }));
@@ -633,11 +766,45 @@ var TagCuratorSettingTab = class extends import_obsidian.PluginSettingTab {
     const settings = this.plugin.settingsManager.getSettings();
     for (const preset of PRESETS) {
       const isEnabled = settings.enabledPresets.includes(preset.id);
-      new import_obsidian.Setting(containerEl).setName(preset.name).setDesc(preset.description).addToggle((toggle) => {
+      new import_obsidian2.Setting(containerEl).setName(preset.name).setDesc(preset.description).addToggle((toggle) => {
         toggle.setValue(isEnabled).onChange((value) => __async(this, null, function* () {
           yield this.plugin.settingsManager.togglePreset(preset.id, value);
         }));
       });
+    }
+  }
+  displayCustomRules(containerEl) {
+    containerEl.createEl("h3", { text: "Custom Rules" });
+    const settings = this.plugin.settingsManager.getSettings();
+    new import_obsidian2.Setting(containerEl).setName("Create new rule").setDesc("Add a custom rule to your configuration").addButton((button) => {
+      button.setButtonText("+ New Rule").onClick(() => {
+        const modal = new RuleEditorModal(this.app, this.plugin, void 0, (rule) => __async(this, null, function* () {
+          yield this.plugin.settingsManager.addRule(rule);
+          this.display();
+        }));
+        modal.open();
+      });
+    });
+    const customRules = this.plugin.settingsManager.getAllRules().filter((r) => !PRESETS.some((p) => p.id === r.id));
+    if (customRules.length > 0) {
+      containerEl.createEl("h4", { text: "Your Rules" });
+      for (const rule of customRules) {
+        const isEnabled = settings.enabledRules.includes(rule.id);
+        new import_obsidian2.Setting(containerEl).setName(rule.name).setDesc(`${rule.match.type} - ${rule.notes || "No description"}`).addToggle((toggle) => {
+          toggle.setValue(isEnabled).onChange((value) => __async(this, null, function* () {
+            yield this.plugin.settingsManager.toggleRule(rule.id, value);
+          }));
+        }).addButton((button) => button.setButtonText("Edit").onClick(() => {
+          const modal = new RuleEditorModal(this.app, this.plugin, rule, (updated) => __async(this, null, function* () {
+            yield this.plugin.settingsManager.updateRule(rule.id, updated);
+            this.display();
+          }));
+          modal.open();
+        })).addButton((button) => button.setButtonText("Delete").setWarning().onClick(() => __async(this, null, function* () {
+          yield this.plugin.settingsManager.deleteRule(rule.id);
+          this.display();
+        })));
+      }
     }
   }
   displayAbout(containerEl) {
@@ -662,9 +829,9 @@ var TagCuratorSettingTab = class extends import_obsidian.PluginSettingTab {
 };
 
 // src/ui/tagListView.ts
-var import_obsidian2 = __toModule(require("obsidian"));
+var import_obsidian3 = __toModule(require("obsidian"));
 var TAG_LIST_VIEW_TYPE = "tag-curator-list";
-var TagListView = class extends import_obsidian2.ItemView {
+var TagListView = class extends import_obsidian3.ItemView {
   constructor(leaf, plugin) {
     super(leaf);
     this.sortBy = "count";
@@ -812,7 +979,7 @@ var TagListView = class extends import_obsidian2.ItemView {
 };
 
 // src/main.ts
-var TagCuratorPlugin = class extends import_obsidian3.Plugin {
+var TagCuratorPlugin = class extends import_obsidian4.Plugin {
   onload() {
     return __async(this, null, function* () {
       console.log("Loading Tag Curator plugin");
