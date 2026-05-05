@@ -1,11 +1,10 @@
 {
-  "id": "obsidian-tag-curator",
+  "id": "tag-curator",
   "name": "Tag Curator",
   "version": "0.1.0",
-  "minVersion": "0.13.0",
-  "description": "Vault-wide tag visibility and curation engine for Obsidian (display-only, file-safe, fully reversible)",
+  "minAppVersion": "1.5.0",
+  "description": "Vault-wide tag visibility and curation engine for Obsidian (display-only, file-safe, fully reversible).",
   "author": "JP Prisant",
   "authorUrl": "https://github.com/jprisant",
-  "fundingUrl": "",
   "isDesktopOnly": false
 }
