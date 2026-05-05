@@ -11,11 +11,11 @@ if you want to view the source, please visit the github repository of this plugi
 
 let prod = (process.argv[2] === 'production');
 
-const context = await esbuild.context({
+const esbuildOptions = {
   banner: {
     js: banner,
   },
-  entry: 'src/main.ts',
+  entryPoints: ['src/main.ts'],
   bundle: true,
   external: [
     'obsidian',
@@ -38,11 +38,17 @@ const context = await esbuild.context({
   sourcemap: prod ? false : 'inline',
   treeShaking: true,
   outfile: 'main.js',
-});
+};
 
 if (prod) {
-  await context.rebuild();
-  process.exit(0);
+  esbuild.build(esbuildOptions);
 } else {
-  await context.watch();
+  esbuild.serve(
+    {
+      servedir: '.',
+    },
+    esbuildOptions,
+  ).then(result => {
+    console.log('watching for changes...');
+  });
 }
