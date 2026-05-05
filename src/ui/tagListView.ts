@@ -2,8 +2,8 @@
  * Tag list view showing all tags in the vault
  */
 
-import { ItemView, WorkspaceLeaf, App } from 'obsidian';
-import { TagMeta, Rule } from '../types';
+import { ItemView, WorkspaceLeaf } from 'obsidian';
+import { TagMeta } from '../types';
 import { RuleEngine } from '../engine/ruleEngine';
 import TagCuratorPlugin from '../main';
 
@@ -75,8 +75,7 @@ export class TagListView extends ItemView {
     // Body
     this.tagsContainer = table.createEl('tbody', { cls: 'tag-curator-table-body' });
 
-    // Status bar
-    const status = this.container.createDiv({ cls: 'tag-curator-list-status' });
+    this.container.createDiv({ cls: 'tag-curator-list-status' });
     this.containerEl.setAttribute('data-tag-curator-status', 'ready');
   }
 
@@ -155,8 +154,7 @@ export class TagListView extends ItemView {
       cls: hiddenByRule ? 'tag-hidden' : 'tag-visible',
     });
 
-    // Tag name
-    const nameCell = row.createEl('td', {
+    row.createEl('td', {
       text: `#${tagMeta.tag}`,
       cls: 'tag-name-cell',
     });

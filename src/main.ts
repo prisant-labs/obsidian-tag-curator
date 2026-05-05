@@ -1,4 +1,4 @@
-import { App, Plugin } from 'obsidian';
+import { Plugin } from 'obsidian';
 import { SettingsManager } from './storage/settings';
 import { TagMetaManager } from './storage/tagMeta';
 import { TagPaneObserver } from './observers/tagPaneObserver';
@@ -52,8 +52,6 @@ export default class TagCuratorPlugin extends Plugin {
 			id: 'toggle-tag-curator',
 			name: 'Toggle Tag Curator on/off',
 			callback: () => {
-				const settings = this.settingsManager.getSettings();
-				// For now, just log - full implementation in future versions
 				console.log('Tag Curator toggled');
 			}
 		});

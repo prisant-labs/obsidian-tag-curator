@@ -1,8 +1,7 @@
 {
   "compilerOptions": {
     "baseUrl": ".",
-    "outDir": "./",
-    "rootDir": "./src",
+    "noEmit": true,
     "allowJs": true,
     "noImplicitAny": true,
     "moduleResolution": "node",
@@ -15,5 +14,5 @@
     "target": "ES2022",
     "module": "ESNext"
   },
-  "include": ["**/*.ts"]
+  "include": ["src/**/*.ts"]
 }
