@@ -3,6 +3,7 @@ import { SettingsManager } from './storage/settings';
 import { TagMetaManager } from './storage/tagMeta';
 import { TagPaneObserver } from './observers/tagPaneObserver';
 import { TagCuratorSettingTab } from './ui/settingsTab';
+import { TagListView, TAG_LIST_VIEW_TYPE } from './ui/tagListView';
 
 export default class TagCuratorPlugin extends Plugin {
 	settingsManager: SettingsManager;
@@ -23,6 +24,9 @@ export default class TagCuratorPlugin extends Plugin {
 
 		// Initialize observers
 		this.tagPaneObserver.init();
+
+		// Register views
+		this.registerView(TAG_LIST_VIEW_TYPE, (leaf) => new TagListView(leaf, this));
 
 		// Update UI when settings change
 		this.settingsManager.onChanged(() => {
@@ -64,6 +68,14 @@ export default class TagCuratorPlugin extends Plugin {
 			}
 		});
 
+		this.addCommand({
+			id: 'open-tag-list',
+			name: 'Open tag list view',
+			callback: () => {
+				this.activateView();
+			}
+		});
+
 		console.log('Tag Curator plugin loaded successfully');
 	}
 
@@ -71,5 +83,21 @@ export default class TagCuratorPlugin extends Plugin {
 		console.log('Unloading Tag Curator plugin');
 		this.tagPaneObserver.unload();
 		this.tagMetaManager.unload();
+	}
+
+	private async activateView() {
+		const { workspace } = this.app;
+
+		let leaf = null;
+		const leaves = workspace.getLeavesOfType(TAG_LIST_VIEW_TYPE);
+
+		if (leaves.length > 0) {
+			leaf = leaves[0];
+		} else {
+			leaf = workspace.getRightLeaf(false);
+			await leaf.setViewState({ type: TAG_LIST_VIEW_TYPE });
+		}
+
+		workspace.revealLeaf(leaf);
 	}
 }
