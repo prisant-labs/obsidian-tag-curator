@@ -18,7 +18,7 @@ export default class TagCuratorPlugin extends Plugin {
 		this.tagMetaManager = new TagMetaManager(this.app, this);
 		this.tagPaneObserver = new TagPaneObserver(this.app, this);
 
-		// Load settings
+		// Load settings and tag metadata
 		await this.settingsManager.load();
 		await this.tagMetaManager.init();
 
