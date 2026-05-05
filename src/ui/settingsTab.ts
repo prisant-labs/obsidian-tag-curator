@@ -2,7 +2,7 @@
  * Settings UI tab
  */
 
-import { App, PluginSettingTab, Setting, Notice } from 'obsidian';
+import { App, PluginSettingTab, Setting } from 'obsidian';
 import TagCuratorPlugin from '../main';
 import { PRESETS } from '../engine/presets';
 import { RuleEditorModal } from './ruleEditor';

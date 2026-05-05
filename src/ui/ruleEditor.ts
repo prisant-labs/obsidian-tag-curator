@@ -2,7 +2,7 @@
  * Rule editor UI for creating and editing custom rules
  */
 
-import { Modal, App, Setting, DropdownComponent } from 'obsidian';
+import { Modal, App, Setting } from 'obsidian';
 import { Rule, MatchCriteria } from '../types';
 import { RuleEngine } from '../engine/ruleEngine';
 import TagCuratorPlugin from '../main';
@@ -129,7 +129,7 @@ export class RuleEditorModal extends Modal {
           });
       });
 
-    const testResult = form.createDiv({
+    form.createDiv({
       cls: 'test-result no-match',
       text: 'No match',
     });
@@ -208,7 +208,7 @@ export class RuleEditorModal extends Modal {
           .addOption('>', 'Greater than')
           .setValue(this.rule.match.operator || '<=')
           .onChange(value => {
-            this.rule.match.operator = value;
+            this.rule.match.operator = value as MatchCriteria['operator'];
           });
       });
 

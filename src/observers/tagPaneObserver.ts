@@ -3,7 +3,7 @@
  */
 
 import { App, Plugin } from 'obsidian';
-import { Rule, TagMeta, Scope } from '../types';
+import { Rule, TagMeta } from '../types';
 import { RuleEngine } from '../engine/ruleEngine';
 
 const TAG_CURATOR_ATTR = 'data-tag-curator-hidden';
@@ -46,7 +46,7 @@ export class TagPaneObserver {
       return; // Tag pane not open
     }
 
-    const container = leaf[0].containerEl?.querySelector('.tag-container');
+    const container = leaf[0].view.containerEl?.querySelector('.tag-container');
     if (!container) {
       return;
     }
