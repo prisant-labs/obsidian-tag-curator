@@ -1,6 +1,6 @@
 {
   "name": "obsidian-tag-curator",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "description": "Vault-wide tag visibility and curation engine for Obsidian (display-only, file-safe, fully reversible).",
   "main": "main.js",
   "scripts": {
