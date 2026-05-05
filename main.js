@@ -68,7 +68,7 @@ var __async = (__this, __arguments, generator) => {
 __export(exports, {
   default: () => TagCuratorPlugin
 });
-var import_obsidian2 = __toModule(require("obsidian"));
+var import_obsidian3 = __toModule(require("obsidian"));
 
 // src/types.ts
 var DEFAULT_SETTINGS = {
@@ -661,8 +661,158 @@ var TagCuratorSettingTab = class extends import_obsidian.PluginSettingTab {
   }
 };
 
+// src/ui/tagListView.ts
+var import_obsidian2 = __toModule(require("obsidian"));
+var TAG_LIST_VIEW_TYPE = "tag-curator-list";
+var TagListView = class extends import_obsidian2.ItemView {
+  constructor(leaf, plugin) {
+    super(leaf);
+    this.sortBy = "count";
+    this.sortDesc = true;
+    this.plugin = plugin;
+    this.container = this.containerEl.children[1];
+  }
+  getViewType() {
+    return TAG_LIST_VIEW_TYPE;
+  }
+  getDisplayText() {
+    return "Tag List";
+  }
+  getIcon() {
+    return "tags";
+  }
+  onOpen() {
+    return __async(this, null, function* () {
+      this.buildUI();
+      this.refreshTags();
+    });
+  }
+  buildUI() {
+    this.container.empty();
+    const header = this.container.createDiv({ cls: "tag-curator-list-header" });
+    header.createEl("h2", { text: "Vault Tags" });
+    const filterDiv = this.container.createDiv({ cls: "tag-curator-list-filter" });
+    filterDiv.createEl("label", { text: "Search: " });
+    this.searchInput = filterDiv.createEl("input", {
+      type: "text",
+      placeholder: "Filter by tag name...",
+      cls: "tag-curator-search"
+    });
+    this.searchInput.addEventListener("input", () => this.refreshTags());
+    const tableDiv = this.container.createDiv({ cls: "tag-curator-table-wrapper" });
+    const table = tableDiv.createEl("table", { cls: "tag-curator-table" });
+    const thead = table.createEl("thead");
+    const headerRow = thead.createEl("tr");
+    this.createHeaderCell(headerRow, "Tag", "name", "tag-col");
+    this.createHeaderCell(headerRow, "Count", "count", "count-col");
+    this.createHeaderCell(headerRow, "First Seen", "firstSeen", "date-col");
+    this.createHeaderCell(headerRow, "Last Used", "lastSeen", "date-col");
+    this.createHeaderCell(headerRow, "Source", "source", "source-col");
+    this.createHeaderCell(headerRow, "Status", "status", "status-col");
+    this.tagsContainer = table.createEl("tbody", { cls: "tag-curator-table-body" });
+    const status = this.container.createDiv({ cls: "tag-curator-list-status" });
+    this.containerEl.setAttribute("data-tag-curator-status", "ready");
+  }
+  createHeaderCell(row, label, sortKey, className) {
+    const cell = row.createEl("th", { text: label, cls: className });
+    cell.style.cursor = "pointer";
+    cell.addEventListener("click", () => {
+      if (this.sortBy === sortKey) {
+        this.sortDesc = !this.sortDesc;
+      } else {
+        this.sortBy = sortKey;
+        this.sortDesc = true;
+      }
+      this.refreshTags();
+    });
+  }
+  refreshTags() {
+    const metadata = this.plugin.tagMetaManager.getAllTagMeta();
+    const rules = this.plugin.settingsManager.getActiveRules();
+    const searchTerm = this.searchInput.value.toLowerCase();
+    let tags = Array.from(metadata.values());
+    if (searchTerm) {
+      tags = tags.filter((meta) => meta.tag.toLowerCase().includes(searchTerm));
+    }
+    tags.sort((a, b) => {
+      let aVal, bVal;
+      switch (this.sortBy) {
+        case "count":
+          aVal = a.count;
+          bVal = b.count;
+          break;
+        case "name":
+          aVal = a.tag;
+          bVal = b.tag;
+          break;
+        case "firstSeen":
+          aVal = a.firstSeen;
+          bVal = b.firstSeen;
+          break;
+        case "lastSeen":
+          aVal = a.lastSeen;
+          bVal = b.lastSeen;
+          break;
+      }
+      if (typeof aVal === "string") {
+        return this.sortDesc ? bVal.localeCompare(aVal) : aVal.localeCompare(bVal);
+      } else {
+        return this.sortDesc ? bVal - aVal : aVal - bVal;
+      }
+    });
+    this.tagsContainer.empty();
+    for (const tagMeta of tags) {
+      const matchResult = RuleEngine.evaluateTag(tagMeta.tag, tagMeta, rules);
+      this.createTagRow(tagMeta, matchResult == null ? void 0 : matchResult.ruleName);
+    }
+  }
+  createTagRow(tagMeta, hiddenByRule) {
+    const row = this.tagsContainer.createEl("tr", {
+      cls: hiddenByRule ? "tag-hidden" : "tag-visible"
+    });
+    const nameCell = row.createEl("td", {
+      text: `#${tagMeta.tag}`,
+      cls: "tag-name-cell"
+    });
+    row.createEl("td", {
+      text: tagMeta.count.toString(),
+      cls: "tag-count-cell"
+    });
+    const firstSeenDate = new Date(tagMeta.firstSeen).toLocaleDateString();
+    row.createEl("td", {
+      text: firstSeenDate,
+      cls: "tag-date-cell"
+    });
+    const lastUsedDate = new Date(tagMeta.lastSeen).toLocaleDateString();
+    row.createEl("td", {
+      text: lastUsedDate,
+      cls: "tag-date-cell"
+    });
+    const sourceText = tagMeta.sources.join(", ");
+    row.createEl("td", {
+      text: sourceText,
+      cls: "tag-source-cell"
+    });
+    const statusCell = row.createEl("td", { cls: "tag-status-cell" });
+    if (hiddenByRule) {
+      statusCell.createEl("span", {
+        text: `Hidden (${hiddenByRule})`,
+        cls: "tag-hidden-badge"
+      });
+    } else {
+      statusCell.createEl("span", {
+        text: "Visible",
+        cls: "tag-visible-badge"
+      });
+    }
+  }
+  onClose() {
+    return Promise.resolve();
+  }
+};
+
 // src/main.ts
-var TagCuratorPlugin = class extends import_obsidian2.Plugin {
+var TagCuratorPlugin = class extends import_obsidian3.Plugin {
   onload() {
     return __async(this, null, function* () {
       console.log("Loading Tag Curator plugin");
@@ -672,6 +822,7 @@ var TagCuratorPlugin = class extends import_obsidian2.Plugin {
       yield this.settingsManager.load();
       yield this.tagMetaManager.init();
       this.tagPaneObserver.init();
+      this.registerView(TAG_LIST_VIEW_TYPE, (leaf) => new TagListView(leaf, this));
       this.settingsManager.onChanged(() => {
         const rules = this.settingsManager.getActiveRules();
         this.tagPaneObserver.updateRules(rules);
@@ -699,6 +850,13 @@ var TagCuratorPlugin = class extends import_obsidian2.Plugin {
           this.tagPaneObserver.updateRules(rules);
         })
       });
+      this.addCommand({
+        id: "open-tag-list",
+        name: "Open tag list view",
+        callback: () => {
+          this.activateView();
+        }
+      });
       console.log("Tag Curator plugin loaded successfully");
     });
   }
@@ -706,5 +864,19 @@ var TagCuratorPlugin = class extends import_obsidian2.Plugin {
     console.log("Unloading Tag Curator plugin");
     this.tagPaneObserver.unload();
     this.tagMetaManager.unload();
+  }
+  activateView() {
+    return __async(this, null, function* () {
+      const { workspace } = this.app;
+      let leaf = null;
+      const leaves = workspace.getLeavesOfType(TAG_LIST_VIEW_TYPE);
+      if (leaves.length > 0) {
+        leaf = leaves[0];
+      } else {
+        leaf = workspace.getRightLeaf(false);
+        yield leaf.setViewState({ type: TAG_LIST_VIEW_TYPE });
+      }
+      workspace.revealLeaf(leaf);
+    });
   }
 };
