@@ -5,10 +5,27 @@ if you want to view the source, please visit the github repository of this plugi
 
 var __create = Object.create;
 var __defProp = Object.defineProperty;
+var __defProps = Object.defineProperties;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __getOwnPropDescs = Object.getOwnPropertyDescriptors;
 var __getOwnPropNames = Object.getOwnPropertyNames;
+var __getOwnPropSymbols = Object.getOwnPropertySymbols;
 var __getProtoOf = Object.getPrototypeOf;
 var __hasOwnProp = Object.prototype.hasOwnProperty;
+var __propIsEnum = Object.prototype.propertyIsEnumerable;
+var __defNormalProp = (obj, key, value) => key in obj ? __defProp(obj, key, { enumerable: true, configurable: true, writable: true, value }) : obj[key] = value;
+var __spreadValues = (a, b) => {
+  for (var prop in b || (b = {}))
+    if (__hasOwnProp.call(b, prop))
+      __defNormalProp(a, prop, b[prop]);
+  if (__getOwnPropSymbols)
+    for (var prop of __getOwnPropSymbols(b)) {
+      if (__propIsEnum.call(b, prop))
+        __defNormalProp(a, prop, b[prop]);
+    }
+  return a;
+};
+var __spreadProps = (a, b) => __defProps(a, __getOwnPropDescs(b));
 var __markAsModule = (target) => __defProp(target, "__esModule", { value: true });
 var __export = (target, all) => {
   __markAsModule(target);
@@ -49,83 +66,535 @@ var __async = (__this, __arguments, generator) => {
 
 // src/main.ts
 __export(exports, {
-  SampleModal: () => SampleModal,
-  SampleSettingTab: () => SampleSettingTab,
   default: () => TagCuratorPlugin
 });
-var import_obsidian = __toModule(require("obsidian"));
 var import_obsidian2 = __toModule(require("obsidian"));
+
+// src/types.ts
 var DEFAULT_SETTINGS = {
-  mySetting: "default"
+  mode: "default",
+  defaultScopes: ["tag-pane"],
+  enabledPresets: ["hide-hex-codes", "hide-url-anchors", "hide-orphans"],
+  enabledRules: [],
+  dryRun: false,
+  debugLog: false,
+  sidecarDebounceMs: 5e3
 };
-var TagCuratorPlugin = class extends import_obsidian.Plugin {
-  onload() {
+
+// src/engine/presets.ts
+var PRESETS = [
+  {
+    id: "hide-hex-codes",
+    name: "Hide hex color codes",
+    description: "Hide tags matching hex color codes (#FFAA00, #abcdef, etc.)",
+    rule: {
+      id: "hide-hex-codes",
+      name: "Hide hex color codes",
+      enabled: true,
+      priority: 100,
+      match: {
+        type: "regex",
+        pattern: "^#[0-9A-Fa-f]{3,8}$"
+      },
+      action: "hide",
+      scopes: ["tag-pane"],
+      notes: "Catches CSS hex codes from web clippings, especially via MarkDownload"
+    }
+  },
+  {
+    id: "hide-url-anchors",
+    name: "Hide URL anchor fragments",
+    description: "Hide tags that are URL fragments (#section-3, #top, etc.)",
+    rule: {
+      id: "hide-url-anchors",
+      name: "Hide URL anchors",
+      enabled: true,
+      priority: 95,
+      match: {
+        type: "regex",
+        pattern: "^#[a-z]+-\\d+$|^#(top|bottom|navigation|content|main|header|footer|sidebar)$"
+      },
+      action: "hide",
+      scopes: ["tag-pane"],
+      notes: "Common URL fragment patterns from web clippings"
+    }
+  },
+  {
+    id: "hide-single-char",
+    name: "Hide single-character tags",
+    description: "Hide single character tags (#a, #x, etc.)",
+    rule: {
+      id: "hide-single-char",
+      name: "Hide single-character tags",
+      enabled: false,
+      priority: 90,
+      match: {
+        type: "regex",
+        pattern: "^#[a-zA-Z]$"
+      },
+      action: "hide",
+      scopes: ["tag-pane"],
+      notes: "Likely typos or single-character shortcuts"
+    }
+  },
+  {
+    id: "hide-orphans",
+    name: "Hide orphan tags",
+    description: "Hide tags that appear only once (count = 1)",
+    rule: {
+      id: "hide-orphans",
+      name: "Hide orphan tags (count <= 1)",
+      enabled: false,
+      priority: 80,
+      match: {
+        type: "frequency",
+        operator: "<=",
+        value: 1
+      },
+      action: "hide",
+      scopes: ["tag-pane"],
+      notes: "Tags appearing only once are likely typos or experiments"
+    }
+  },
+  {
+    id: "hide-numeric",
+    name: "Hide pure numeric tags",
+    description: "Hide tags that are purely numeric (though Obsidian usually strips these)",
+    rule: {
+      id: "hide-numeric",
+      name: "Hide pure numeric tags",
+      enabled: false,
+      priority: 85,
+      match: {
+        type: "regex",
+        pattern: "^#\\d+$"
+      },
+      action: "hide",
+      scopes: ["tag-pane"],
+      notes: "Catchall for numeric tags (edge case, usually filtered by Obsidian)"
+    }
+  }
+];
+
+// src/storage/settings.ts
+var SettingsManager = class {
+  constructor(plugin) {
+    this.settings = DEFAULT_SETTINGS;
+    this.rules = [];
+    this.onSettingsChanged = null;
+    this.plugin = plugin;
+  }
+  load() {
     return __async(this, null, function* () {
-      yield this.loadSettings();
-      const statusBarItemEl = this.addStatusBarItem();
-      statusBarItemEl.setText("Tag Curator");
-      this.addCommand({
-        id: "open-sample-modal-simple",
-        name: "Open sample modal",
-        callback: () => {
-          new SampleModal(this.app).open();
-        }
+      const saved = yield this.plugin.loadData();
+      if (saved) {
+        this.settings = __spreadValues(__spreadValues({}, DEFAULT_SETTINGS), saved.settings);
+        this.rules = saved.rules || [];
+      }
+    });
+  }
+  save() {
+    return __async(this, null, function* () {
+      yield this.plugin.saveData({
+        settings: this.settings,
+        rules: this.rules
       });
-      this.addCommand({
-        id: "sample-editor-command",
-        name: "Sample editor command",
-        editorCallback: (editor) => {
-          console.log(editor.getSelection());
-          editor.replaceSelection("Sample Editor Command");
+      if (this.onSettingsChanged) {
+        this.onSettingsChanged();
+      }
+    });
+  }
+  getSettings() {
+    return this.settings;
+  }
+  updateSettings(partial) {
+    return __async(this, null, function* () {
+      this.settings = __spreadValues(__spreadValues({}, this.settings), partial);
+      yield this.save();
+    });
+  }
+  getActiveRules() {
+    const rules = [];
+    for (const presetId of this.settings.enabledPresets) {
+      const preset = PRESETS.find((p) => p.id === presetId);
+      if (preset) {
+        rules.push(preset.rule);
+      }
+    }
+    rules.push(...this.rules.filter((r) => this.settings.enabledRules.includes(r.id)));
+    return rules.sort((a, b) => b.priority - a.priority);
+  }
+  getAllRules() {
+    return [
+      ...PRESETS.map((p) => p.rule),
+      ...this.rules
+    ];
+  }
+  addRule(rule) {
+    return __async(this, null, function* () {
+      this.rules.push(rule);
+      this.settings.enabledRules.push(rule.id);
+      yield this.save();
+    });
+  }
+  updateRule(ruleId, partial) {
+    return __async(this, null, function* () {
+      const rule = this.rules.find((r) => r.id === ruleId);
+      if (rule) {
+        Object.assign(rule, partial);
+        yield this.save();
+      }
+    });
+  }
+  deleteRule(ruleId) {
+    return __async(this, null, function* () {
+      this.rules = this.rules.filter((r) => r.id !== ruleId);
+      this.settings.enabledRules = this.settings.enabledRules.filter((id) => id !== ruleId);
+      yield this.save();
+    });
+  }
+  toggleRule(ruleId, enabled) {
+    return __async(this, null, function* () {
+      if (enabled && !this.settings.enabledRules.includes(ruleId)) {
+        this.settings.enabledRules.push(ruleId);
+      } else if (!enabled && this.settings.enabledRules.includes(ruleId)) {
+        this.settings.enabledRules = this.settings.enabledRules.filter((id) => id !== ruleId);
+      }
+      yield this.save();
+    });
+  }
+  togglePreset(presetId, enabled) {
+    return __async(this, null, function* () {
+      if (enabled && !this.settings.enabledPresets.includes(presetId)) {
+        this.settings.enabledPresets.push(presetId);
+      } else if (!enabled && this.settings.enabledPresets.includes(presetId)) {
+        this.settings.enabledPresets = this.settings.enabledPresets.filter((id) => id !== presetId);
+      }
+      yield this.save();
+    });
+  }
+  onChanged(callback) {
+    this.onSettingsChanged = callback;
+  }
+};
+
+// src/storage/tagMeta.ts
+var TagMetaManager = class {
+  constructor(app, plugin) {
+    this.tagMetadata = new Map();
+    this.saveTimeout = null;
+    this.debounceMs = 5e3;
+    this.onMetadataChanged = null;
+    this.app = app;
+    this.plugin = plugin;
+  }
+  init() {
+    this.loadMetadata();
+    this.app.metadataCache.on("changed", (file) => {
+      this.updateFileMetadata(file);
+    });
+  }
+  loadMetadata() {
+    return __async(this, null, function* () {
+      try {
+        const data = yield this.plugin.loadData();
+        if (data == null ? void 0 : data.tagMetadata) {
+          const stored = data.tagMetadata;
+          this.tagMetadata = new Map(Object.entries(stored));
         }
-      });
-      this.addCommand({
-        id: "open-sample-modal-complex",
-        name: "Open sample modal (complex)",
-        checkCallback: (checking) => {
-          const markdownView = this.app.workspace.getActiveViewOfType(import_obsidian2.MarkdownView);
-          if (markdownView) {
-            if (!checking) {
-              new SampleModal(this.app).open();
-            }
-            return true;
+      } catch (e) {
+        console.error("Failed to load tag metadata:", e);
+      }
+    });
+  }
+  debouncedSave() {
+    if (this.saveTimeout) {
+      clearTimeout(this.saveTimeout);
+    }
+    this.saveTimeout = setTimeout(() => __async(this, null, function* () {
+      try {
+        const data = yield this.plugin.loadData();
+        const stored = Object.fromEntries(this.tagMetadata);
+        yield this.plugin.saveData(__spreadProps(__spreadValues({}, data), {
+          tagMetadata: stored
+        }));
+      } catch (e) {
+        console.error("Failed to save tag metadata:", e);
+      }
+    }), this.debounceMs);
+  }
+  updateFileMetadata(file) {
+    const cache = this.app.metadataCache.getFileCache(file);
+    if (!cache)
+      return;
+    const tags = cache.tags || [];
+    const now = Date.now();
+    for (const tagObj of tags) {
+      const tag = tagObj.tag.startsWith("#") ? tagObj.tag.slice(1) : tagObj.tag;
+      const source = "inline";
+      let meta = this.tagMetadata.get(tag);
+      if (!meta) {
+        meta = {
+          tag,
+          firstSeen: now,
+          lastSeen: now,
+          count: 1,
+          sources: [source]
+        };
+      } else {
+        meta.lastSeen = now;
+        meta.count += 1;
+        if (!meta.sources.includes(source)) {
+          meta.sources.push(source);
+        }
+      }
+      this.tagMetadata.set(tag, meta);
+    }
+    const frontmatter = cache.frontmatter;
+    if (frontmatter && frontmatter.tags) {
+      const fmTags = frontmatter.tags;
+      const tagsArray = Array.isArray(fmTags) ? fmTags : [fmTags];
+      for (const tag of tagsArray) {
+        const normalizedTag = tag.startsWith("#") ? tag.slice(1) : tag;
+        const source = "frontmatter";
+        let meta = this.tagMetadata.get(normalizedTag);
+        if (!meta) {
+          meta = {
+            tag: normalizedTag,
+            firstSeen: now,
+            lastSeen: now,
+            count: 1,
+            sources: [source]
+          };
+        } else {
+          meta.lastSeen = now;
+          meta.count += 1;
+          if (!meta.sources.includes(source)) {
+            meta.sources.push(source);
           }
         }
-      });
-      this.addSettingTab(new SampleSettingTab(this.app, this));
-      this.registerDomEvent(document, "click", (evt) => {
-        console.log("click", evt);
-      });
-      this.registerInterval(window.setInterval(() => console.log("setInterval"), 5 * 60 * 1e3));
-    });
+        this.tagMetadata.set(normalizedTag, meta);
+      }
+    }
+    this.debouncedSave();
+    if (this.onMetadataChanged) {
+      this.onMetadataChanged();
+    }
   }
-  onunload() {
+  getTagMeta(tag) {
+    return this.tagMetadata.get(tag);
   }
-  loadSettings() {
-    return __async(this, null, function* () {
-      this.settings = Object.assign({}, DEFAULT_SETTINGS, yield this.loadData());
-    });
+  getAllTagMeta() {
+    return new Map(this.tagMetadata);
   }
-  saveSettings() {
-    return __async(this, null, function* () {
-      yield this.saveData(this.settings);
-    });
+  getAllTags() {
+    return Array.from(this.tagMetadata.keys());
   }
-};
-var SampleModal = class extends import_obsidian2.Modal {
-  constructor(app) {
-    super(app);
+  setDebounceMs(ms) {
+    this.debounceMs = ms;
   }
-  onOpen() {
-    const { contentEl } = this;
-    contentEl.setText("Woah!");
+  onChanged(callback) {
+    this.onMetadataChanged = callback;
   }
-  onClose() {
-    const { contentEl } = contentEl;
-    contentEl.empty();
+  unload() {
+    if (this.saveTimeout) {
+      clearTimeout(this.saveTimeout);
+    }
   }
 };
-var SampleSettingTab = class extends import_obsidian.PluginSettingTab {
+
+// src/engine/matchers.ts
+var TagMatcher = class {
+  static matches(tag, tagMeta, criteria) {
+    switch (criteria.type) {
+      case "regex":
+        return this.matchRegex(tag, criteria.pattern || "");
+      case "frequency":
+        if (!tagMeta)
+          return false;
+        return this.matchFrequency(tagMeta.count, criteria.operator, criteria.value);
+      case "list":
+        return this.matchList(tag, criteria.list || []);
+      default:
+        return false;
+    }
+  }
+  static matchRegex(tag, pattern) {
+    try {
+      const regex = new RegExp(pattern);
+      return regex.test(tag);
+    } catch (e) {
+      console.error(`Invalid regex pattern: ${pattern}`, e);
+      return false;
+    }
+  }
+  static matchFrequency(count, operator, value) {
+    switch (operator) {
+      case "<":
+        return count < value;
+      case "<=":
+        return count <= value;
+      case ">":
+        return count > value;
+      case ">=":
+        return count >= value;
+      case "=":
+        return count === value;
+      default:
+        return false;
+    }
+  }
+  static matchList(tag, list) {
+    return list.includes(tag);
+  }
+};
+
+// src/engine/ruleEngine.ts
+var RuleEngine = class {
+  static evaluateTag(tag, tagMeta, rules) {
+    const sortedRules = [...rules].filter((r) => r.enabled).sort((a, b) => b.priority - a.priority);
+    let lastMatch = null;
+    for (const rule of sortedRules) {
+      if (TagMatcher.matches(tag, tagMeta, rule.match)) {
+        lastMatch = {
+          matched: true,
+          ruleId: rule.id,
+          ruleName: rule.name
+        };
+      }
+    }
+    return lastMatch;
+  }
+  static getAllMatches(tag, tagMeta, rules) {
+    const matches = [];
+    for (const rule of rules.filter((r) => r.enabled)) {
+      if (TagMatcher.matches(tag, tagMeta, rule.match)) {
+        matches.push({
+          matched: true,
+          ruleId: rule.id,
+          ruleName: rule.name
+        });
+      }
+    }
+    return matches;
+  }
+  static testTag(tag, rule) {
+    return TagMatcher.matches(tag, void 0, rule.match);
+  }
+};
+
+// src/observers/tagPaneObserver.ts
+var TAG_CURATOR_ATTR = "data-tag-curator-hidden";
+var TAG_PANE_ITEM_CLASS = "tag-pane-tag-self";
+var TagPaneObserver = class {
+  constructor(app, plugin) {
+    this.observer = null;
+    this.containerEl = null;
+    this.rules = [];
+    this.tagMetadata = new Map();
+    this.isEnabled = true;
+    this.app = app;
+    this.plugin = plugin;
+  }
+  init() {
+    this.app.workspace.onLayoutReady(() => {
+      this.setup();
+    });
+    this.app.workspace.on("layout-change", () => {
+      this.setup();
+    });
+  }
+  setup() {
+    var _a;
+    const leaf = this.app.workspace.getLeavesOfType("tag");
+    if (leaf.length === 0) {
+      return;
+    }
+    const container = (_a = leaf[0].containerEl) == null ? void 0 : _a.querySelector(".tag-container");
+    if (!container) {
+      return;
+    }
+    this.containerEl = container;
+    this.attachObserver();
+    this.applyFilters();
+  }
+  attachObserver() {
+    if (this.observer) {
+      this.observer.disconnect();
+    }
+    if (!this.containerEl)
+      return;
+    this.observer = new MutationObserver(() => {
+      if (this.isEnabled) {
+        this.applyFilters();
+      }
+    });
+    this.observer.observe(this.containerEl, {
+      childList: true,
+      subtree: true,
+      characterData: true
+    });
+  }
+  applyFilters() {
+    var _a;
+    if (!this.containerEl || !this.isEnabled)
+      return;
+    const tagItems = this.containerEl.querySelectorAll(`.${TAG_PANE_ITEM_CLASS}`);
+    for (const item of Array.from(tagItems)) {
+      const element = item;
+      const tagText = (_a = element.textContent) == null ? void 0 : _a.trim();
+      if (!tagText)
+        continue;
+      const tag = tagText.startsWith("#") ? tagText.slice(1) : tagText;
+      const matchResult = RuleEngine.evaluateTag(tag, this.tagMetadata.get(tag), this.rules);
+      if (matchResult && matchResult.ruleName) {
+        element.setAttribute(TAG_CURATOR_ATTR, matchResult.ruleId);
+        element.style.display = "none";
+      } else {
+        element.removeAttribute(TAG_CURATOR_ATTR);
+        element.style.display = "";
+      }
+    }
+  }
+  updateRules(rules) {
+    this.rules = rules;
+    this.applyFilters();
+  }
+  updateTagMetadata(metadata) {
+    this.tagMetadata = metadata;
+    this.applyFilters();
+  }
+  setEnabled(enabled) {
+    this.isEnabled = enabled;
+    if (!enabled) {
+      this.clearFilters();
+    } else {
+      this.applyFilters();
+    }
+  }
+  clearFilters() {
+    if (!this.containerEl)
+      return;
+    const hiddenItems = this.containerEl.querySelectorAll(`[${TAG_CURATOR_ATTR}]`);
+    for (const item of Array.from(hiddenItems)) {
+      const element = item;
+      element.removeAttribute(TAG_CURATOR_ATTR);
+      element.style.display = "";
+    }
+  }
+  unload() {
+    if (this.observer) {
+      this.observer.disconnect();
+      this.observer = null;
+    }
+    this.clearFilters();
+    this.containerEl = null;
+  }
+};
+
+// src/ui/settingsTab.ts
+var import_obsidian = __toModule(require("obsidian"));
+var TagCuratorSettingTab = class extends import_obsidian.PluginSettingTab {
   constructor(app, plugin) {
     super(app, plugin);
     this.plugin = plugin;
@@ -133,9 +602,109 @@ var SampleSettingTab = class extends import_obsidian.PluginSettingTab {
   display() {
     const { containerEl } = this;
     containerEl.empty();
-    new import_obsidian.Setting(containerEl).setName("Setting #1").setDesc("It's a secret").addText((text) => text.setPlaceholder("Enter your secret").setValue(this.plugin.settings.mySetting).onChange((value) => __async(this, null, function* () {
-      this.plugin.settings.mySetting = value;
-      yield this.plugin.saveSettings();
-    })));
+    containerEl.createEl("h2", { text: "Tag Curator Settings" });
+    this.displayGeneralSettings(containerEl);
+    this.displayPresets(containerEl);
+    this.displayAbout(containerEl);
+  }
+  displayGeneralSettings(containerEl) {
+    containerEl.createEl("h3", { text: "General" });
+    const settings = this.plugin.settingsManager.getSettings();
+    new import_obsidian.Setting(containerEl).setName("Mode").setDesc("How Tag Curator filters tags").addDropdown((dropdown) => {
+      dropdown.addOption("default", "Default (hide matched)").addOption("allow-only", "Allow-only (whitelist)").addOption("inbox", "Inbox (review mode)").setValue(settings.mode).onChange((value) => __async(this, null, function* () {
+        yield this.plugin.settingsManager.updateSettings({
+          mode: value
+        });
+      }));
+    });
+    new import_obsidian.Setting(containerEl).setName("Debug logging").setDesc("Write rule evaluation logs to plugin folder").addToggle((toggle) => {
+      toggle.setValue(settings.debugLog).onChange((value) => __async(this, null, function* () {
+        yield this.plugin.settingsManager.updateSettings({ debugLog: value });
+      }));
+    });
+    new import_obsidian.Setting(containerEl).setName("Dry run mode").setDesc("Show what rules would hide without actually hiding").addToggle((toggle) => {
+      toggle.setValue(settings.dryRun).onChange((value) => __async(this, null, function* () {
+        yield this.plugin.settingsManager.updateSettings({ dryRun: value });
+      }));
+    });
+  }
+  displayPresets(containerEl) {
+    containerEl.createEl("h3", { text: "Built-in Presets" });
+    const settings = this.plugin.settingsManager.getSettings();
+    for (const preset of PRESETS) {
+      const isEnabled = settings.enabledPresets.includes(preset.id);
+      new import_obsidian.Setting(containerEl).setName(preset.name).setDesc(preset.description).addToggle((toggle) => {
+        toggle.setValue(isEnabled).onChange((value) => __async(this, null, function* () {
+          yield this.plugin.settingsManager.togglePreset(preset.id, value);
+        }));
+      });
+    }
+  }
+  displayAbout(containerEl) {
+    containerEl.createEl("h3", { text: "About" });
+    const aboutDiv = containerEl.createDiv({ cls: "tag-curator-about" });
+    aboutDiv.createEl("p", {
+      text: "Tag Curator: A vault-wide tag visibility and curation engine for Obsidian"
+    });
+    aboutDiv.createEl("p", {
+      text: "Version 0.1.0 - Display-only, file-safe, fully reversible"
+    });
+    aboutDiv.createEl("p", {
+      text: "Uninstall to immediately restore all hidden tags. No files are modified."
+    });
+    const linksDiv = aboutDiv.createDiv({ cls: "tag-curator-links" });
+    linksDiv.createEl("a", {
+      text: "GitHub",
+      href: "https://github.com/jprisant/obsidian-tag-curator",
+      attr: { target: "_blank" }
+    });
+  }
+};
+
+// src/main.ts
+var TagCuratorPlugin = class extends import_obsidian2.Plugin {
+  onload() {
+    return __async(this, null, function* () {
+      console.log("Loading Tag Curator plugin");
+      this.settingsManager = new SettingsManager(this);
+      this.tagMetaManager = new TagMetaManager(this.app, this);
+      this.tagPaneObserver = new TagPaneObserver(this.app, this);
+      yield this.settingsManager.load();
+      yield this.tagMetaManager.init();
+      this.tagPaneObserver.init();
+      this.settingsManager.onChanged(() => {
+        const rules = this.settingsManager.getActiveRules();
+        this.tagPaneObserver.updateRules(rules);
+      });
+      this.tagMetaManager.onChanged(() => {
+        const metadata = this.tagMetaManager.getAllTagMeta();
+        this.tagPaneObserver.updateTagMetadata(metadata);
+      });
+      this.addSettingTab(new TagCuratorSettingTab(this.app, this));
+      const statusBarItemEl = this.addStatusBarItem();
+      statusBarItemEl.setText("Tag Curator: Ready");
+      this.addCommand({
+        id: "toggle-tag-curator",
+        name: "Toggle Tag Curator on/off",
+        callback: () => {
+          const settings = this.settingsManager.getSettings();
+          console.log("Tag Curator toggled");
+        }
+      });
+      this.addCommand({
+        id: "reload-presets",
+        name: "Reload preset rules",
+        callback: () => __async(this, null, function* () {
+          const rules = this.settingsManager.getActiveRules();
+          this.tagPaneObserver.updateRules(rules);
+        })
+      });
+      console.log("Tag Curator plugin loaded successfully");
+    });
+  }
+  onunload() {
+    console.log("Unloading Tag Curator plugin");
+    this.tagPaneObserver.unload();
+    this.tagMetaManager.unload();
   }
 };
