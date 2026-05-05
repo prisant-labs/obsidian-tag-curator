@@ -10,7 +10,7 @@ export class TagMetaManager {
   private plugin: Plugin;
   private tagMetadata: Map<string, TagMeta> = new Map();
   private saveTimeout: NodeJS.Timeout | null = null;
-  private debounceMs: number = 5000;
+  private debounceMs = 5000;
   private onMetadataChanged: (() => void) | null = null;
 
   constructor(app: App, plugin: Plugin) {
