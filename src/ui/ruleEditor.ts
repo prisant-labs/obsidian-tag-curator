@@ -23,7 +23,7 @@ export class RuleEditorModal extends Modal {
     this.plugin = plugin;
     this.isNew = !rule;
     this.rule = rule || this.createNewRule();
-    this.onSave = onSave || (async () => {});
+    this.onSave = onSave || (async () => { return; });
   }
 
   private createNewRule(): Rule {
