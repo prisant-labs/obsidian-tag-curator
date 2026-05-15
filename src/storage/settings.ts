@@ -1,148 +1,115 @@
-/**
- * Settings storage and management
- */
-
 import { Plugin } from 'obsidian';
-import { TagCuratorSettings, Rule, DEFAULT_SETTINGS } from '../types';
-import { PRESETS } from '../engine/presets';
+import {
+  DEFAULT_SETTINGS,
+  Rule,
+  SCHEMA_VERSION,
+  TagCuratorSettings,
+} from '../types';
+
+type LegacyV0Settings = Partial<TagCuratorSettings> & {
+  rules?: Rule[];
+  enabledRules?: string[];
+  tagMetadata?: unknown;
+};
 
 export class SettingsManager {
   private plugin: Plugin;
-  private settings: TagCuratorSettings = DEFAULT_SETTINGS;
-  private rules: Rule[] = [];
-  private onSettingsChanged: (() => void) | null = null;
+  private settings: TagCuratorSettings = { ...DEFAULT_SETTINGS };
+  private listeners: Array<() => void> = [];
 
   constructor(plugin: Plugin) {
     this.plugin = plugin;
   }
 
-  /**
-   * Load settings from disk
-   */
-  async load() {
-    const saved = await this.plugin.loadData();
-    if (saved) {
-      this.settings = { ...DEFAULT_SETTINGS, ...saved.settings };
-      this.rules = saved.rules || [];
+  async load(): Promise<void> {
+    const raw = ((await this.plugin.loadData()) ?? {}) as LegacyV0Settings;
+    this.settings = this.migrate(raw);
+    if (this.settings.schemaVersion !== SCHEMA_VERSION) {
+      this.settings.schemaVersion = SCHEMA_VERSION;
+      await this.persist();
     }
   }
 
-  /**
-   * Save settings to disk
-   */
-  async save() {
-    await this.plugin.saveData({
-      settings: this.settings,
-      rules: this.rules,
-    });
-
-    if (this.onSettingsChanged) {
-      this.onSettingsChanged();
+  private migrate(raw: LegacyV0Settings): TagCuratorSettings {
+    const inferred = (raw.schemaVersion ?? 0) as number;
+    const nested = (raw as { settings?: Partial<TagCuratorSettings> }).settings;
+    const base: Partial<TagCuratorSettings> = nested ?? raw;
+    const merged: TagCuratorSettings = {
+      ...DEFAULT_SETTINGS,
+      ...base,
+      schemaVersion: SCHEMA_VERSION,
+      customRules: Array.isArray(raw.rules)
+        ? raw.rules
+        : Array.isArray(base.customRules)
+          ? base.customRules
+          : [],
+    };
+    if (inferred < 1) {
+      const enabledIds = new Set(raw.enabledRules ?? []);
+      merged.customRules = merged.customRules.map((r) => ({
+        ...r,
+        enabled: r.enabled ?? enabledIds.has(r.id),
+      }));
     }
+    return merged;
   }
 
-  /**
-   * Get current settings
-   */
-  getSettings(): TagCuratorSettings {
+  private async persist(): Promise<void> {
+    await this.plugin.saveData(this.settings);
+    for (const cb of this.listeners) cb();
+  }
+
+  get(): TagCuratorSettings {
     return this.settings;
   }
 
-  /**
-   * Update settings
-   */
-  async updateSettings(partial: Partial<TagCuratorSettings>) {
+  async update(partial: Partial<TagCuratorSettings>): Promise<void> {
     this.settings = { ...this.settings, ...partial };
-    await this.save();
+    await this.persist();
   }
 
-  /**
-   * Get all active rules (both presets and custom)
-   */
-  getActiveRules(): Rule[] {
-    const rules: Rule[] = [];
-
-    // Add enabled presets
-    for (const presetId of this.settings.enabledPresets) {
-      const preset = PRESETS.find(p => p.id === presetId);
-      if (preset) {
-        rules.push(preset.rule);
-      }
-    }
-
-    // Add custom enabled rules
-    rules.push(...this.rules.filter(r => this.settings.enabledRules.includes(r.id)));
-
-    return rules.sort((a, b) => b.priority - a.priority);
+  async setPresetEnabled(presetId: string, enabled: boolean): Promise<void> {
+    const set = new Set(this.settings.enabledPresets);
+    if (enabled) set.add(presetId);
+    else set.delete(presetId);
+    this.settings.enabledPresets = Array.from(set);
+    await this.persist();
   }
 
-  /**
-   * Get all rules (including disabled ones)
-   */
-  getAllRules(): Rule[] {
-    return [
-      ...PRESETS.map(p => p.rule),
-      ...this.rules,
-    ];
+  async addCustomRule(rule: Rule): Promise<void> {
+    this.settings.customRules = [...this.settings.customRules, rule];
+    await this.persist();
   }
 
-  /**
-   * Add a custom rule
-   */
-  async addRule(rule: Rule) {
-    this.rules.push(rule);
-    this.settings.enabledRules.push(rule.id);
-    await this.save();
+  async updateCustomRule(ruleId: string, partial: Partial<Rule>): Promise<void> {
+    this.settings.customRules = this.settings.customRules.map((r) =>
+      r.id === ruleId ? { ...r, ...partial } : r,
+    );
+    await this.persist();
   }
 
-  /**
-   * Update a custom rule
-   */
-  async updateRule(ruleId: string, partial: Partial<Rule>) {
-    const rule = this.rules.find(r => r.id === ruleId);
-    if (rule) {
-      Object.assign(rule, partial);
-      await this.save();
-    }
+  async deleteCustomRule(ruleId: string): Promise<void> {
+    this.settings.customRules = this.settings.customRules.filter(
+      (r) => r.id !== ruleId,
+    );
+    await this.persist();
   }
 
-  /**
-   * Delete a custom rule
-   */
-  async deleteRule(ruleId: string) {
-    this.rules = this.rules.filter(r => r.id !== ruleId);
-    this.settings.enabledRules = this.settings.enabledRules.filter(id => id !== ruleId);
-    await this.save();
+  async setEnabled(enabled: boolean): Promise<void> {
+    this.settings.enabled = enabled;
+    await this.persist();
   }
 
-  /**
-   * Toggle a rule's enabled state
-   */
-  async toggleRule(ruleId: string, enabled: boolean) {
-    if (enabled && !this.settings.enabledRules.includes(ruleId)) {
-      this.settings.enabledRules.push(ruleId);
-    } else if (!enabled && this.settings.enabledRules.includes(ruleId)) {
-      this.settings.enabledRules = this.settings.enabledRules.filter(id => id !== ruleId);
-    }
-    await this.save();
+  async setDryRun(dryRun: boolean): Promise<void> {
+    this.settings.dryRun = dryRun;
+    await this.persist();
   }
 
-  /**
-   * Toggle preset enabled state
-   */
-  async togglePreset(presetId: string, enabled: boolean) {
-    if (enabled && !this.settings.enabledPresets.includes(presetId)) {
-      this.settings.enabledPresets.push(presetId);
-    } else if (!enabled && this.settings.enabledPresets.includes(presetId)) {
-      this.settings.enabledPresets = this.settings.enabledPresets.filter(id => id !== presetId);
-    }
-    await this.save();
+  onChange(cb: () => void): void {
+    this.listeners.push(cb);
   }
 
-  /**
-   * Register a callback for when settings change
-   */
-  onChanged(callback: () => void) {
-    this.onSettingsChanged = callback;
+  async reload(): Promise<void> {
+    await this.load();
   }
 }
