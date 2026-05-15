@@ -5,6 +5,7 @@
 import { ItemView, WorkspaceLeaf } from 'obsidian';
 import { TagMeta } from '../types';
 import { RuleEngine } from '../engine/ruleEngine';
+import { resolveActiveRules } from '../engine/presets';
 import TagCuratorPlugin from '../main';
 
 export const TAG_LIST_VIEW_TYPE = 'tag-curator-list';
@@ -12,8 +13,8 @@ export const TAG_LIST_VIEW_TYPE = 'tag-curator-list';
 export class TagListView extends ItemView {
   plugin: TagCuratorPlugin;
   private container: HTMLElement;
-  private searchInput: HTMLInputElement;
-  private tagsContainer: HTMLElement;
+  private searchInput!: HTMLInputElement;
+  private tagsContainer!: HTMLElement;
   private sortBy: 'count' | 'name' | 'firstSeen' | 'lastSeen' = 'count';
   private sortDesc = true;
 
@@ -99,8 +100,8 @@ export class TagListView extends ItemView {
   }
 
   private refreshTags() {
-    const metadata = this.plugin.tagMetaManager.getAllTagMeta();
-    const rules = this.plugin.settingsManager.getActiveRules();
+    const metadata = this.plugin.tagMetaManager.all();
+    const rules = resolveActiveRules(this.plugin.settingsManager.get());
     const searchTerm = this.searchInput.value.toLowerCase();
 
     // Filter tags
