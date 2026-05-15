@@ -39,7 +39,7 @@ export class TagCuratorSettingTab extends PluginSettingTab {
   private displayGeneralSettings(containerEl: HTMLElement) {
     containerEl.createEl('h3', { text: 'General' });
 
-    const settings = this.plugin.settingsManager.getSettings();
+    const settings = this.plugin.settingsManager.get();
 
     new Setting(containerEl)
       .setName('Mode')
@@ -51,7 +51,7 @@ export class TagCuratorSettingTab extends PluginSettingTab {
           .addOption('inbox', 'Inbox (review mode)')
           .setValue(settings.mode)
           .onChange(async value => {
-            await this.plugin.settingsManager.updateSettings({
+            await this.plugin.settingsManager.update({
               mode: value as any,
             });
           });
@@ -64,7 +64,7 @@ export class TagCuratorSettingTab extends PluginSettingTab {
         toggle
           .setValue(settings.debugLog)
           .onChange(async value => {
-            await this.plugin.settingsManager.updateSettings({ debugLog: value });
+            await this.plugin.settingsManager.update({ debugLog: value });
           });
       });
 
@@ -75,7 +75,7 @@ export class TagCuratorSettingTab extends PluginSettingTab {
         toggle
           .setValue(settings.dryRun)
           .onChange(async value => {
-            await this.plugin.settingsManager.updateSettings({ dryRun: value });
+            await this.plugin.settingsManager.update({ dryRun: value });
           });
       });
   }
@@ -83,7 +83,7 @@ export class TagCuratorSettingTab extends PluginSettingTab {
   private displayPresets(containerEl: HTMLElement) {
     containerEl.createEl('h3', { text: 'Built-in Presets' });
 
-    const settings = this.plugin.settingsManager.getSettings();
+    const settings = this.plugin.settingsManager.get();
 
     for (const preset of PRESETS) {
       const isEnabled = settings.enabledPresets.includes(preset.id);
@@ -95,7 +95,7 @@ export class TagCuratorSettingTab extends PluginSettingTab {
           toggle
             .setValue(isEnabled)
             .onChange(async value => {
-              await this.plugin.settingsManager.togglePreset(preset.id, value);
+              await this.plugin.settingsManager.setPresetEnabled(preset.id, value);
             });
         });
     }
@@ -104,7 +104,7 @@ export class TagCuratorSettingTab extends PluginSettingTab {
   private displayCustomRules(containerEl: HTMLElement) {
     containerEl.createEl('h3', { text: 'Custom Rules' });
 
-    const settings = this.plugin.settingsManager.getSettings();
+    const settings = this.plugin.settingsManager.get();
 
     new Setting(containerEl)
       .setName('Create new rule')
@@ -114,7 +114,7 @@ export class TagCuratorSettingTab extends PluginSettingTab {
           .setButtonText('+ New Rule')
           .onClick(() => {
             const modal = new RuleEditorModal(this.app, this.plugin, undefined, async (rule) => {
-              await this.plugin.settingsManager.addRule(rule);
+              await this.plugin.settingsManager.addCustomRule(rule);
               this.display(); // Refresh the settings display
             });
             modal.open();
@@ -122,13 +122,13 @@ export class TagCuratorSettingTab extends PluginSettingTab {
       });
 
     // List existing custom rules
-    const customRules = this.plugin.settingsManager.getAllRules().filter(r => !PRESETS.some(p => p.id === r.id));
+    const customRules = settings.customRules;
 
     if (customRules.length > 0) {
       containerEl.createEl('h4', { text: 'Your Rules' });
 
       for (const rule of customRules) {
-        const isEnabled = settings.enabledRules.includes(rule.id);
+        const isEnabled = rule.enabled;
 
         new Setting(containerEl)
           .setName(rule.name)
@@ -137,7 +137,7 @@ export class TagCuratorSettingTab extends PluginSettingTab {
             toggle
               .setValue(isEnabled)
               .onChange(async value => {
-                await this.plugin.settingsManager.toggleRule(rule.id, value);
+                await this.plugin.settingsManager.updateCustomRule(rule.id, { enabled: value });
               });
           })
           .addButton(button =>
@@ -145,7 +145,7 @@ export class TagCuratorSettingTab extends PluginSettingTab {
               .setButtonText('Edit')
               .onClick(() => {
                 const modal = new RuleEditorModal(this.app, this.plugin, rule, async (updated) => {
-                  await this.plugin.settingsManager.updateRule(rule.id, updated);
+                  await this.plugin.settingsManager.updateCustomRule(rule.id, updated);
                   this.display(); // Refresh
                 });
                 modal.open();
@@ -156,7 +156,7 @@ export class TagCuratorSettingTab extends PluginSettingTab {
               .setButtonText('Delete')
               .setWarning()
               .onClick(async () => {
-                await this.plugin.settingsManager.deleteRule(rule.id);
+                await this.plugin.settingsManager.deleteCustomRule(rule.id);
                 this.display(); // Refresh
               })
           );
