@@ -1,172 +1,163 @@
-/**
- * Observer for the tag pane UI
- */
-
-import { App, Plugin } from 'obsidian';
+import { App, Plugin, View, WorkspaceLeaf } from 'obsidian';
 import { Rule, TagMeta } from '../types';
 import { RuleEngine } from '../engine/ruleEngine';
 
-const TAG_CURATOR_ATTR = 'data-tag-curator-hidden';
-const TAG_PANE_ITEM_CLASS = 'tag-pane-tag-self';
+const HIDDEN_CLASS = 'tag-curator-hidden';
+const FLAG_CLASS = 'tag-curator-flagged';
+const TAG_ATTR = 'data-tag-curator-rule';
+const TAG_VIEW_TYPE = 'tag';
+
+interface Filterable extends View {
+  containerEl: HTMLElement;
+}
 
 export class TagPaneObserver {
-  private observer: MutationObserver | null = null;
-  private containerEl: HTMLElement | null = null;
   private app: App;
   private plugin: Plugin;
+  private observers = new WeakMap<HTMLElement, MutationObserver>();
+  private containers = new Set<HTMLElement>();
   private rules: Rule[] = [];
-  private tagMetadata: Map<string, TagMeta> = new Map();
-  private isEnabled = true;
+  private metadata = new Map<string, TagMeta>();
+  private dryRun = false;
+  private enabled = true;
+  private rafQueued = false;
 
   constructor(app: App, plugin: Plugin) {
     this.app = app;
     this.plugin = plugin;
   }
 
-  /**
-   * Initialize the observer
-   */
-  init() {
-    this.app.workspace.onLayoutReady(() => {
-      this.setup();
-    });
+  init(): void {
+    this.app.workspace.onLayoutReady(() => this.attachAll());
+    this.plugin.registerEvent(
+      this.app.workspace.on('layout-change', () => this.attachAll()),
+    );
+  }
 
-    this.app.workspace.on('layout-change', () => {
-      this.setup();
+  setRules(rules: Rule[]): void {
+    this.rules = rules;
+    this.scheduleApply();
+  }
+
+  setMetadata(metadata: Map<string, TagMeta>): void {
+    this.metadata = metadata;
+    this.scheduleApply();
+  }
+
+  setDryRun(dryRun: boolean): void {
+    this.dryRun = dryRun;
+    this.scheduleApply();
+  }
+
+  setEnabled(enabled: boolean): void {
+    this.enabled = enabled;
+    if (!enabled) this.clearAll();
+    else this.scheduleApply();
+  }
+
+  countHidden(): number {
+    let count = 0;
+    for (const container of this.containers) {
+      count += container.querySelectorAll(`.${HIDDEN_CLASS}`).length;
+    }
+    return count;
+  }
+
+  countFlagged(): number {
+    let count = 0;
+    for (const container of this.containers) {
+      count += container.querySelectorAll(`.${FLAG_CLASS}`).length;
+    }
+    return count;
+  }
+
+  ruleForElement(el: HTMLElement): string | null {
+    return el.getAttribute(TAG_ATTR);
+  }
+
+  attachAll(): void {
+    for (const leaf of this.app.workspace.getLeavesOfType(TAG_VIEW_TYPE)) {
+      this.attachLeaf(leaf);
+    }
+  }
+
+  private attachLeaf(leaf: WorkspaceLeaf): void {
+    const maybeDeferred = leaf as WorkspaceLeaf & {
+      isDeferred?: boolean;
+      loadIfDeferred?: () => void;
+    };
+    if (maybeDeferred.isDeferred) maybeDeferred.loadIfDeferred?.();
+    const view = leaf.view as Filterable;
+    const containerEl = view?.containerEl;
+    if (!containerEl || this.observers.has(containerEl)) return;
+    const obs = new MutationObserver(() => this.scheduleApply());
+    obs.observe(containerEl, { childList: true, subtree: true });
+    this.observers.set(containerEl, obs);
+    this.containers.add(containerEl);
+    this.plugin.register(() => {
+      obs.disconnect();
+      this.containers.delete(containerEl);
+    });
+    this.apply(containerEl);
+  }
+
+  private scheduleApply(): void {
+    if (this.rafQueued) return;
+    this.rafQueued = true;
+    requestAnimationFrame(() => {
+      this.rafQueued = false;
+      for (const container of this.containers) this.apply(container);
     });
   }
 
-  /**
-   * Find and set up the tag pane container
-   */
-  private setup() {
-    // Find the tag pane using Obsidian's class names
-    const leaf = this.app.workspace.getLeavesOfType('tag');
-    if (leaf.length === 0) {
-      return; // Tag pane not open
-    }
-
-    const container = leaf[0].view.containerEl?.querySelector('.tag-container');
-    if (!container) {
+  private apply(root: HTMLElement): void {
+    if (!this.enabled) {
+      this.clearWithin(root);
       return;
     }
-
-    this.containerEl = container as HTMLElement;
-    this.attachObserver();
-    this.applyFilters();
-  }
-
-  /**
-   * Attach mutation observer to tag pane
-   */
-  private attachObserver() {
-    if (this.observer) {
-      this.observer.disconnect();
-    }
-
-    if (!this.containerEl) return;
-
-    this.observer = new MutationObserver(() => {
-      if (this.isEnabled) {
-        this.applyFilters();
-      }
-    });
-
-    this.observer.observe(this.containerEl, {
-      childList: true,
-      subtree: true,
-      characterData: true,
-    });
-  }
-
-  /**
-   * Apply rules to all visible tags in the pane
-   */
-  private applyFilters() {
-    if (!this.containerEl || !this.isEnabled) return;
-
-    // Find all tag items in the pane
-    const tagItems = this.containerEl.querySelectorAll(`.${TAG_PANE_ITEM_CLASS}`);
-
-    for (const item of Array.from(tagItems)) {
-      const element = item as HTMLElement;
-      const tagText = element.textContent?.trim();
-
-      if (!tagText) continue;
-
-      // Normalize tag (remove # if present)
-      const tag = tagText.startsWith('#') ? tagText.slice(1) : tagText;
-
-      // Check if tag matches any active rule
-      const matchResult = RuleEngine.evaluateTag(
-        tag,
-        this.tagMetadata.get(tag),
-        this.rules
-      );
-
-      if (matchResult && matchResult.ruleName) {
-        // Hide the tag
-        element.setAttribute(TAG_CURATOR_ATTR, matchResult.ruleId);
-        element.style.display = 'none';
+    const rows = root.querySelectorAll<HTMLElement>('.tag-pane-tag');
+    for (const row of Array.from(rows)) {
+      const textEl = row.querySelector('.tag-pane-tag-text') ?? row;
+      const tag = (textEl.textContent ?? '').trim();
+      if (!tag) continue;
+      const normalized = tag.startsWith('#') ? tag.slice(1) : tag;
+      const meta = this.metadata.get(normalized);
+      const result = RuleEngine.evaluateTag(normalized, meta, this.rules);
+      if (result && !this.dryRun) {
+        row.classList.add(HIDDEN_CLASS);
+        row.classList.remove(FLAG_CLASS);
+        row.setAttribute('aria-hidden', 'true');
+        row.setAttribute(TAG_ATTR, result.ruleId);
+      } else if (result && this.dryRun) {
+        row.classList.add(FLAG_CLASS);
+        row.classList.remove(HIDDEN_CLASS);
+        row.removeAttribute('aria-hidden');
+        row.setAttribute(TAG_ATTR, result.ruleId);
       } else {
-        // Show the tag
-        element.removeAttribute(TAG_CURATOR_ATTR);
-        element.style.display = '';
+        row.classList.remove(HIDDEN_CLASS);
+        row.classList.remove(FLAG_CLASS);
+        row.removeAttribute('aria-hidden');
+        row.removeAttribute(TAG_ATTR);
       }
     }
   }
 
-  /**
-   * Update rules and re-apply filters
-   */
-  updateRules(rules: Rule[]) {
-    this.rules = rules;
-    this.applyFilters();
-  }
-
-  /**
-   * Update tag metadata and re-apply filters
-   */
-  updateTagMetadata(metadata: Map<string, TagMeta>) {
-    this.tagMetadata = metadata;
-    this.applyFilters();
-  }
-
-  /**
-   * Enable/disable filtering
-   */
-  setEnabled(enabled: boolean) {
-    this.isEnabled = enabled;
-    if (!enabled) {
-      this.clearFilters();
-    } else {
-      this.applyFilters();
+  private clearWithin(root: HTMLElement): void {
+    const rows = root.querySelectorAll<HTMLElement>(`.${HIDDEN_CLASS}, .${FLAG_CLASS}`);
+    for (const row of Array.from(rows)) {
+      row.classList.remove(HIDDEN_CLASS);
+      row.classList.remove(FLAG_CLASS);
+      row.removeAttribute('aria-hidden');
+      row.removeAttribute(TAG_ATTR);
     }
   }
 
-  /**
-   * Clear all applied styles
-   */
-  private clearFilters() {
-    if (!this.containerEl) return;
-
-    const hiddenItems = this.containerEl.querySelectorAll(`[${TAG_CURATOR_ATTR}]`);
-    for (const item of Array.from(hiddenItems)) {
-      const element = item as HTMLElement;
-      element.removeAttribute(TAG_CURATOR_ATTR);
-      element.style.display = '';
-    }
+  clearAll(): void {
+    for (const container of this.containers) this.clearWithin(container);
   }
 
-  /**
-   * Clean up
-   */
-  unload() {
-    if (this.observer) {
-      this.observer.disconnect();
-      this.observer = null;
-    }
-    this.clearFilters();
-    this.containerEl = null;
+  unload(): void {
+    this.clearAll();
+    this.containers.clear();
   }
 }
