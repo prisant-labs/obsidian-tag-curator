@@ -1,62 +1,50 @@
-/**
- * Tag matching logic for rules
- */
-
 import { MatchCriteria, TagMeta } from '../types';
+import { compileSafeRegex } from '../util/safeRegex';
+
+const REGEX_CACHE = new Map<string, RegExp | null>();
+
+function regexFor(pattern: string): RegExp | null {
+  if (REGEX_CACHE.has(pattern)) return REGEX_CACHE.get(pattern) ?? null;
+  try {
+    const compiled = compileSafeRegex(pattern);
+    REGEX_CACHE.set(pattern, compiled);
+    return compiled;
+  } catch (e) {
+    console.warn('[tag-curator] invalid regex', pattern, e);
+    REGEX_CACHE.set(pattern, null);
+    return null;
+  }
+}
 
 export class TagMatcher {
-  /**
-   * Test if a tag matches a given criteria
-   */
-  static matches(tag: string, tagMeta: TagMeta | undefined, criteria: MatchCriteria): boolean {
+  static matches(tag: string, meta: TagMeta | undefined, criteria: MatchCriteria): boolean {
     switch (criteria.type) {
       case 'regex':
-        return this.matchRegex(tag, criteria.pattern || '');
-
+        return this.matchRegex(tag, criteria.pattern ?? '');
       case 'frequency':
-        if (!tagMeta) return false;
-        return this.matchFrequency(tagMeta.count, criteria.operator, criteria.value as number);
-
+        if (!meta) return false;
+        return this.matchFrequency(meta.count, criteria.operator, criteria.value ?? 0);
       case 'list':
-        return this.matchList(tag, criteria.list || []);
-
+        return (criteria.list ?? []).includes(tag);
       default:
         return false;
     }
   }
 
   private static matchRegex(tag: string, pattern: string): boolean {
-    try {
-      const regex = new RegExp(pattern);
-      return regex.test(tag);
-    } catch (e) {
-      console.error(`Invalid regex pattern: ${pattern}`, e);
-      return false;
-    }
+    if (!pattern) return false;
+    const re = regexFor(pattern);
+    return re ? re.test(tag) : false;
   }
 
-  private static matchFrequency(
-    count: number,
-    operator: string | undefined,
-    value: number
-  ): boolean {
-    switch (operator) {
-      case '<':
-        return count < value;
-      case '<=':
-        return count <= value;
-      case '>':
-        return count > value;
-      case '>=':
-        return count >= value;
-      case '=':
-        return count === value;
-      default:
-        return false;
+  private static matchFrequency(count: number, op: MatchCriteria['operator'], value: number): boolean {
+    switch (op) {
+      case '<': return count < value;
+      case '<=': return count <= value;
+      case '>': return count > value;
+      case '>=': return count >= value;
+      case '=': return count === value;
+      default: return false;
     }
-  }
-
-  private static matchList(tag: string, list: string[]): boolean {
-    return list.includes(tag);
   }
 }
