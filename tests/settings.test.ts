@@ -84,6 +84,24 @@ describe('SettingsManager.load - v0 to v1 migration', () => {
     expect(mgr.get().enabled).toBe(false);
     expect(mgr.get().enabledPresets).toEqual(['hide-hex-codes']);
   });
+
+  it('does not persist (no downgrade) when reading a future-version file', async () => {
+    const futureShape = {
+      ...DEFAULT_SETTINGS,
+      schemaVersion: SCHEMA_VERSION + 1,
+      enabled: false,
+      enabledPresets: ['hide-hex-codes'],
+      // a hypothetical v2-only field the older plugin does not know about
+      futureField: { kept: true } as unknown,
+    };
+    const plugin = pluginWith(futureShape);
+    const mgr = new SettingsManager(plugin);
+    await mgr.load();
+    // The on-disk data should NOT have been rewritten - the future field is intact.
+    const onDisk = plugin.data as { futureField?: { kept: boolean }; schemaVersion: number };
+    expect(onDisk.futureField).toEqual({ kept: true });
+    expect(onDisk.schemaVersion).toBe(SCHEMA_VERSION + 1);
+  });
 });
 
 describe('SettingsManager mutations', () => {

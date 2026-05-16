@@ -25,7 +25,9 @@ export class SettingsManager {
     const raw = ((await this.plugin.loadData()) ?? {}) as LegacyV0Settings;
     const incomingVersion = (raw.schemaVersion ?? 0) as number;
     this.settings = this.migrate(raw);
-    if (incomingVersion !== SCHEMA_VERSION) {
+    // Only persist when migrating UP. Reading a future-version file with an
+    // older plugin must not overwrite the on-disk data with downgraded shape.
+    if (incomingVersion < SCHEMA_VERSION) {
       await this.persist();
     }
   }
