@@ -17,9 +17,7 @@
 
 ## Deferred to v0.2+
 
-- [ ] JSDOM-based tests for `tagPaneObserver` and `tagMetaManager`
-- [ ] Lifecycle / command tests for `main.ts`
-- [ ] `tsc --noEmit` as a CI gate (esbuild alone strips types without checking them)
+- [ ] Lifecycle / command tests for `main.ts` (App / Notice / addCommand mocking + scenario coverage)
 - [ ] Push `main` (currently has the prior session log not yet pushed to origin/main)
 
 ## Done
@@ -35,3 +33,8 @@
 - [x] `RuleEngine.getRuleAttribution` engine helper for diagnostic UI (2026-05-15)
 - [x] `TESTING.md` v0.1.0 six-cell smoke matrix + tagging runbook (2026-05-15)
 - [x] Verified Tasks 7 (observer dry-run) and 9 (status bar click) already done in source (2026-05-15)
+- [x] Self-review fix: schemaVersion guard now uses `<` so future-version files are not downgraded (2026-05-15)
+- [x] `tsc --noEmit` typecheck CI gate added between lint and test (2026-05-15)
+- [x] 17 happy-dom tests for `tagPaneObserver` covering hide / dry-run / ARIA / multi-pane / counts / clearAll (2026-05-15)
+- [x] 18 tests for `tagMetaManager` covering load / scan / index / remove / rename / debounced persist / unload (2026-05-15)
+- [x] Bug fix: `indexFile` now records BOTH inline and frontmatter sources when a tag appears in both (2026-05-15)

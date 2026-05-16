@@ -38,6 +38,13 @@
   - `RuleEngine.getRuleAttribution` helper for the "why is this tag hidden?" diagnostic
   - Bug fix: v0->v1 schemaVersion was never persisted (caught by tests)
   - `TESTING.md`: v0.1.0 six-cell smoke matrix + tagging runbook
+- Parallel-track round 2 (2026-05-15 23:00 session):
+  - `tsc --noEmit` typecheck CI gate (esbuild alone strips types without checking them)
+  - 17 happy-dom tests for `tagPaneObserver`
+  - 18 tests for `tagMetaManager` covering load / scan / index / remove / rename / debounced persist / unload
+  - Bug fix: `tagMeta.indexFile` now records both inline and frontmatter sources when a tag appears in both
+  - Self-review fix: schemaVersion guard now uses `<` to avoid downgrading a future-version file
+  - Test count: 115 across 8 files
 
 **Not done (Phase C, blocked on UI screenshots):**
 - Settings tab rewrite (Task 11) - currently translated, still ignored by ESLint
