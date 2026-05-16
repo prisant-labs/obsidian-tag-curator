@@ -66,6 +66,10 @@ export class TagMetaManager extends Events {
     const inlineTags = (cache?.tags ?? []).map((t) => t.tag);
     const allTags = tagsFromCache(cache);
     const inlineSet = new Set(inlineTags.map((t) => (t.startsWith('#') ? t.slice(1) : t)));
+    const fm = cache?.frontmatter?.tags;
+    const frontmatterSet = new Set<string>();
+    if (typeof fm === 'string') frontmatterSet.add(fm);
+    else if (Array.isArray(fm)) for (const t of fm) frontmatterSet.add(t);
     const now = Date.now();
 
     const previousTags = this.fileTags.get(file.path) ?? new Set<string>();
@@ -73,8 +77,13 @@ export class TagMetaManager extends Events {
     this.fileTags.set(file.path, currentTags);
 
     for (const tag of currentTags) {
-      const source: TagSource = inlineSet.has(tag) ? 'inline' : 'frontmatter';
-      this.touchTag(tag, source, now);
+      // A tag may appear in BOTH inline body and frontmatter; record each
+      // source so the sidecar's `sources` field reflects every location.
+      const seen: TagSource[] = [];
+      if (inlineSet.has(tag)) seen.push('inline');
+      if (frontmatterSet.has(tag)) seen.push('frontmatter');
+      if (seen.length === 0) seen.push('frontmatter'); // fallback: came via cache but neither set
+      for (const source of seen) this.touchTag(tag, source, now);
     }
     for (const tag of previousTags) {
       if (!currentTags.has(tag)) this.recomputeCount(tag);
