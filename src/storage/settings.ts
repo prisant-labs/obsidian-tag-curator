@@ -23,9 +23,9 @@ export class SettingsManager {
 
   async load(): Promise<void> {
     const raw = ((await this.plugin.loadData()) ?? {}) as LegacyV0Settings;
+    const incomingVersion = (raw.schemaVersion ?? 0) as number;
     this.settings = this.migrate(raw);
-    if (this.settings.schemaVersion !== SCHEMA_VERSION) {
-      this.settings.schemaVersion = SCHEMA_VERSION;
+    if (incomingVersion !== SCHEMA_VERSION) {
       await this.persist();
     }
   }
