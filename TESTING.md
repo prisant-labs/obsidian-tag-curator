@@ -145,16 +145,62 @@ Create test vaults to verify performance:
 
 Before creating a release:
 
-1. Run `npm run lint` - verify no errors, max 24 warnings acceptable
-2. Run `npm run build` - verify successful build
-3. Test on both small and medium vaults
-4. Verify GitHub Actions CI/CD passes
-5. Check that all presets work as documented
-6. Verify "Tag list view" command works
-7. Test custom rule creation end-to-end
-8. Confirm no console errors
-9. Update CHANGELOG.md with new features/fixes
-10. Update manifest.json version if needed
+1. Run `npm run lint` - must pass with zero warnings (`--max-warnings 0`)
+2. Run `npm test` - all unit tests must pass
+3. Run `npm run build` - verify successful build
+4. Walk the v0.1.0 smoke matrix below (six cells)
+5. Verify GitHub Actions CI/CD passes
+6. Confirm no console errors during smoke runs
+7. Update CHANGELOG.md with new features/fixes
+8. Update manifest.json + versions.json version if needed
+
+## v0.1.0 Smoke Test (BRAT pre-release)
+
+Per `docs/internal/release-plans/plan_v0.1.0.md` Task 18, walk the six cells below before tagging. Implementation plan §7.5 specifies a 24-cell sweep for the v0.3+ community-plugin-directory submission; six cells is the v0.1 BRAT release threshold.
+
+| # | Vault size | Platform | Theme | Companion plugins |
+|---|---|---|---|---|
+| 1 | Small (10-20 notes) | Win11 desktop | Default dark | None |
+| 2 | Small (10-20 notes) | Win11 desktop | Default light | None |
+| 3 | Medium (200+ notes) | macOS or Linux | Default dark | Tag Wrangler enabled |
+| 4 | Medium (200+ notes) | iOS (Obsidian Mobile) | Default | None |
+| 5 | Large (~10k notes synthetic) | Win11 desktop | Default dark | None |
+| 6 | Empty vault (0 notes) | Win11 desktop | Default | None |
+
+For each cell, verify all ten:
+
+1. Plugin loads with zero console errors.
+2. All five presets toggle without errors.
+3. "Hide hex color codes" preset hides at least one `#FFAA00`-style tag created in a test note.
+4. Status bar updates as rules are toggled (count reflects current hidden total).
+5. "Tag Curator: Open tag list view" command opens, sorts, and search-filters.
+6. Clicking the status bar opens the tag list (Phase C will add the auto-filter to hidden-only).
+7. "Tag Curator: Panic disable" removes all hidden styling immediately and persists `enabled: false`.
+8. "Tag Curator: Toggle enable" cycles cleanly on and off.
+9. After plugin disable from Community Plugins, every tag is visible again.
+10. After re-enable, hidden tags return as expected without a reload.
+
+If any cell fails, fix and re-run that cell before tagging. Use the "Common Issues" section above to triage.
+
+### Tagging the release
+
+After all six cells pass:
+
+```bash
+git status --short                          # must be empty
+git checkout main
+git merge --no-ff release/v0.1.0 -m "release: v0.1.0"
+git tag 0.1.0
+```
+
+Do not push the tag automatically. Confirm with the user before:
+
+```bash
+git push origin main
+git push origin 0.1.0
+```
+
+The tag push triggers `.github/workflows/release.yml`, which uploads `manifest.json`, `main.js`, `styles.css`, and `versions.json` to the GitHub release.
 
 ## Reporting Issues
 
