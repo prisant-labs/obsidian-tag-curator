@@ -90,3 +90,19 @@ export interface MatchResult {
   ruleId: string;
   ruleName: string;
 }
+
+export interface AttributedMatch {
+  ruleId: string;
+  ruleName: string;
+  action: Action;
+  scopes: Scope[];
+  priority: number;
+  builtin: boolean;
+  reason: string;
+}
+
+export interface RuleAttribution {
+  tag: string;
+  effective: AttributedMatch | null;
+  allMatches: AttributedMatch[];
+}

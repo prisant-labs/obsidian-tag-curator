@@ -2,8 +2,44 @@
  * Core rule evaluation engine
  */
 
-import { Rule, TagMeta, MatchResult } from '../types';
+import {
+  AttributedMatch,
+  MatchCriteria,
+  MatchResult,
+  Rule,
+  RuleAttribution,
+  TagMeta,
+} from '../types';
 import { TagMatcher } from './matchers';
+
+function describeReason(criteria: MatchCriteria, tagMeta: TagMeta | undefined): string {
+  switch (criteria.type) {
+    case 'regex':
+      return `matches /${criteria.pattern ?? ''}/`;
+    case 'frequency': {
+      const op = criteria.operator ?? '=';
+      const threshold = criteria.value ?? 0;
+      const count = tagMeta?.count ?? 0;
+      return `count ${count} ${op} ${threshold}`;
+    }
+    case 'list':
+      return 'exact match in list';
+    default:
+      return 'matched';
+  }
+}
+
+function attribute(rule: Rule, tagMeta: TagMeta | undefined): AttributedMatch {
+  return {
+    ruleId: rule.id,
+    ruleName: rule.name,
+    action: rule.action,
+    scopes: rule.scopes,
+    priority: rule.priority,
+    builtin: rule.builtin ?? false,
+    reason: describeReason(rule.match, tagMeta),
+  };
+}
 
 export class RuleEngine {
   /**
@@ -64,5 +100,30 @@ export class RuleEngine {
    */
   static testTag(tag: string, rule: Rule): boolean {
     return TagMatcher.matches(tag, undefined, rule.match);
+  }
+
+  /**
+   * Diagnostic helper for "why is this tag affected?" UIs.
+   * Returns the winning rule (last-match-wins under priority order) plus the
+   * full chain of matching enabled rules with human-readable reasons.
+   */
+  static getRuleAttribution(
+    tag: string,
+    tagMeta: TagMeta | undefined,
+    rules: Rule[],
+  ): RuleAttribution {
+    const sortedRules = [...rules]
+      .filter((r) => r.enabled)
+      .sort((a, b) => b.priority - a.priority);
+
+    const allMatches: AttributedMatch[] = [];
+    for (const rule of sortedRules) {
+      if (TagMatcher.matches(tag, tagMeta, rule.match)) {
+        allMatches.push(attribute(rule, tagMeta));
+      }
+    }
+
+    const effective = allMatches.length > 0 ? allMatches[allMatches.length - 1] : null;
+    return { tag, effective, allMatches };
   }
 }

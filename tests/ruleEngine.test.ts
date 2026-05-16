@@ -94,3 +94,93 @@ describe('RuleEngine.testTag', () => {
     expect(RuleEngine.testTag('t', r)).toBe(false);
   });
 });
+
+describe('RuleEngine.getRuleAttribution', () => {
+  it('returns empty attribution when nothing matches', () => {
+    const result = RuleEngine.getRuleAttribution('miss', undefined, [
+      rule({ id: 'a', match: { type: 'list', list: ['other'] } }),
+    ]);
+    expect(result).toEqual({ tag: 'miss', effective: null, allMatches: [] });
+  });
+
+  it('returns the winning rule under last-match-wins (lowest priority among matches)', () => {
+    const rules: Rule[] = [
+      rule({ id: 'high', name: 'high', priority: 100 }),
+      rule({ id: 'mid', name: 'mid', priority: 50 }),
+      rule({ id: 'low', name: 'low', priority: 10 }),
+    ];
+    const result = RuleEngine.getRuleAttribution('t', undefined, rules);
+    expect(result.effective?.ruleId).toBe('low');
+    expect(result.allMatches.map((m) => m.ruleId)).toEqual(['high', 'mid', 'low']);
+  });
+
+  it('skips disabled rules in both the chain and the effective slot', () => {
+    const rules: Rule[] = [
+      rule({ id: 'on', priority: 100 }),
+      rule({ id: 'off', priority: 50, enabled: false }),
+    ];
+    const result = RuleEngine.getRuleAttribution('t', undefined, rules);
+    expect(result.allMatches.map((m) => m.ruleId)).toEqual(['on']);
+    expect(result.effective?.ruleId).toBe('on');
+  });
+
+  it('describes a regex reason with the pattern', () => {
+    const r = rule({ id: 'rx', match: { type: 'regex', pattern: '^foo$' } });
+    const result = RuleEngine.getRuleAttribution('foo', undefined, [r]);
+    expect(result.effective?.reason).toBe('matches /^foo$/');
+  });
+
+  it('describes a frequency reason with the count and operator', () => {
+    const r = rule({ id: 'fr', match: { type: 'frequency', operator: '<=', value: 1 } });
+    const meta = {
+      tag: 't',
+      firstSeen: 0,
+      lastSeen: 0,
+      count: 1,
+      sources: ['inline' as const],
+    };
+    const result = RuleEngine.getRuleAttribution('t', meta, [r]);
+    expect(result.effective?.reason).toBe('count 1 <= 1');
+  });
+
+  it('describes a list reason', () => {
+    const r = rule({ id: 'ls', match: { type: 'list', list: ['t'] } });
+    const result = RuleEngine.getRuleAttribution('t', undefined, [r]);
+    expect(result.effective?.reason).toBe('exact match in list');
+  });
+
+  it('includes action, scopes, priority, and builtin in attribution', () => {
+    const r = rule({
+      id: 'a',
+      action: 'hide',
+      scopes: ['tag-pane'],
+      priority: 42,
+      builtin: true,
+    });
+    const result = RuleEngine.getRuleAttribution('t', undefined, [r]);
+    expect(result.effective).toMatchObject({
+      ruleId: 'a',
+      action: 'hide',
+      scopes: ['tag-pane'],
+      priority: 42,
+      builtin: true,
+    });
+  });
+
+  it('treats missing builtin flag as false', () => {
+    const r = rule({ id: 'custom' });
+    delete (r as { builtin?: boolean }).builtin;
+    const result = RuleEngine.getRuleAttribution('t', undefined, [r]);
+    expect(result.effective?.builtin).toBe(false);
+  });
+
+  it('does not mutate the input rules array', () => {
+    const rules: Rule[] = [
+      rule({ id: 'a', priority: 1 }),
+      rule({ id: 'b', priority: 2 }),
+    ];
+    const before = rules.map((r) => r.id);
+    RuleEngine.getRuleAttribution('t', undefined, rules);
+    expect(rules.map((r) => r.id)).toEqual(before);
+  });
+});
