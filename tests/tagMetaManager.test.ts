@@ -1,0 +1,330 @@
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { CachedMetadata, Plugin, TFile } from 'obsidian';
+import { TagMetaManager } from '../src/storage/tagMeta';
+
+class FakeAdapter {
+  files = new Map<string, string>();
+  dirs = new Set<string>();
+
+  async exists(path: string): Promise<boolean> {
+    return this.files.has(path) || this.dirs.has(path);
+  }
+  async read(path: string): Promise<string> {
+    const f = this.files.get(path);
+    if (f === undefined) throw new Error(`No such file: ${path}`);
+    return f;
+  }
+  async write(path: string, data: string): Promise<void> {
+    this.files.set(path, data);
+  }
+  async mkdir(path: string): Promise<void> {
+    this.dirs.add(path);
+  }
+}
+
+interface FakeApp {
+  vault: {
+    adapter: FakeAdapter;
+    getMarkdownFiles: () => TFile[];
+    markdownFiles: TFile[];
+  };
+  metadataCache: {
+    caches: Map<string, CachedMetadata>;
+    getFileCache: (file: TFile) => CachedMetadata | null;
+  };
+}
+
+function makeApp(): FakeApp {
+  const adapter = new FakeAdapter();
+  const markdownFiles: TFile[] = [];
+  const caches = new Map<string, CachedMetadata>();
+  return {
+    vault: {
+      adapter,
+      markdownFiles,
+      getMarkdownFiles: () => markdownFiles,
+    },
+    metadataCache: {
+      caches,
+      getFileCache: (file: TFile) => caches.get(file.path) ?? null,
+    },
+  };
+}
+
+function makePlugin(): Plugin {
+  const p = new Plugin();
+  p.manifest = { id: 'tag-curator', dir: '.obsidian/plugins/tag-curator' };
+  return p;
+}
+
+function addFile(app: FakeApp, path: string, tags: string[], frontmatterTags?: string[]): TFile {
+  const file = new TFile(path);
+  app.vault.markdownFiles.push(file);
+  app.metadataCache.caches.set(path, {
+    tags: tags.map((t) => ({ tag: t.startsWith('#') ? t : `#${t}` })),
+    frontmatter: frontmatterTags ? { tags: frontmatterTags } : undefined,
+  });
+  return file;
+}
+
+beforeEach(() => {
+  vi.useFakeTimers();
+});
+
+afterEach(() => {
+  vi.useRealTimers();
+});
+
+describe('TagMetaManager.scanAll + load', () => {
+  it('flushes a populated tags.json after a scan', async () => {
+    const app = makeApp();
+    addFile(app, 'a.md', ['todo']);
+    addFile(app, 'b.md', ['todo', 'wip']);
+
+    const mgr = new TagMetaManager(app as never, makePlugin());
+    await mgr.scanAll();
+
+    const written = app.vault.adapter.files.get('.obsidian/plugins/tag-curator/tags.json');
+    expect(written).toBeDefined();
+    const parsed = JSON.parse(written!);
+    expect(parsed.schemaVersion).toBe(1);
+    expect(parsed.tags.todo.count).toBe(2);
+    expect(parsed.tags.wip.count).toBe(1);
+  });
+
+  it('load reads a previously written tags.json', async () => {
+    const app = makeApp();
+    const plugin = makePlugin();
+    addFile(app, 'a.md', ['done']);
+    const writer = new TagMetaManager(app as never, plugin);
+    await writer.scanAll();
+
+    const reader = new TagMetaManager(app as never, plugin);
+    await reader.load();
+    expect(reader.get('done')?.count).toBe(1);
+  });
+
+  it('load returns empty store when tags.json does not exist', async () => {
+    const mgr = new TagMetaManager(makeApp() as never, makePlugin());
+    await mgr.load();
+    expect(mgr.all().size).toBe(0);
+  });
+
+  it('load discards data with a wrong schemaVersion', async () => {
+    const app = makeApp();
+    await app.vault.adapter.write(
+      '.obsidian/plugins/tag-curator/tags.json',
+      JSON.stringify({ schemaVersion: 99, tags: { stale: { tag: 'stale', count: 5 } } }),
+    );
+    const mgr = new TagMetaManager(app as never, makePlugin());
+    await mgr.load();
+    expect(mgr.all().size).toBe(0);
+  });
+
+  it('load handles corrupted JSON without throwing', async () => {
+    const app = makeApp();
+    await app.vault.adapter.write(
+      '.obsidian/plugins/tag-curator/tags.json',
+      '{not json',
+    );
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const mgr = new TagMetaManager(app as never, makePlugin());
+    await mgr.load();
+    expect(mgr.all().size).toBe(0);
+    expect(errorSpy).toHaveBeenCalled();
+    errorSpy.mockRestore();
+  });
+});
+
+describe('TagMetaManager.indexFile', () => {
+  it('records first/last seen timestamps and sources', async () => {
+    const app = makeApp();
+    const file = addFile(app, 'a.md', ['todo'], ['from-fm']);
+    const mgr = new TagMetaManager(app as never, makePlugin());
+
+    mgr.indexFile(file);
+    const todo = mgr.get('todo');
+    const fromFm = mgr.get('from-fm');
+
+    expect(todo?.count).toBe(1);
+    expect(todo?.sources).toEqual(['inline']);
+    expect(fromFm?.count).toBe(1);
+    expect(fromFm?.sources).toEqual(['frontmatter']);
+    expect(todo?.firstSeen).toBe(todo?.lastSeen);
+  });
+
+  it('updates lastSeen and merges sources on re-index', async () => {
+    const app = makeApp();
+    const file = addFile(app, 'a.md', ['todo']);
+    const mgr = new TagMetaManager(app as never, makePlugin());
+
+    mgr.indexFile(file);
+    const firstSeen = mgr.get('todo')?.firstSeen;
+
+    // simulate the file gaining a frontmatter source
+    app.metadataCache.caches.set('a.md', {
+      tags: [{ tag: '#todo' }],
+      frontmatter: { tags: ['todo'] },
+    });
+    vi.advanceTimersByTime(10);
+    mgr.indexFile(file);
+
+    const meta = mgr.get('todo');
+    expect(meta?.firstSeen).toBe(firstSeen);
+    expect(meta?.lastSeen).toBeGreaterThan(firstSeen!);
+    expect(meta?.sources).toContain('inline');
+    expect(meta?.sources).toContain('frontmatter');
+  });
+
+  it('emits "changed" event', async () => {
+    const app = makeApp();
+    const file = addFile(app, 'a.md', ['todo']);
+    const mgr = new TagMetaManager(app as never, makePlugin());
+    let fired = 0;
+    mgr.on('changed', () => {
+      fired += 1;
+    });
+    mgr.indexFile(file);
+    expect(fired).toBe(1);
+  });
+
+  it('recomputes count when a previous tag is gone from the file', async () => {
+    const app = makeApp();
+    const file = addFile(app, 'a.md', ['todo', 'wip']);
+    const mgr = new TagMetaManager(app as never, makePlugin());
+    mgr.indexFile(file);
+    expect(mgr.get('wip')?.count).toBe(1);
+
+    // file no longer contains wip
+    app.metadataCache.caches.set('a.md', { tags: [{ tag: '#todo' }] });
+    mgr.indexFile(file);
+
+    expect(mgr.get('wip')).toBeUndefined();
+    expect(mgr.get('todo')?.count).toBe(1);
+  });
+});
+
+describe('TagMetaManager.removeFile', () => {
+  it('drops tags that no other file contains', async () => {
+    const app = makeApp();
+    const file = addFile(app, 'a.md', ['solo']);
+    const mgr = new TagMetaManager(app as never, makePlugin());
+    mgr.indexFile(file);
+    expect(mgr.get('solo')?.count).toBe(1);
+
+    mgr.removeFile('a.md');
+    expect(mgr.get('solo')).toBeUndefined();
+  });
+
+  it('decrements count for tags still present in other files', async () => {
+    const app = makeApp();
+    const a = addFile(app, 'a.md', ['shared']);
+    const b = addFile(app, 'b.md', ['shared']);
+    const mgr = new TagMetaManager(app as never, makePlugin());
+    mgr.indexFile(a);
+    mgr.indexFile(b);
+    expect(mgr.get('shared')?.count).toBe(2);
+
+    mgr.removeFile('a.md');
+    expect(mgr.get('shared')?.count).toBe(1);
+  });
+
+  it('is a no-op for an unknown path', async () => {
+    const app = makeApp();
+    const file = addFile(app, 'a.md', ['todo']);
+    const mgr = new TagMetaManager(app as never, makePlugin());
+    mgr.indexFile(file);
+
+    mgr.removeFile('never-indexed.md');
+    expect(mgr.get('todo')?.count).toBe(1);
+  });
+});
+
+describe('TagMetaManager.renameFile', () => {
+  it('moves the per-file tag set to the new path', async () => {
+    const app = makeApp();
+    const file = addFile(app, 'old.md', ['todo']);
+    const mgr = new TagMetaManager(app as never, makePlugin());
+    mgr.indexFile(file);
+
+    mgr.renameFile('old.md', 'new.md');
+    // After rename, removing by the old path should not change counts
+    mgr.removeFile('old.md');
+    expect(mgr.get('todo')?.count).toBe(1);
+    // And removing by the new path should drop the tag
+    mgr.removeFile('new.md');
+    expect(mgr.get('todo')).toBeUndefined();
+  });
+
+  it('is a no-op for an unknown path', async () => {
+    const app = makeApp();
+    const file = addFile(app, 'a.md', ['todo']);
+    const mgr = new TagMetaManager(app as never, makePlugin());
+    mgr.indexFile(file);
+
+    mgr.renameFile('never.md', 'whatever.md');
+    expect(mgr.get('todo')?.count).toBe(1);
+  });
+});
+
+describe('TagMetaManager debounced persistence', () => {
+  it('does not flush until the debounce interval elapses', async () => {
+    const app = makeApp();
+    const file = addFile(app, 'a.md', ['todo']);
+    const mgr = new TagMetaManager(app as never, makePlugin());
+    mgr.setDebounceMs(500);
+    mgr.indexFile(file);
+
+    expect(app.vault.adapter.files.has('.obsidian/plugins/tag-curator/tags.json')).toBe(false);
+
+    await vi.advanceTimersByTimeAsync(500);
+    expect(app.vault.adapter.files.has('.obsidian/plugins/tag-curator/tags.json')).toBe(true);
+  });
+
+  it('clamps debounce to a minimum of 500ms', async () => {
+    const app = makeApp();
+    const file = addFile(app, 'a.md', ['todo']);
+    const mgr = new TagMetaManager(app as never, makePlugin());
+    mgr.setDebounceMs(0); // should clamp to 500
+    mgr.indexFile(file);
+
+    await vi.advanceTimersByTimeAsync(499);
+    expect(app.vault.adapter.files.has('.obsidian/plugins/tag-curator/tags.json')).toBe(false);
+    await vi.advanceTimersByTimeAsync(1);
+    expect(app.vault.adapter.files.has('.obsidian/plugins/tag-curator/tags.json')).toBe(true);
+  });
+
+  it('coalesces rapid edits into a single flush', async () => {
+    const app = makeApp();
+    const a = addFile(app, 'a.md', ['todo']);
+    const b = addFile(app, 'b.md', ['wip']);
+    const mgr = new TagMetaManager(app as never, makePlugin());
+    mgr.setDebounceMs(500);
+
+    mgr.indexFile(a);
+    await vi.advanceTimersByTimeAsync(100);
+    mgr.indexFile(b);
+    await vi.advanceTimersByTimeAsync(100);
+    expect(app.vault.adapter.files.has('.obsidian/plugins/tag-curator/tags.json')).toBe(false);
+
+    await vi.advanceTimersByTimeAsync(500);
+    const parsed = JSON.parse(app.vault.adapter.files.get('.obsidian/plugins/tag-curator/tags.json')!);
+    expect(Object.keys(parsed.tags).sort()).toEqual(['todo', 'wip']);
+  });
+});
+
+describe('TagMetaManager.unload', () => {
+  it('flushes pending changes synchronously and clears the timer', async () => {
+    const app = makeApp();
+    const file = addFile(app, 'a.md', ['todo']);
+    const mgr = new TagMetaManager(app as never, makePlugin());
+    mgr.setDebounceMs(5000);
+    mgr.indexFile(file);
+
+    mgr.unload();
+    // unload kicks off flushNow which is async; let microtasks run
+    await Promise.resolve();
+    await Promise.resolve();
+    expect(app.vault.adapter.files.has('.obsidian/plugins/tag-curator/tags.json')).toBe(true);
+  });
+});
