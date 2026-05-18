@@ -45,6 +45,13 @@
   - Bug fix: `tagMeta.indexFile` now records both inline and frontmatter sources when a tag appears in both
   - Self-review fix: schemaVersion guard now uses `<` to avoid downgrading a future-version file
   - Test count: 115 across 8 files
+- UI exploration and ecosystem research (2026-05-15 23:49 / 2026-05-16 sessions):
+  - `ui-options_v0.1.0.html` expanded from 7 sections to 31 across 9 functional areas
+  - Option 2 settings layout: sidebar nav replaced with top tabs (avoids double-stacking with Obsidian's left chrome)
+  - Engine-extension flag pill added to mark options requiring data model changes (Opts 22, 25, 27, 31) vs pure UI options
+  - New 437-line ecosystem research doc at `docs/internal/discovery/ecosystem-research_claude-opus-4.7_2026-05-16.md`
+  - Identifies 3 critical plugin integrations (Style Settings, Tag Wrangler, Notebook Navigator), 6 high-value, 12 compatible-by-default
+  - Style Settings deep dive: full manifest example, 6 variables to expose, ~50 lines CSS comments to ship in v0.2
 
 **Not done (Phase C, blocked on UI screenshots):**
 - Settings tab rewrite (Task 11) - currently translated, still ignored by ESLint
