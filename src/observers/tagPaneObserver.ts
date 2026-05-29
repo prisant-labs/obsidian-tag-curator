@@ -18,7 +18,7 @@ export class TagPaneObserver {
   private containers = new Set<HTMLElement>();
   private rules: Rule[] = [];
   private metadata = new Map<string, TagMeta>();
-  private dryRun = false;
+  private previewMode = false;
   private enabled = true;
   private rafQueued = false;
 
@@ -44,8 +44,8 @@ export class TagPaneObserver {
     this.scheduleApply();
   }
 
-  setDryRun(dryRun: boolean): void {
-    this.dryRun = dryRun;
+  setPreviewMode(previewMode: boolean): void {
+    this.previewMode = previewMode;
     this.scheduleApply();
   }
 
@@ -123,12 +123,12 @@ export class TagPaneObserver {
       const normalized = tag.startsWith('#') ? tag.slice(1) : tag;
       const meta = this.metadata.get(normalized);
       const result = RuleEngine.evaluateTag(normalized, meta, this.rules);
-      if (result && !this.dryRun) {
+      if (result && !this.previewMode) {
         row.classList.add(HIDDEN_CLASS);
         row.classList.remove(FLAG_CLASS);
         row.setAttribute('aria-hidden', 'true');
         row.setAttribute(TAG_ATTR, result.ruleId);
-      } else if (result && this.dryRun) {
+      } else if (result && this.previewMode) {
         row.classList.add(FLAG_CLASS);
         row.classList.remove(HIDDEN_CLASS);
         row.removeAttribute('aria-hidden');

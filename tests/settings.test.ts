@@ -109,9 +109,9 @@ describe('SettingsManager mutations', () => {
     const plugin = pluginWith(null);
     const mgr = new SettingsManager(plugin);
     await mgr.load();
-    await mgr.update({ enabled: false, dryRun: true });
+    await mgr.update({ enabled: false, previewMode: true });
     expect(mgr.get().enabled).toBe(false);
-    expect(mgr.get().dryRun).toBe(true);
+    expect(mgr.get().previewMode).toBe(true);
     expect((plugin.data as { enabled: boolean }).enabled).toBe(false);
   });
 
@@ -178,8 +178,44 @@ describe('SettingsManager mutations', () => {
     const plugin = pluginWith(null);
     const mgr = new SettingsManager(plugin);
     await mgr.load();
-    plugin.data = { ...DEFAULT_SETTINGS, schemaVersion: SCHEMA_VERSION, dryRun: true };
+    plugin.data = { ...DEFAULT_SETTINGS, schemaVersion: SCHEMA_VERSION, previewMode: true };
     await mgr.reload();
-    expect(mgr.get().dryRun).toBe(true);
+    expect(mgr.get().previewMode).toBe(true);
+  });
+});
+
+describe('SettingsManager.load - v1 to v2 migration', () => {
+  it('maps legacy `dryRun` onto `previewMode` when reading v1 data', async () => {
+    const v1 = {
+      ...DEFAULT_SETTINGS,
+      schemaVersion: 1,
+      dryRun: true,
+    } as unknown;
+    delete (v1 as { previewMode?: boolean }).previewMode;
+    const plugin = pluginWith(v1);
+    const mgr = new SettingsManager(plugin);
+    await mgr.load();
+    expect(mgr.get().previewMode).toBe(true);
+    expect(mgr.get().schemaVersion).toBe(SCHEMA_VERSION);
+  });
+
+  it('keeps previewMode false when v1 data did not set dryRun', async () => {
+    const v1 = { ...DEFAULT_SETTINGS, schemaVersion: 1 } as unknown;
+    delete (v1 as { previewMode?: boolean }).previewMode;
+    const plugin = pluginWith(v1);
+    const mgr = new SettingsManager(plugin);
+    await mgr.load();
+    expect(mgr.get().previewMode).toBe(false);
+  });
+
+  it('persists the renamed field to disk after migration', async () => {
+    const v1 = { ...DEFAULT_SETTINGS, schemaVersion: 1, dryRun: true } as unknown;
+    delete (v1 as { previewMode?: boolean }).previewMode;
+    const plugin = pluginWith(v1);
+    const mgr = new SettingsManager(plugin);
+    await mgr.load();
+    const onDisk = plugin.data as { previewMode?: boolean; schemaVersion: number };
+    expect(onDisk.previewMode).toBe(true);
+    expect(onDisk.schemaVersion).toBe(SCHEMA_VERSION);
   });
 });

@@ -1,4 +1,4 @@
-export const SCHEMA_VERSION = 1;
+export const SCHEMA_VERSION = 2;
 
 export type Mode = 'default' | 'allow-only' | 'inbox';
 
@@ -61,7 +61,7 @@ export interface TagCuratorSettings {
   defaultScopes: Scope[];
   enabledPresets: string[];
   customRules: Rule[];
-  dryRun: boolean;
+  previewMode: boolean;
   debugLog: boolean;
   sidecarDebounceMs: number;
 }
@@ -73,7 +73,7 @@ export const DEFAULT_SETTINGS: TagCuratorSettings = {
   defaultScopes: ['tag-pane'],
   enabledPresets: ['hide-hex-codes', 'hide-url-anchors'],
   customRules: [],
-  dryRun: false,
+  previewMode: false,
   debugLog: false,
   sidecarDebounceMs: 5000,
 };
