@@ -410,3 +410,238 @@
 .tcw-btn-accent:hover {
   background: var(--interactive-accent-hover);
 }
+
+/* =========================================================
+ * Settings tab (top-tab layout, D-007/D-009/D-011)
+ * ========================================================= */
+.tag-curator-settings .tag-curator-state-banner {
+  margin: -16px -16px 12px -16px;
+  border-radius: 0;
+}
+.tag-curator-top-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px;
+  border-bottom: 1px solid var(--divider-color);
+  margin-bottom: 18px;
+}
+.tcst-tab {
+  padding: 8px 14px;
+  font-size: 13px;
+  color: var(--text-muted);
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.tcst-tab:hover {
+  color: var(--text-normal);
+}
+.tcst-tab.active {
+  color: var(--text-normal);
+  border-bottom-color: var(--interactive-accent);
+}
+.tcst-badge {
+  font-size: 10px;
+  background: var(--background-modifier-border);
+  color: var(--text-muted);
+  border-radius: 999px;
+  padding: 1px 6px;
+  font-variant-numeric: tabular-nums;
+}
+.tcst-badge-soon {
+  background: transparent;
+  border: 1px dashed var(--background-modifier-border);
+  color: var(--text-faint);
+}
+
+.tcst-panel {
+  /* Padding handled by Obsidian Setting() rows; panel just provides layout root. */
+}
+
+/* Stats header on General */
+.tcst-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 12px;
+  margin-bottom: 20px;
+}
+.tcst-stat-card {
+  background: var(--background-secondary);
+  border: 1px solid var(--divider-color);
+  border-radius: 9px;
+  padding: 14px 16px;
+}
+.tcst-stat-label {
+  font-size: 11px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.tcst-stat-value {
+  font-size: 26px;
+  font-weight: 700;
+  margin-top: 4px;
+  font-variant-numeric: tabular-nums;
+}
+.tcst-stat-accent {
+  color: var(--text-accent);
+}
+
+/* Info callout (Tag list tab, deferred placeholders) */
+.tcst-info-callout {
+  display: flex;
+  gap: 10px;
+  background: rgba(124, 58, 237, 0.08);
+  border: 1px solid rgba(124, 58, 237, 0.25);
+  border-radius: 9px;
+  padding: 12px 14px;
+  font-size: 12.5px;
+  line-height: 1.55;
+  margin: 14px 0;
+}
+.tcst-info-callout .tcst-info-ic {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  font-weight: 700;
+  font-size: 12px;
+  background: var(--interactive-accent);
+  color: #fff;
+}
+
+.tcst-section-sub {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin: 0 0 12px;
+}
+.tcst-empty {
+  font-size: 12.5px;
+  color: var(--text-faint);
+  font-style: italic;
+  margin: 8px 0 12px;
+}
+
+/* Preset cards */
+.tcst-preset {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 12px 14px;
+  border: 1px solid var(--divider-color);
+  border-radius: 9px;
+  margin-bottom: 8px;
+  background: var(--background-secondary);
+}
+.tcst-preset-body {
+  flex: 1;
+  min-width: 0;
+}
+.tcst-preset-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.tcst-preset-nm {
+  font-size: 13.5px;
+  font-weight: 600;
+}
+.tcst-preset-dsc {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+.tcst-preset-meta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 6px;
+  font-size: 11.5px;
+}
+.tcst-pill {
+  font-size: 10px;
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: rgba(124, 58, 237, 0.15);
+  color: var(--text-accent);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-weight: 600;
+}
+.tcst-affected {
+  color: var(--text-accent);
+  font-weight: 600;
+  cursor: pointer;
+}
+.tcst-affected-zero {
+  color: var(--text-faint);
+  cursor: default;
+}
+.tcst-more-link {
+  color: var(--text-muted);
+  cursor: pointer;
+}
+.tcst-more-link:hover {
+  color: var(--text-normal);
+  text-decoration: underline;
+}
+
+.tcst-preset-details {
+  margin-top: 10px;
+  padding-top: 8px;
+  border-top: 1px dashed var(--background-modifier-border);
+}
+.tcst-preset-dl {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 4px 12px;
+  font-size: 12px;
+  align-items: baseline;
+}
+.tcst-dl-label {
+  color: var(--text-faint);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-size: 10.5px;
+}
+.tcst-dl-value {
+  color: var(--text-normal);
+}
+.tcst-dl-value code {
+  font-size: 11px;
+}
+
+/* Toggle - small variant used in preset rows */
+.tcst-toggle {
+  width: 38px;
+  height: 22px;
+  border-radius: 999px;
+  background: var(--background-modifier-border);
+  position: relative;
+  cursor: pointer;
+  transition: background 0.15s ease;
+  flex-shrink: 0;
+}
+.tcst-toggle::after {
+  content: "";
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #fff;
+  top: 3px;
+  left: 3px;
+  transition: left 0.15s ease;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+.tcst-toggle.on {
+  background: var(--interactive-accent);
+}
+.tcst-toggle.on::after {
+  left: 19px;
+}
