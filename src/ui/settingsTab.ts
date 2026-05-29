@@ -11,7 +11,7 @@
 import { App, Notice, PluginSettingTab, Setting, WorkspaceLeaf } from 'obsidian';
 import TagCuratorPlugin from '../main';
 import { PRESETS, resolveActiveRules } from '../engine/presets';
-import { RuleEditorModal } from './ruleEditor';
+import { RuleEditor } from './ruleEditor';
 import { StateBanner } from './stateBanner';
 import { TAG_LIST_VIEW_TYPE } from './tagListView';
 import { Mode } from '../types';
@@ -425,84 +425,14 @@ export class TagCuratorSettingTab extends PluginSettingTab {
   }
 
   // -----------------------------------------------------------------
-  // Custom rules (Phase 2 placeholder: uses the existing RuleEditorModal,
-  // replaced by the card view in Phase 4)
+  // Custom rules - card view + right-docked preview (D-010)
   // -----------------------------------------------------------------
 
   private renderCustomRules(panel: HTMLElement): void {
-    panel.createEl('p', {
-      cls: 'tcst-section-sub',
-      text:
-        'Custom rules added by you, evaluated by priority (highest wins). The Phase-4 card view + right-docked preview editor (D-010) replaces this list with the locked design.',
-    });
-
-    const s = this.plugin.settingsManager.get();
-    if (s.customRules.length === 0) {
-      panel.createEl('p', {
-        cls: 'tcst-empty',
-        text: 'No custom rules yet. Create one to get started.',
-      });
-    } else {
-      for (const rule of s.customRules) {
-        new Setting(panel)
-          .setName(rule.name)
-          .setDesc(
-            `${rule.match.type}${
-              rule.notes ? ' - ' + rule.notes : ''
-            }`,
-          )
-          .addToggle((t) =>
-            t.setValue(rule.enabled).onChange(async (v) => {
-              await this.plugin.settingsManager.updateCustomRule(rule.id, {
-                enabled: v,
-              });
-            }),
-          )
-          .addButton((b) =>
-            b
-              .setButtonText('Edit')
-              .onClick(() => this.openRuleEditor(rule.id)),
-          )
-          .addButton((b) =>
-            b
-              .setButtonText('Delete')
-              .setWarning()
-              .onClick(async () => {
-                await this.plugin.settingsManager.deleteCustomRule(rule.id);
-                this.display();
-              }),
-          );
-      }
-    }
-
-    new Setting(panel).addButton((b) =>
-      b
-        .setButtonText('+ New rule')
-        .setCta()
-        .onClick(() => this.openRuleEditor()),
-    );
-  }
-
-  private openRuleEditor(ruleId?: string): void {
-    const existing = ruleId
-      ? this.plugin.settingsManager
-          .get()
-          .customRules.find((r) => r.id === ruleId)
-      : undefined;
-    const modal = new RuleEditorModal(
-      this.app,
-      this.plugin,
-      existing,
-      async (rule) => {
-        if (existing) {
-          await this.plugin.settingsManager.updateCustomRule(existing.id, rule);
-        } else {
-          await this.plugin.settingsManager.addCustomRule(rule);
-        }
-        this.display();
-      },
-    );
-    modal.open();
+    // The RuleEditor manages its own DOM (workspace shell + preview dock)
+    // and subscribes to settings changes for live updates. Each display()
+    // call constructs a fresh editor inside the new panel.
+    new RuleEditor(panel, this.plugin);
   }
 
   // -----------------------------------------------------------------
