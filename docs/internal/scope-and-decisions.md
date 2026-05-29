@@ -3,7 +3,7 @@
 Living document. The single place to see **what is in v0.1 vs. deferred**, **what is still undecided**, and **the decisions we have made** (with enough context to revisit them later). Updated as conversations produce new scope calls, questions, or decisions.
 
 - **Last updated:** 2026-05-28
-- **Companion docs:** spec (`discovery/tag-curator-spec_opus-4.7_2026-04-30.md`), release plan (`release-plans/plan_v0.1.0.md`), backlog (`backlog.md`), UI review log (`release-plans/plan_v0.1.0/ui-review-log_2026-05-28.md`).
+- **Companion docs:** spec (`discovery/tag-curator-spec_opus-4.7_2026-04-30.md`), release plan (`release-plans/plan_v0.1.0.md`), backlog (`backlog.md`), UI review log (`release-plans/plan_v0.1.0/ui-review-log_2026-05-28.md`), **proposals (unreleased)** (`release-plans/proposals/`).
 
 ## How to maintain this doc
 

@@ -1,0 +1,612 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Aliases & Display-Merge - UI Proposal (B006)</title>
+<style>
+  :root[data-theme="dark"] {
+    --background-primary: #1e1e1e;
+    --background-primary-alt: #1a1a1a;
+    --background-secondary: #252525;
+    --background-tertiary: #151515;
+    --background-modifier-hover: #2f2f2f;
+    --background-modifier-border: #333;
+    --background-modifier-border-hover: #444;
+    --background-modifier-form-field: #1a1a1a;
+    --text-normal: #dcddde;
+    --text-muted: #999;
+    --text-faint: #6e6e6e;
+    --text-on-accent: #ffffff;
+    --text-accent: #a78bfa;
+    --text-warning: #f5c97c;
+    --text-success: #67d391;
+    --interactive-accent: #7c3aed;
+    --interactive-accent-hover: #8b5cf6;
+    --interactive-normal: #2a2a2a;
+    --interactive-hover: #353535;
+    --divider-color: #2a2a2a;
+    --shadow-l: 0 12px 28px rgba(0,0,0,0.5);
+    --code-bg: #161616;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: var(--background-tertiary);
+    color: var(--text-normal);
+    font-family: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", Roboto, sans-serif;
+    font-size: 14px;
+    line-height: 1.5;
+  }
+  code { background: var(--code-bg); padding: 1px 5px; border-radius: 4px; font-size: 0.92em; font-family: "SFMono-Regular", Consolas, monospace; }
+
+  .page { display: grid; grid-template-columns: 240px 1fr; min-height: 100vh; }
+  .sidebar { position: sticky; top: 0; height: 100vh; background: var(--background-secondary); border-right: 1px solid var(--divider-color); padding: 24px 18px; overflow-y: auto; }
+  .sidebar h1 { margin: 0 0 4px; font-size: 16px; font-weight: 700; }
+  .sidebar .subtitle { margin: 0 0 18px; font-size: 11.5px; color: var(--text-muted); }
+  .sidebar .section-label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-faint); margin: 14px 6px 6px; font-weight: 600; }
+  .sidebar nav { display: flex; flex-direction: column; gap: 2px; }
+  .sidebar nav a { display: flex; align-items: center; gap: 8px; padding: 6px 10px; border-radius: 6px; color: var(--text-muted); text-decoration: none; font-size: 12.5px; }
+  .sidebar nav a:hover { background: var(--background-modifier-hover); color: var(--text-normal); }
+  .sidebar nav a.active { background: var(--interactive-accent); color: var(--text-on-accent); }
+  .sidebar .meta { margin-top: 18px; padding: 11px; background: var(--background-tertiary); border-radius: 6px; font-size: 11px; color: var(--text-muted); line-height: 1.55; }
+  .sidebar .meta strong { color: var(--text-normal); }
+
+  .canvas { padding: 42px 56px 100px; max-width: 1180px; }
+  .lede { max-width: 780px; margin-bottom: 50px; }
+  .lede h2 { font-size: 28px; margin: 0 0 12px; }
+  .lede p { color: var(--text-muted); font-size: 14.5px; }
+  .lede .badges { display: flex; gap: 8px; margin-top: 14px; }
+  .badge-large { font-size: 11px; padding: 4px 10px; border-radius: 999px; border: 1px solid var(--divider-color); background: var(--background-secondary); color: var(--text-muted); }
+  .badge-large.draft { background: rgba(245,201,124,0.15); color: var(--text-warning); border-color: rgba(245,201,124,0.35); }
+  .badge-large.target { background: rgba(124,58,237,0.15); color: var(--text-accent); border-color: rgba(124,58,237,0.35); }
+
+  section.block { padding-top: 20px; margin-bottom: 70px; scroll-margin-top: 24px; }
+  .block-header { margin-bottom: 22px; }
+  .block-eyebrow { font-size: 11px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-faint); margin-bottom: 6px; }
+  .block-title { margin: 0 0 8px; font-size: 24px; font-weight: 700; letter-spacing: -0.01em; }
+  .block-desc { color: var(--text-muted); max-width: 800px; font-size: 14px; }
+
+  .mockup { background: var(--background-primary); border: 1px solid var(--background-modifier-border); border-radius: 12px; overflow: hidden; box-shadow: var(--shadow-l); }
+  .mockup-titlebar { display: flex; align-items: center; gap: 8px; padding: 10px 14px; background: var(--background-secondary); border-bottom: 1px solid var(--divider-color); font-size: 12px; color: var(--text-muted); }
+  .traffic { display: flex; gap: 6px; }
+  .traffic span { width: 11px; height: 11px; border-radius: 50%; display: inline-block; }
+  .traffic span:nth-child(1){ background:#ff5f57; } .traffic span:nth-child(2){ background:#febc2e; } .traffic span:nth-child(3){ background:#28c840; }
+  .mockup-title { flex: 1; text-align: center; font-weight: 500; color: var(--text-normal); font-size: 12px; }
+
+  /* Aliases workspace - card view + right-docked preview */
+  .alias-workspace { display: grid; grid-template-columns: 1fr 320px; min-height: 540px; }
+  .alias-main { padding: 18px 22px; display: flex; flex-direction: column; gap: 14px; }
+  .alias-toolbar { display: flex; align-items: center; gap: 10px; }
+  .alias-toolbar-title { font-size: 11px; text-transform: uppercase; letter-spacing: 0.07em; color: var(--text-faint); font-weight: 600; }
+  .alias-toolbar .spacer { flex: 1; }
+  .btn { font: inherit; font-size: 12.5px; padding: 6px 12px; border-radius: 6px; border: 1px solid var(--background-modifier-border); background: var(--interactive-normal); color: var(--text-normal); cursor: pointer; }
+  .btn:hover { background: var(--interactive-hover); }
+  .btn.accent { background: var(--interactive-accent); border-color: var(--interactive-accent); color: var(--text-on-accent); }
+  .btn.small { padding: 4px 10px; font-size: 11.5px; }
+  .btn.ghost { background: transparent; }
+
+  .merge-link { color: var(--text-accent); font-size: 13px; cursor: pointer; display: flex; align-items: center; gap: 6px; }
+  .merge-link:hover { text-decoration: underline; }
+  .merge-link .pill { font-size: 10.5px; background: rgba(124,58,237,0.18); padding: 1px 8px; border-radius: 999px; }
+
+  /* Alias group cards */
+  .alias-cards { display: flex; flex-direction: column; gap: 10px; }
+  .alias-card { border: 1px solid var(--divider-color); border-radius: 10px; background: var(--background-secondary); padding: 14px 18px; cursor: pointer; display: grid; grid-template-columns: auto 1fr auto auto; align-items: center; gap: 18px; transition: border-color 0.12s ease; }
+  .alias-card:hover { border-color: var(--background-modifier-border-hover); }
+  .alias-card.off { opacity: 0.6; }
+  .alias-card-info { min-width: 0; }
+  .alias-card-canonical { font-size: 16px; font-weight: 700; line-height: 1.3; }
+  .alias-card-canonical .tag-hash { color: var(--text-faint); }
+  .alias-card-meta { font-size: 12px; color: var(--text-muted); margin-top: 4px; display: flex; align-items: center; gap: 10px; }
+  .alias-card-stat { display: inline-flex; align-items: center; gap: 4px; }
+  .alias-card-stat strong { color: var(--text-normal); font-weight: 600; }
+  .alias-card-affected { color: var(--text-accent); font-weight: 600; font-size: 13px; white-space: nowrap; }
+  .alias-card-chevron { color: var(--text-faint); font-size: 18px; }
+  .alias-card-new { border-style: dashed; background: transparent; grid-template-columns: 1fr; text-align: center; padding: 18px; color: var(--text-muted); font-weight: 600; }
+  .alias-card-new:hover { border-color: var(--interactive-accent); color: var(--text-accent); }
+  .alias-card-new-sub { font-size: 11.5px; font-weight: 400; color: var(--text-faint); margin-top: 4px; }
+
+  /* Toggle */
+  .toggle { width: 38px; height: 22px; border-radius: 999px; background: var(--background-modifier-border); position: relative; cursor: pointer; transition: background 0.15s ease; flex-shrink: 0; }
+  .toggle::after { content: ""; position: absolute; width: 16px; height: 16px; border-radius: 50%; background: #fff; top: 3px; left: 3px; transition: left 0.15s ease; box-shadow: 0 1px 2px rgba(0,0,0,0.2); }
+  .toggle.on { background: var(--interactive-accent); }
+  .toggle.on::after { left: 19px; }
+
+  /* Edit mode */
+  .alias-edit { border: 1px solid var(--divider-color); border-radius: 10px; background: var(--background-secondary); padding: 18px 24px; }
+  .alias-edit-head { display: flex; flex-direction: column; gap: 12px; padding-bottom: 16px; border-bottom: 1px solid var(--divider-color); margin-bottom: 18px; }
+  .alias-edit-crumbs { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--text-muted); }
+  .alias-edit-crumbs .sep { opacity: 0.4; }
+  .alias-edit-title-row { display: flex; align-items: center; gap: 14px; }
+  .alias-edit-title { margin: 0; font-size: 24px; font-weight: 700; letter-spacing: -0.01em; }
+  .alias-edit-title .tag-hash { color: var(--text-faint); }
+  .alias-edit-meta { font-size: 12px; color: var(--text-faint); margin-left: auto; }
+
+  .section { margin-bottom: 22px; }
+  .section-label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-faint); font-weight: 600; margin-bottom: 10px; padding-bottom: 6px; border-bottom: 1px solid var(--divider-color); }
+  .row { display: flex; align-items: center; gap: 14px; padding: 8px 0; }
+  .row + .row { border-top: 1px solid var(--divider-color); }
+  .row-label { width: 110px; font-size: 12.5px; color: var(--text-muted); flex-shrink: 0; }
+  .row-control { flex: 1; display: flex; align-items: center; gap: 8px; }
+  .input { background: var(--background-modifier-form-field); border: 1px solid var(--background-modifier-border); border-radius: 6px; padding: 7px 10px; color: var(--text-normal); font: inherit; font-size: 13px; }
+  .input.flex { flex: 1; }
+
+  /* Alias chip list */
+  .alias-list { display: flex; flex-direction: column; gap: 6px; margin-top: 6px; }
+  .alias-row { display: flex; align-items: center; gap: 10px; padding: 8px 12px; background: var(--background-primary); border: 1px solid var(--divider-color); border-radius: 8px; }
+  .alias-row .name { flex: 1; font-size: 13.5px; font-weight: 500; }
+  .alias-row .name .tag-hash { color: var(--text-faint); }
+  .alias-row .count { font-size: 11.5px; color: var(--text-muted); font-variant-numeric: tabular-nums; }
+  .alias-row .x-btn { background: transparent; border: 0; color: var(--text-faint); font-size: 16px; cursor: pointer; padding: 0 4px; }
+  .alias-row .x-btn:hover { color: var(--text-error, #ff7878); }
+  .alias-add-row { display: flex; gap: 8px; margin-top: 6px; }
+
+  .edit-foot { display: flex; gap: 10px; justify-content: flex-end; margin-top: 8px; padding-top: 16px; border-top: 1px solid var(--divider-color); }
+  .edit-foot-left { margin-right: auto; }
+
+  .btn.warning { background: rgba(255,120,120,0.15); border-color: rgba(255,120,120,0.4); color: #ff7878; }
+
+  /* Right-docked preview */
+  .alias-preview-dock { border-left: 1px solid var(--divider-color); background: var(--background-primary-alt); display: flex; flex-direction: column; overflow: hidden; max-height: 700px; }
+  .pd-head { padding: 12px 14px; border-bottom: 1px solid var(--divider-color); }
+  .pd-eyebrow { font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-faint); }
+  .pd-title { font-size: 13.5px; font-weight: 600; margin-top: 2px; display: flex; align-items: center; gap: 8px; }
+  .pd-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--interactive-accent); }
+  .pd-stats { display: flex; gap: 6px; margin-top: 10px; }
+  .pd-stat { flex: 1; background: var(--background-secondary); border: 1px solid var(--divider-color); border-radius: 7px; padding: 7px 9px; }
+  .pd-stat-label { font-size: 10px; color: var(--text-faint); text-transform: uppercase; letter-spacing: 0.05em; }
+  .pd-stat-value { font-size: 17px; font-weight: 700; }
+  .pd-sub { font-size: 11px; color: var(--text-muted); margin-top: 8px; }
+  .pd-body { flex: 1; overflow-y: auto; padding: 6px 0; }
+  .pd-row { display: flex; align-items: center; gap: 10px; padding: 7px 14px; font-size: 12.5px; }
+  .pd-row + .pd-row { border-top: 1px solid var(--divider-color); }
+  .pd-row:hover { background: var(--background-modifier-hover); }
+  .pd-tag { flex: 1; font-weight: 500; }
+  .pd-tag .alias-marker { color: var(--text-warning); font-size: 10px; margin-left: 6px; text-transform: uppercase; letter-spacing: 0.06em; }
+  .pd-count { color: var(--text-muted); font-variant-numeric: tabular-nums; font-size: 11.5px; }
+
+  /* Tag pane mockup */
+  .obs-tag-pane { padding: 12px; background: var(--background-secondary); border-radius: 9px; max-width: 320px; font-size: 13px; }
+  .obs-tag-pane h3 { margin: 0 0 12px; font-size: 13px; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; }
+  .obs-tag-row { display: flex; align-items: center; gap: 8px; padding: 4px 6px; border-radius: 5px; }
+  .obs-tag-row:hover { background: var(--background-modifier-hover); }
+  .obs-tag-row .tag { flex: 1; color: var(--text-normal); }
+  .obs-tag-row .count { color: var(--text-faint); font-size: 11.5px; font-variant-numeric: tabular-nums; }
+  .obs-tag-row .alias-badge { font-size: 10px; background: rgba(124,58,237,0.18); color: var(--text-accent); border-radius: 999px; padding: 1px 7px; }
+  .obs-tag-row.aliased-row { opacity: 0.35; text-decoration: line-through; color: var(--text-faint); }
+  .obs-tag-row.expanded-alias { padding-left: 24px; color: var(--text-muted); font-size: 12px; }
+
+  /* Tag list view comparison */
+  .tag-table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+  .tag-table th { text-align: left; font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-faint); padding: 7px 9px; border-bottom: 1px solid var(--background-modifier-border); font-weight: 600; }
+  .tag-table td { padding: 8px 9px; border-bottom: 1px solid var(--divider-color); }
+  .tag-table .alias-hint { font-size: 10.5px; color: var(--text-accent); background: rgba(124,58,237,0.16); padding: 1px 6px; border-radius: 999px; margin-left: 6px; cursor: pointer; }
+
+  /* Suggested merges panel */
+  .merges-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .merges-table th { text-align: left; font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-faint); padding: 8px 10px; border-bottom: 1px solid var(--background-modifier-border); font-weight: 600; }
+  .merges-table td { padding: 10px; border-bottom: 1px solid var(--divider-color); }
+  .merges-table .pair { font-weight: 500; }
+  .merges-table .pair .arrow { color: var(--text-faint); margin: 0 6px; }
+  .merges-table .annot { font-size: 11px; color: var(--text-faint); margin-left: 6px; }
+  .merges-table .counts { color: var(--text-muted); font-variant-numeric: tabular-nums; }
+  .merges-table td.actions { text-align: right; white-space: nowrap; }
+  .merges-table td.actions button { margin-left: 6px; }
+</style>
+</head>
+<body>
+<div class="page">
+  <aside class="sidebar">
+    <h1>Aliases & display-merge</h1>
+    <p class="subtitle">B006 - UI proposal</p>
+    <div class="section-label">Sections</div>
+    <nav>
+      <a href="#card-view" class="active">1 - Card view</a>
+      <a href="#edit-mode">2 - Edit mode</a>
+      <a href="#tag-pane">3 - Tag pane impact</a>
+      <a href="#tag-list">4 - Tag list view</a>
+      <a href="#suggested">5 - Suggested merges</a>
+    </nav>
+    <div class="meta">
+      <strong>Status:</strong> Draft / Unreleased<br>
+      <strong>Target:</strong> v0.2 (re-ranked)<br>
+      <strong>Spec:</strong> spec.md<br>
+      <strong>Plan:</strong> plan.md
+    </div>
+  </aside>
+
+  <main class="canvas">
+    <div class="lede">
+      <h2>Aliases & display-merge</h2>
+      <p>Solves the "I have <code>#ai</code>, <code>#AI</code>, <code>#Ai</code>, <code>#artificial-intelligence</code>" problem without modifying any note content. Declare a canonical tag and its aliases; Tag Curator presents them as a single row across every surface. File rewrites stay delegated to Tag Wrangler.</p>
+      <div class="badges">
+        <span class="badge-large draft">Draft</span>
+        <span class="badge-large target">v0.2 target</span>
+        <span class="badge-large">Display-only (D-004)</span>
+        <span class="badge-large">Reuses TagMeta.aliases</span>
+      </div>
+    </div>
+
+    <!-- Section 1: Card view -->
+    <section class="block" id="card-view">
+      <div class="block-header">
+        <div class="block-eyebrow">Primary design</div>
+        <h2 class="block-title">1 - Settings > Aliases tab (card view)</h2>
+        <p class="block-desc">Replaces the v0.1 deferred placeholder. Same card-and-edit-mode pattern as the rule editor (D-010): each alias group is a full-width card showing canonical, alias count, total instances, and an enable toggle. Click any card to enter edit mode. A toolbar link to <em>Suggested merges</em> handles the curation side.</p>
+      </div>
+      <div class="mockup">
+        <div class="mockup-titlebar"><div class="traffic"><span></span><span></span><span></span></div><div class="mockup-title">Settings - Tag Curator - Aliases</div></div>
+        <div class="alias-workspace">
+          <div class="alias-main">
+            <div class="alias-toolbar">
+              <div class="alias-toolbar-title">Alias groups · 4</div>
+              <div class="spacer"></div>
+              <div class="merge-link">Suggested merges <span class="pill">4</span></div>
+              <button class="btn small">+ New group</button>
+            </div>
+
+            <div class="alias-cards">
+              <div class="alias-card">
+                <div class="toggle on"></div>
+                <div class="alias-card-info">
+                  <div class="alias-card-canonical"><span class="tag-hash">#</span>ai</div>
+                  <div class="alias-card-meta">
+                    <span class="alias-card-stat"><strong>3</strong> aliases</span>
+                    <span>·</span>
+                    <span class="alias-card-stat"><strong>47</strong> instances</span>
+                    <span>·</span>
+                    <span class="alias-card-stat"><strong>31</strong> notes touched</span>
+                  </div>
+                </div>
+                <div class="alias-card-affected">folded</div>
+                <div class="alias-card-chevron">›</div>
+              </div>
+
+              <div class="alias-card">
+                <div class="toggle on"></div>
+                <div class="alias-card-info">
+                  <div class="alias-card-canonical"><span class="tag-hash">#</span>project/acme</div>
+                  <div class="alias-card-meta">
+                    <span class="alias-card-stat"><strong>4</strong> aliases</span>
+                    <span>·</span>
+                    <span class="alias-card-stat"><strong>132</strong> instances</span>
+                    <span>·</span>
+                    <span class="alias-card-stat"><strong>89</strong> notes touched</span>
+                  </div>
+                </div>
+                <div class="alias-card-affected">folded</div>
+                <div class="alias-card-chevron">›</div>
+              </div>
+
+              <div class="alias-card">
+                <div class="toggle on"></div>
+                <div class="alias-card-info">
+                  <div class="alias-card-canonical"><span class="tag-hash">#</span>wip</div>
+                  <div class="alias-card-meta">
+                    <span class="alias-card-stat"><strong>2</strong> aliases</span>
+                    <span>·</span>
+                    <span class="alias-card-stat"><strong>40</strong> instances</span>
+                  </div>
+                </div>
+                <div class="alias-card-affected">folded</div>
+                <div class="alias-card-chevron">›</div>
+              </div>
+
+              <div class="alias-card off">
+                <div class="toggle"></div>
+                <div class="alias-card-info">
+                  <div class="alias-card-canonical"><span class="tag-hash">#</span>journal</div>
+                  <div class="alias-card-meta">
+                    <span class="alias-card-stat"><strong>1</strong> alias</span>
+                    <span>·</span>
+                    <span class="alias-card-stat"><strong>72</strong> instances</span>
+                  </div>
+                </div>
+                <div class="alias-card-affected" style="color:var(--text-faint);">off</div>
+                <div class="alias-card-chevron">›</div>
+              </div>
+
+              <div class="alias-card alias-card-new">
+                <div>+ New alias group</div>
+                <div class="alias-card-new-sub">Pick a canonical tag and fold its variants under it.</div>
+              </div>
+            </div>
+          </div>
+
+          <aside class="alias-preview-dock">
+            <div class="pd-head">
+              <div class="pd-eyebrow">Vault impact</div>
+              <div class="pd-title">All alias groups</div>
+              <div class="pd-stats">
+                <div class="pd-stat"><div class="pd-stat-label">Groups</div><div class="pd-stat-value">4</div></div>
+                <div class="pd-stat"><div class="pd-stat-label">Aliases</div><div class="pd-stat-value">10</div></div>
+                <div class="pd-stat"><div class="pd-stat-label">Rows folded</div><div class="pd-stat-value">10</div></div>
+              </div>
+              <div class="pd-sub">Without aliases, the tag pane would show 14 separate rows for these concepts. With aliases on, it shows 4.</div>
+            </div>
+            <div class="pd-body">
+              <div class="pd-row"><span class="pd-tag">ai</span><span class="pd-count">47 (folded)</span></div>
+              <div class="pd-row"><span class="pd-tag">project/acme</span><span class="pd-count">132 (folded)</span></div>
+              <div class="pd-row"><span class="pd-tag">wip</span><span class="pd-count">40 (folded)</span></div>
+              <div class="pd-row"><span class="pd-tag">journal</span><span class="pd-count">72 (unfolded - group off)</span></div>
+            </div>
+          </aside>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 2: Edit mode -->
+    <section class="block" id="edit-mode">
+      <div class="block-header">
+        <div class="block-eyebrow">Primary design</div>
+        <h2 class="block-title">2 - Edit mode</h2>
+        <p class="block-desc">Mirrors the rule editor edit pattern: breadcrumb row + prominent title + sectioned form (Canonical / Aliases / Preview). Right-docked preview becomes per-group: stats + the list of merged tags. Send-to-Tag-Wrangler offers the file-rename escape hatch.</p>
+      </div>
+      <div class="mockup">
+        <div class="mockup-titlebar"><div class="traffic"><span></span><span></span><span></span></div><div class="mockup-title">Settings - Tag Curator - Aliases - Edit</div></div>
+        <div class="alias-workspace">
+          <div class="alias-main">
+            <div class="alias-edit">
+              <div class="alias-edit-head">
+                <div class="alias-edit-crumbs">
+                  <button class="btn small" style="padding: 3px 9px;">← Back to aliases</button>
+                  <span class="sep">/</span>
+                  <span>Aliases</span>
+                  <span class="sep">/</span>
+                  <span>Edit group</span>
+                </div>
+                <div class="alias-edit-title-row">
+                  <div class="toggle on"></div>
+                  <h2 class="alias-edit-title"><span class="tag-hash">#</span>ai</h2>
+                  <div class="alias-edit-meta">Last edited 3 days ago</div>
+                </div>
+              </div>
+
+              <div class="section">
+                <div class="section-label">Canonical</div>
+                <div class="row">
+                  <div class="row-label">Tag name</div>
+                  <div class="row-control"><input class="input flex" value="ai"></div>
+                </div>
+                <div style="font-size:11.5px; color:var(--text-faint); margin-top:8px;">The canonical tag is what every alias folds into for display. Note content is never modified.</div>
+              </div>
+
+              <div class="section">
+                <div class="section-label">Aliases · 3</div>
+                <div class="alias-list">
+                  <div class="alias-row"><div class="name"><span class="tag-hash">#</span>AI</div><div class="count">14 notes</div><button class="x-btn">×</button></div>
+                  <div class="alias-row"><div class="name"><span class="tag-hash">#</span>Ai</div><div class="count">4 notes</div><button class="x-btn">×</button></div>
+                  <div class="alias-row"><div class="name"><span class="tag-hash">#</span>artificial-intelligence</div><div class="count">11 notes</div><button class="x-btn">×</button></div>
+                </div>
+                <div class="alias-add-row">
+                  <input class="input flex" placeholder="Add another alias (no leading #)">
+                  <button class="btn">Add</button>
+                </div>
+              </div>
+
+              <div class="edit-foot">
+                <button class="btn warning edit-foot-left">Delete group</button>
+                <button class="btn">Send to Tag Wrangler (rename all to canonical)</button>
+                <button class="btn ghost">Cancel</button>
+                <button class="btn accent">Save</button>
+              </div>
+            </div>
+          </div>
+
+          <aside class="alias-preview-dock">
+            <div class="pd-head">
+              <div class="pd-eyebrow">Preview · filtered to</div>
+              <div class="pd-title"><span class="pd-dot"></span> #ai</div>
+              <div class="pd-stats">
+                <div class="pd-stat"><div class="pd-stat-label">Unique tags</div><div class="pd-stat-value">4</div></div>
+                <div class="pd-stat"><div class="pd-stat-label">Instances</div><div class="pd-stat-value">47</div></div>
+                <div class="pd-stat"><div class="pd-stat-label">Notes</div><div class="pd-stat-value">31</div></div>
+              </div>
+              <div class="pd-sub">Each alias' note count. Click a row to jump to that tag in the tag list.</div>
+            </div>
+            <div class="pd-body">
+              <div class="pd-row"><span class="pd-tag">ai<span class="alias-marker">canonical</span></span><span class="pd-count">18</span></div>
+              <div class="pd-row"><span class="pd-tag">AI<span class="alias-marker">alias</span></span><span class="pd-count">14</span></div>
+              <div class="pd-row"><span class="pd-tag">Ai<span class="alias-marker">alias</span></span><span class="pd-count">4</span></div>
+              <div class="pd-row"><span class="pd-tag">artificial-intelligence<span class="alias-marker">alias</span></span><span class="pd-count">11</span></div>
+            </div>
+          </aside>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 3: Tag pane impact -->
+    <section class="block" id="tag-pane">
+      <div class="block-header">
+        <div class="block-eyebrow">DOM observer impact</div>
+        <h2 class="block-title">3 - What the user sees in the native tag pane</h2>
+        <p class="block-desc">When the group is on, alias rows are hidden via a CSS class and the canonical row gets a "+3" badge alongside its count. Clicking the badge expands the row inline (one click in, one click out) so users can audit without leaving the pane.</p>
+      </div>
+      <div style="display:flex; gap:24px; flex-wrap: wrap;">
+        <div>
+          <div style="font-size:11px; text-transform:uppercase; letter-spacing:0.05em; color:var(--text-faint); margin-bottom:8px;">Without aliases (v0.1 default)</div>
+          <div class="obs-tag-pane">
+            <h3>Tags</h3>
+            <div class="obs-tag-row"><span class="tag">#ai</span><span class="count">18</span></div>
+            <div class="obs-tag-row"><span class="tag">#AI</span><span class="count">14</span></div>
+            <div class="obs-tag-row"><span class="tag">#Ai</span><span class="count">4</span></div>
+            <div class="obs-tag-row"><span class="tag">#artificial-intelligence</span><span class="count">11</span></div>
+            <div class="obs-tag-row"><span class="tag">#journal</span><span class="count">64</span></div>
+            <div class="obs-tag-row"><span class="tag">#wip</span><span class="count">22</span></div>
+            <div class="obs-tag-row"><span class="tag">#WIP</span><span class="count">11</span></div>
+          </div>
+        </div>
+
+        <div>
+          <div style="font-size:11px; text-transform:uppercase; letter-spacing:0.05em; color:var(--text-faint); margin-bottom:8px;">With aliases on (canonical + badge)</div>
+          <div class="obs-tag-pane">
+            <h3>Tags</h3>
+            <div class="obs-tag-row"><span class="tag">#ai <span class="alias-badge">+3</span></span><span class="count">47</span></div>
+            <div class="obs-tag-row aliased-row"><span class="tag">#AI</span><span class="count">14</span></div>
+            <div class="obs-tag-row aliased-row"><span class="tag">#Ai</span><span class="count">4</span></div>
+            <div class="obs-tag-row aliased-row"><span class="tag">#artificial-intelligence</span><span class="count">11</span></div>
+            <div class="obs-tag-row"><span class="tag">#journal</span><span class="count">64</span></div>
+            <div class="obs-tag-row"><span class="tag">#wip <span class="alias-badge">+1</span></span><span class="count">33</span></div>
+            <div class="obs-tag-row aliased-row"><span class="tag">#WIP</span><span class="count">11</span></div>
+          </div>
+        </div>
+
+        <div>
+          <div style="font-size:11px; text-transform:uppercase; letter-spacing:0.05em; color:var(--text-faint); margin-bottom:8px;">Expanded (click the +N badge)</div>
+          <div class="obs-tag-pane">
+            <h3>Tags</h3>
+            <div class="obs-tag-row"><span class="tag">#ai <span class="alias-badge">▼ +3</span></span><span class="count">47</span></div>
+            <div class="obs-tag-row expanded-alias"><span class="tag">#AI</span><span class="count">14</span></div>
+            <div class="obs-tag-row expanded-alias"><span class="tag">#Ai</span><span class="count">4</span></div>
+            <div class="obs-tag-row expanded-alias"><span class="tag">#artificial-intelligence</span><span class="count">11</span></div>
+            <div class="obs-tag-row"><span class="tag">#journal</span><span class="count">64</span></div>
+            <div class="obs-tag-row"><span class="tag">#wip <span class="alias-badge">+1</span></span><span class="count">33</span></div>
+          </div>
+        </div>
+      </div>
+      <p style="margin-top:18px; font-size:12.5px; color:var(--text-muted); max-width:760px;">Strike-through rows in the middle column are hidden in the real DOM via the <code>tag-curator-aliased</code> class (not deleted). The badge is appended via a CSS pseudo-element so Obsidian's row structure stays intact, which matters for keyboard navigation and screen readers.</p>
+    </section>
+
+    <!-- Section 4: Tag list view -->
+    <section class="block" id="tag-list">
+      <div class="block-header">
+        <div class="block-eyebrow">Tag list integration</div>
+        <h2 class="block-title">4 - Tag list view rows fold</h2>
+        <p class="block-desc">When <code>enableAliases</code> is on, the Tag list view (sidebar leaf + Settings tab per D-011) uses the folded display map. Each canonical row gets a "+N aliases" affordance that expands inline. Sort by Count uses the folded count.</p>
+      </div>
+      <div class="mockup">
+        <div class="mockup-titlebar"><div class="traffic"><span></span><span></span><span></span></div><div class="mockup-title">Tag list view (sidebar leaf)</div></div>
+        <div style="padding: 16px;">
+          <table class="tag-table">
+            <thead>
+              <tr>
+                <th>Tag</th>
+                <th>Count</th>
+                <th>First seen</th>
+                <th>Last used</th>
+                <th>Source</th>
+                <th>Visible?</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>#ai <span class="alias-hint">+3 aliases</span></td>
+                <td>47</td>
+                <td>Mar 04, 2026</td>
+                <td>yesterday</td>
+                <td>both</td>
+                <td>shown</td>
+              </tr>
+              <tr style="background:var(--background-secondary);">
+                <td style="padding-left:36px; color:var(--text-muted);">↳ AI</td>
+                <td>14</td>
+                <td>Mar 04</td>
+                <td>yesterday</td>
+                <td>inline</td>
+                <td>folded</td>
+              </tr>
+              <tr style="background:var(--background-secondary);">
+                <td style="padding-left:36px; color:var(--text-muted);">↳ Ai</td>
+                <td>4</td>
+                <td>Mar 28</td>
+                <td>2 weeks ago</td>
+                <td>inline</td>
+                <td>folded</td>
+              </tr>
+              <tr style="background:var(--background-secondary);">
+                <td style="padding-left:36px; color:var(--text-muted);">↳ artificial-intelligence</td>
+                <td>11</td>
+                <td>May 01</td>
+                <td>3 days ago</td>
+                <td>both</td>
+                <td>folded</td>
+              </tr>
+              <tr>
+                <td>#project/acme <span class="alias-hint">+4 aliases</span></td>
+                <td>132</td>
+                <td>Feb 18, 2026</td>
+                <td>2 days ago</td>
+                <td>both</td>
+                <td>shown</td>
+              </tr>
+              <tr>
+                <td>#journal</td>
+                <td>64</td>
+                <td>Jan 12, 2026</td>
+                <td>today</td>
+                <td>frontmatter</td>
+                <td>shown</td>
+              </tr>
+            </tbody>
+          </table>
+          <p style="margin-top:14px; font-size:11.5px; color:var(--text-faint);">The first row is expanded (showing the ↳ child rows). The second row is collapsed. Clicking the "+N aliases" pill toggles the expansion.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 5: Suggested merges -->
+    <section class="block" id="suggested">
+      <div class="block-header">
+        <div class="block-eyebrow">Curation</div>
+        <h2 class="block-title">5 - Suggested merges panel</h2>
+        <p class="block-desc">Detects tag pairs that look like intended duplicates (Levenshtein <= 1, plus a case-only fast path). Threshold: combined count >= 5. Pairs the user has dismissed are persisted in <code>ignoredMergeSuggestions</code>. Clicking <strong>Merge</strong> pre-fills the alias editor; <strong>Ignore</strong> hides the pair from future runs.</p>
+      </div>
+      <div class="mockup">
+        <div class="mockup-titlebar"><div class="traffic"><span></span><span></span><span></span></div><div class="mockup-title">Suggested merges</div></div>
+        <div style="padding: 16px;">
+          <table class="merges-table">
+            <thead>
+              <tr>
+                <th>Suggested merge</th>
+                <th>Distance</th>
+                <th>Counts (a / b)</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="pair">#ai <span class="arrow">↔</span> #AI <span class="annot">(case)</span></td>
+                <td>0 (case only)</td>
+                <td class="counts">18 / 14</td>
+                <td class="actions">
+                  <button class="btn small accent">Merge</button>
+                  <button class="btn small ghost">Ignore</button>
+                </td>
+              </tr>
+              <tr>
+                <td class="pair">#wip <span class="arrow">↔</span> #WIP <span class="annot">(case)</span></td>
+                <td>0 (case only)</td>
+                <td class="counts">22 / 11</td>
+                <td class="actions">
+                  <button class="btn small accent">Merge</button>
+                  <button class="btn small ghost">Ignore</button>
+                </td>
+              </tr>
+              <tr>
+                <td class="pair">#journal <span class="arrow">↔</span> #journals</td>
+                <td>1</td>
+                <td class="counts">64 / 8</td>
+                <td class="actions">
+                  <button class="btn small accent">Merge</button>
+                  <button class="btn small ghost">Ignore</button>
+                </td>
+              </tr>
+              <tr>
+                <td class="pair">#todo/now <span class="arrow">↔</span> #todo-now</td>
+                <td>1</td>
+                <td class="counts">12 / 5</td>
+                <td class="actions">
+                  <button class="btn small accent">Merge</button>
+                  <button class="btn small ghost">Ignore</button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+  </main>
+</div>
+</body>
+</html>
