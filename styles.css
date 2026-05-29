@@ -132,3 +132,281 @@
 .tag-curator-links a:hover {
   text-decoration: underline;
 }
+
+/* =========================================================
+ * State banner (D-007) - persistent above Tag Curator surfaces
+ * whenever the plugin is in a non-default state.
+ * ========================================================= */
+.tag-curator-state-banner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 9px 16px;
+  font-size: 12.5px;
+  border-bottom: 1px solid var(--divider-color);
+}
+.tag-curator-state-banner[data-variant="preview"] {
+  background: rgba(245, 201, 124, 0.1);
+}
+.tag-curator-state-banner[data-variant="preview"] .sb-ic {
+  background: var(--text-warning);
+  color: var(--background-primary);
+}
+.tag-curator-state-banner[data-variant="preview"] .sb-msg {
+  color: var(--text-warning);
+}
+.tag-curator-state-banner[data-variant="off"] {
+  background: var(--background-secondary);
+}
+.tag-curator-state-banner[data-variant="off"] .sb-ic {
+  background: var(--text-faint);
+  color: var(--background-primary);
+}
+.tag-curator-state-banner[data-variant="off"] .sb-msg {
+  color: var(--text-muted);
+}
+.tag-curator-state-banner .sb-ic {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-size: 11px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+.tag-curator-state-banner .sb-msg {
+  flex: 1;
+  line-height: 1.4;
+}
+.tag-curator-state-banner .sb-msg strong {
+  color: var(--text-normal);
+}
+.tag-curator-state-banner .sb-action {
+  background: transparent;
+  border: 1px solid currentColor;
+  color: inherit;
+  font: inherit;
+  font-size: 11.5px;
+  padding: 4px 10px;
+  border-radius: 5px;
+  cursor: pointer;
+  opacity: 0.85;
+}
+.tag-curator-state-banner .sb-action:hover {
+  opacity: 1;
+}
+
+/* =========================================================
+ * Welcome modal (D-008)
+ * ========================================================= */
+.tag-curator-welcome-modal .modal-content {
+  max-width: 640px;
+}
+.tcw-head {
+  padding: 4px 0 6px;
+}
+.tcw-eyebrow {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-accent);
+}
+.tcw-title {
+  margin: 6px 0 4px;
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+.tcw-subhead {
+  font-size: 13px;
+  color: var(--text-muted);
+}
+.tcw-section-label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--text-faint);
+  font-weight: 600;
+  margin: 18px 0 10px;
+}
+.tcw-section-caption {
+  font-size: 11.5px;
+  color: var(--text-faint);
+  margin: 6px 2px 0;
+}
+
+/* Safety promises strip */
+.tcw-promises {
+  background: rgba(103, 211, 145, 0.06);
+  border: 1px solid rgba(103, 211, 145, 0.25);
+  border-radius: 10px;
+  padding: 12px 14px;
+  margin: 14px 0 4px;
+}
+.tcw-promise-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 4px 0;
+  font-size: 13px;
+}
+.tcw-promise-check {
+  color: var(--text-success);
+  font-weight: 700;
+  font-size: 14px;
+  line-height: 1.5;
+  flex-shrink: 0;
+  width: 16px;
+}
+.tcw-promise-row strong {
+  color: var(--text-normal);
+}
+
+/* Preset cards in modal */
+.tcw-preset {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 11px 13px;
+  border: 1px solid var(--divider-color);
+  border-radius: 9px;
+  background: var(--background-secondary);
+  margin-bottom: 8px;
+}
+.tcw-preset-body {
+  flex: 1;
+  min-width: 0;
+}
+.tcw-preset-name {
+  font-size: 13.5px;
+  font-weight: 600;
+}
+.tcw-preset-desc {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+.tcw-toggle {
+  width: 38px;
+  height: 22px;
+  border-radius: 999px;
+  background: var(--background-modifier-border);
+  position: relative;
+  cursor: pointer;
+  transition: background 0.15s ease;
+  flex-shrink: 0;
+}
+.tcw-toggle::after {
+  content: "";
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #fff;
+  top: 3px;
+  left: 3px;
+  transition: left 0.15s ease;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+.tcw-toggle.on {
+  background: var(--interactive-accent);
+}
+.tcw-toggle.on::after {
+  left: 19px;
+}
+
+/* Integration cards */
+.tcw-integ {
+  border: 1px solid var(--divider-color);
+  border-radius: 9px;
+  background: var(--background-secondary);
+  padding: 12px 14px;
+  margin-bottom: 8px;
+}
+.tcw-integ-muted {
+  opacity: 0.7;
+}
+.tcw-integ-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 6px;
+}
+.tcw-integ-name {
+  font-weight: 600;
+  font-size: 13.5px;
+  flex: 1;
+}
+.tcw-integ-pill {
+  font-size: 10.5px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.tcw-integ-pill-enabled {
+  background: rgba(103, 211, 145, 0.15);
+  color: var(--text-success);
+}
+.tcw-integ-pill-installed {
+  background: rgba(124, 58, 237, 0.15);
+  color: var(--text-accent);
+}
+.tcw-integ-pill-missing {
+  background: var(--background-modifier-border);
+  color: var(--text-faint);
+}
+.tcw-integ ul {
+  margin: 4px 0 0;
+  padding-left: 18px;
+  font-size: 12.5px;
+  color: var(--text-muted);
+  line-height: 1.55;
+}
+.tcw-integ ul li {
+  padding: 2px 0;
+}
+
+/* Modal footer */
+.tcw-foot {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  align-items: center;
+  padding: 18px 0 0;
+  margin-top: 18px;
+  border-top: 1px solid var(--divider-color);
+}
+.tcw-foot-explainer {
+  flex: 1;
+  font-size: 11.5px;
+  color: var(--text-muted);
+  line-height: 1.5;
+  max-width: 320px;
+}
+.tcw-foot-explainer strong {
+  color: var(--text-normal);
+}
+.tcw-btn {
+  font: inherit;
+  font-size: 12.5px;
+  padding: 6px 12px;
+  border-radius: 6px;
+  border: 1px solid var(--background-modifier-border);
+  background: var(--interactive-normal);
+  color: var(--text-normal);
+  cursor: pointer;
+}
+.tcw-btn:hover {
+  background: var(--interactive-hover);
+}
+.tcw-btn-accent {
+  background: var(--interactive-accent);
+  border-color: var(--interactive-accent);
+  color: var(--text-on-accent);
+}
+.tcw-btn-accent:hover {
+  background: var(--interactive-accent-hover);
+}

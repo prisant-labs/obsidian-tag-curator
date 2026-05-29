@@ -1,4 +1,4 @@
-export const SCHEMA_VERSION = 2;
+export const SCHEMA_VERSION = 3;
 
 export type Mode = 'default' | 'allow-only' | 'inbox';
 
@@ -64,6 +64,10 @@ export interface TagCuratorSettings {
   previewMode: boolean;
   debugLog: boolean;
   sidecarDebounceMs: number;
+  // First-run welcome modal (D-008). False on a fresh install, true once dismissed.
+  // Schema v3 added this; migration from v2 defaults it to false (so existing BRAT
+  // testers see the modal once on next load - intentional).
+  seenWelcomeModal: boolean;
 }
 
 export const DEFAULT_SETTINGS: TagCuratorSettings = {
@@ -74,6 +78,7 @@ export const DEFAULT_SETTINGS: TagCuratorSettings = {
   enabledPresets: ['hide-hex-codes', 'hide-url-anchors'],
   customRules: [],
   previewMode: false,
+  seenWelcomeModal: false,
   debugLog: false,
   sidecarDebounceMs: 5000,
 };

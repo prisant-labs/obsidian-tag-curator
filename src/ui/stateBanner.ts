@@ -1,0 +1,81 @@
+/**
+ * Persistent state banner (D-007).
+ *
+ * Renders above every Tag Curator surface whenever the plugin is in a non-default
+ * state. Two variants:
+ *   - "preview" (amber)  - Preview mode is on; matched tags are flagged, not hidden.
+ *   - "off"     (muted)  - Tag Curator is off; no tags are being curated.
+ *
+ * Each banner carries an inline action so resolving the state is one click.
+ * Subscribes to settings changes and updates itself; the host surface only has
+ * to construct one and call `destroy()` on unload.
+ */
+import TagCuratorPlugin from '../main';
+
+type Variant = 'preview' | 'off';
+
+export class StateBanner {
+  private root: HTMLElement;
+  private unsubscribe: () => void;
+
+  constructor(parent: HTMLElement, private plugin: TagCuratorPlugin) {
+    this.root = parent.createDiv({ cls: 'tag-curator-state-banner' });
+    this.render();
+    // Re-render on any settings change. Cheap because render() short-circuits
+    // when the active state is unchanged.
+    const handler = (): void => this.render();
+    this.plugin.settingsManager.onChange(handler);
+    this.unsubscribe = () => {
+      // SettingsManager.onChange does not currently expose an off(), so we
+      // mark this banner as detached and let render() no-op after destroy.
+      this.root = null as unknown as HTMLElement;
+    };
+  }
+
+  private render(): void {
+    if (!this.root) return;
+    const s = this.plugin.settingsManager.get();
+    let variant: Variant | null = null;
+    if (!s.enabled) variant = 'off';
+    else if (s.previewMode) variant = 'preview';
+
+    this.root.empty();
+    if (variant === null) {
+      this.root.style.display = 'none';
+      this.root.removeAttribute('data-variant');
+      return;
+    }
+    this.root.style.display = '';
+    this.root.dataset.variant = variant;
+
+    const icon = this.root.createDiv({ cls: 'sb-ic', text: '!' });
+    void icon;
+    const msg = this.root.createDiv({ cls: 'sb-msg' });
+    const action = this.root.createEl('button', { cls: 'sb-action' });
+
+    if (variant === 'preview') {
+      msg.createEl('strong', { text: 'Preview mode is on. ' });
+      msg.appendText(
+        'Matched tags are flagged in place, not hidden. The same banner appears above the tag list and rule editor whenever this state is active.',
+      );
+      action.setText('Turn off preview');
+      action.addEventListener('click', () => {
+        void this.plugin.settingsManager.setPreviewMode(false);
+      });
+    } else {
+      msg.createEl('strong', { text: 'Tag Curator is off. ' });
+      msg.appendText(
+        'No tags are being curated. Re-enable to apply your rules again. Nothing in your notes is ever changed.',
+      );
+      action.setText('Turn on');
+      action.addEventListener('click', () => {
+        void this.plugin.settingsManager.setEnabled(true);
+      });
+    }
+  }
+
+  destroy(): void {
+    this.unsubscribe();
+    this.root?.remove();
+  }
+}

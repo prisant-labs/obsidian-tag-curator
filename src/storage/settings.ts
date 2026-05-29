@@ -61,6 +61,13 @@ export class SettingsManager {
         merged.previewMode = raw.dryRun;
       }
     }
+    if (inferred < 3) {
+      // Added seenWelcomeModal (D-008). Existing installs (BRAT testers) see the
+      // modal once on next load - intentional, so they get the new contract framing.
+      if (typeof merged.seenWelcomeModal !== 'boolean') {
+        merged.seenWelcomeModal = false;
+      }
+    }
     return merged;
   }
 
@@ -112,6 +119,11 @@ export class SettingsManager {
 
   async setPreviewMode(previewMode: boolean): Promise<void> {
     this.settings.previewMode = previewMode;
+    await this.persist();
+  }
+
+  async setSeenWelcomeModal(seen: boolean): Promise<void> {
+    this.settings.seenWelcomeModal = seen;
     await this.persist();
   }
 
