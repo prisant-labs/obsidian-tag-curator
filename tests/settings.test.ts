@@ -219,3 +219,51 @@ describe('SettingsManager.load - v1 to v2 migration', () => {
     expect(onDisk.schemaVersion).toBe(SCHEMA_VERSION);
   });
 });
+
+describe('SettingsManager.load - v2 to v3 migration', () => {
+  it('defaults seenWelcomeModal to false when reading v2 data', async () => {
+    const v2 = { ...DEFAULT_SETTINGS, schemaVersion: 2 } as unknown;
+    delete (v2 as { seenWelcomeModal?: boolean }).seenWelcomeModal;
+    const plugin = pluginWith(v2);
+    const mgr = new SettingsManager(plugin);
+    await mgr.load();
+    expect(mgr.get().seenWelcomeModal).toBe(false);
+    expect(mgr.get().schemaVersion).toBe(SCHEMA_VERSION);
+  });
+
+  it('preserves seenWelcomeModal when already present on v2 data', async () => {
+    const v2 = {
+      ...DEFAULT_SETTINGS,
+      schemaVersion: 2,
+      seenWelcomeModal: true,
+    } as unknown;
+    const plugin = pluginWith(v2);
+    const mgr = new SettingsManager(plugin);
+    await mgr.load();
+    expect(mgr.get().seenWelcomeModal).toBe(true);
+  });
+
+  it('persists the v3 schemaVersion + new field to disk', async () => {
+    const v2 = { ...DEFAULT_SETTINGS, schemaVersion: 2 } as unknown;
+    delete (v2 as { seenWelcomeModal?: boolean }).seenWelcomeModal;
+    const plugin = pluginWith(v2);
+    const mgr = new SettingsManager(plugin);
+    await mgr.load();
+    const onDisk = plugin.data as {
+      seenWelcomeModal?: boolean;
+      schemaVersion: number;
+    };
+    expect(onDisk.schemaVersion).toBe(SCHEMA_VERSION);
+    expect(onDisk.seenWelcomeModal).toBe(false);
+  });
+});
+
+describe('SettingsManager.setSeenWelcomeModal', () => {
+  it('persists the flag', async () => {
+    const mgr = new SettingsManager(pluginWith(null));
+    await mgr.load();
+    expect(mgr.get().seenWelcomeModal).toBe(false);
+    await mgr.setSeenWelcomeModal(true);
+    expect(mgr.get().seenWelcomeModal).toBe(true);
+  });
+});

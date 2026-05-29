@@ -6,6 +6,7 @@ import { TagCuratorSettingTab } from './ui/settingsTab';
 import { TagListView, TAG_LIST_VIEW_TYPE } from './ui/tagListView';
 import { resolveActiveRules } from './engine/presets';
 import { panicCleanup } from './ui/panicDisable';
+import { WelcomeModal } from './ui/welcomeModal';
 
 export default class TagCuratorPlugin extends Plugin {
   settingsManager!: SettingsManager;
@@ -118,9 +119,26 @@ export default class TagCuratorPlugin extends Plugin {
     void this.tagMetaManager.scanAll().then(() => {
       this.tagPaneObserver.setMetadata(this.tagMetaManager.all());
       this.refreshStatusBar();
+      this.maybeShowWelcomeModal();
     });
 
     this.refreshStatusBar();
+  }
+
+  /**
+   * First-run welcome modal gate (D-008). Fires once when the plugin enables
+   * for the first time on this vault. The post-scan timing means the user
+   * sees a populated tag list immediately after dismissing the modal.
+   */
+  private maybeShowWelcomeModal(): void {
+    const settings = this.settingsManager.get();
+    if (settings.seenWelcomeModal) return;
+    if (!settings.enabled) return;
+    new WelcomeModal(this.app, this, () => {
+      // Modal already persisted seenWelcomeModal and any preview-mode flip;
+      // we just refresh derived UI surfaces.
+      this.refreshStatusBar();
+    }).open();
   }
 
   async onExternalSettingsChange(): Promise<void> {
