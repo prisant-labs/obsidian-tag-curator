@@ -632,32 +632,6 @@ export class RuleEditor {
   }
 }
 
-/**
- * Legacy modal preserved as a deprecation shim so anything that imported it
- * keeps compiling. Will be deleted in a follow-up cleanup.
- */
-export class RuleEditorModal extends Modal {
-  constructor(
-    app: App,
-    private plugin: TagCuratorPlugin,
-    private existing: Rule | undefined,
-    private onSave: (rule: Rule) => void | Promise<void>,
-  ) {
-    super(app);
-  }
-  onOpen(): void {
-    void this.plugin;
-    void this.existing;
-    void this.onSave;
-    this.contentEl.setText(
-      'RuleEditorModal is deprecated in v0.1; the card-view RuleEditor is used instead.',
-    );
-  }
-  onClose(): void {
-    this.contentEl.empty();
-  }
-}
-
 // =================================================================
 // Helpers
 // =================================================================
