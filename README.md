@@ -18,7 +18,16 @@ Five built-in presets ship enabled or disabled to taste:
 
 You can also write your own rules: regex patterns, frequency thresholds, or explicit allow lists.
 
-<!-- screenshot placeholder: add a screenshot here once the v0.1.0 UI lands -->
+## Highlights of v0.1.0
+
+- **Top-tabbed Settings**: General / Tag list / Presets / Custom rules / Commands / Advanced, with Profiles and Aliases tabs reserved for later releases.
+- **Tag list view**, the same component, rendered in two places that stay in sync: a sidebar leaf (right-side panel) and a Settings tab. Multi-select, bulk actions, sortable columns, help-icon tooltips on every column header.
+- **Card-view rule editor**: each rule is a full-width card; click to edit in the same surface. A right-docked preview shows affected tags live as you type. No separate wizard, no expand/collapse, no layout shift.
+- **First-run welcome modal** that acknowledges what just happened ("Tag Curator is now enabled"), states the file-safe contract, and offers two clear ways to start: applying rules normally, or starting in preview mode so nothing actually disappears.
+- **Persistent state banner** above every Tag Curator surface whenever you are in a non-default state. Preview mode on? You see it. Plugin disabled? You see it. Each banner carries an inline action to return to the default.
+- **Status bar** that reflects the current state at a glance and is one click away from the hidden-tag list.
+
+<!-- screenshot placeholder: add a screenshot here once the v0.1.0 UI is exercised in a real vault -->
 
 ## Install (BRAT, until directory submission)
 
@@ -34,11 +43,12 @@ You can also write your own rules: regex patterns, frequency thresholds, or expl
 
 ## Quick start
 
-1. Open Settings, then Community Plugins, then Tag Curator.
-2. Toggle a preset (start with "Hide hex color codes").
-3. Open the tag pane. Hidden tags disappear.
-4. Run "Tag Curator: Open tag list view" from the command palette to see every tag and its visibility status.
-5. Click the status bar item to filter the tag list to just hidden tags.
+1. Enable Tag Curator. The welcome modal opens once: pick **Start curating** (apply rules normally) or **Start in preview mode** (flag matched tags instead of hiding them).
+2. Open the tag pane. By default, hex color codes and URL anchor fragments are hidden.
+3. Settings, then Tag Curator. Use the **Tag list** tab to see every tag with counts, sources, and rule attribution. Hover the column headers' `?` icons for what each column means.
+4. **Custom rules** tab: click `+ New rule`, give it a name, pick a Type (Pattern match / Count threshold / Specific tags), and watch the right-docked preview update live as you type.
+5. The status bar shows the current state. Click it to open the tag list filtered to hidden tags.
+6. If anything looks wrong: **Settings > General > Run panic disable**. Or run "Tag Curator: Panic disable" from the command palette. Every effect is removed instantly; nothing in your notes changes.
 
 ## Safety contract
 
@@ -74,11 +84,11 @@ For typical vaults (under 10k notes, under 1,500 unique tags), Tag Curator's ove
 
 ## Roadmap
 
-- v0.1: tag-pane filtering, rule engine, presets, custom rules, tag list view, panic disable, preview mode.
-- v0.2: editor autocomplete and properties chip filtering, recently created / orphan / stale panels.
-- v0.3: aliases / display-merge, profiles, Tag Wrangler integration, inbox mode.
-- v0.4: Notebook Navigator integration, suggested merges, export and import, community rule packs.
-- v0.5+: Bases scope, Colored Tags Wrangler delegation, mobile polish, community plugin directory.
+- **v0.1**: tag-pane filtering, rule engine, five presets, custom rules, tag list view (sidebar leaf + Settings tab), panic disable, preview mode, persistent state banner, welcome modal.
+- **v0.2** (planned): graph view + autocomplete + properties chip scopes, aliases / display-merge, allow-only mode, conflict resolver view, file-extension file filter on rules, drag-to-reorder rules. See `docs/internal/release-plans/proposals/` for the full per-feature specs.
+- **v0.3** (planned): profiles, inbox mode, rule library / preset gallery, tag analytics dashboard.
+- **v0.4** (planned): Notebook Navigator integration, suggested-merges curation panel, export and import, community rule packs.
+- **v0.5+**: Bases scope, Colored Tags Wrangler delegation, mobile polish, Obsidian community plugin directory submission.
 
 ## Non-goals
 

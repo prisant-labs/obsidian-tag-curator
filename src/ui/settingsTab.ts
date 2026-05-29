@@ -2,9 +2,7 @@
  * Settings tab (D-008, D-007, D-009, D-011, D-010).
  *
  * Top-tab layout. The Tag list tab (D-011) hosts the same component as the
- * sidebar leaf; the Custom rules tab will be replaced with the card-view
- * editor in Phase 4 - for now it keeps using RuleEditorModal so v0.1
- * capability is preserved while the design is being built.
+ * sidebar leaf; the Custom rules tab hosts the card-view RuleEditor (D-010).
  *
  * The persistent state banner (D-007) sits above whichever panel is active.
  */
