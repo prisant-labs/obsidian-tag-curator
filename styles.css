@@ -645,3 +645,231 @@
 .tcst-toggle.on::after {
   left: 19px;
 }
+
+/* =========================================================
+ * Tag list view (D-007, D-011) - row-based, sortable, multi-select.
+ * Used in both the sidebar leaf and the Settings tab.
+ * ========================================================= */
+.tag-curator-list {
+  padding: 0;
+}
+.tag-curator-list .tag-curator-state-banner {
+  margin-bottom: 12px;
+}
+
+.tcl-header {
+  padding: 14px 16px 4px;
+}
+.tcl-header h2 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.tcl-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  padding: 8px 16px 10px;
+}
+.tcl-search {
+  flex: 1;
+  min-width: 180px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--background-modifier-form-field);
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 7px;
+  padding: 6px 10px;
+}
+.tcl-search-ic {
+  color: var(--text-faint);
+  font-size: 12px;
+}
+.tcl-search input {
+  flex: 1;
+  background: transparent;
+  border: 0;
+  outline: 0;
+  color: var(--text-normal);
+  font-size: 13px;
+}
+.tcl-chip {
+  font-size: 12px;
+  padding: 5px 11px;
+  border-radius: 999px;
+  border: 1px solid var(--background-modifier-border);
+  background: var(--background-secondary);
+  color: var(--text-muted);
+  cursor: pointer;
+}
+.tcl-chip.active {
+  background: rgba(124, 58, 237, 0.16);
+  border-color: rgba(124, 58, 237, 0.4);
+  color: var(--text-accent);
+}
+
+/* Bulk-actions bar */
+.tcl-bulk-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0 16px 10px;
+  padding: 9px 12px;
+  background: rgba(124, 58, 237, 0.1);
+  border: 1px solid rgba(124, 58, 237, 0.3);
+  border-radius: 9px;
+  font-size: 13px;
+}
+.tcl-bulk-count {
+  font-weight: 600;
+  color: var(--text-accent);
+}
+.tcl-bulk-spacer {
+  flex: 1;
+}
+.tcl-bulk-btn {
+  font: inherit;
+  font-size: 11.5px;
+  padding: 4px 10px;
+  border-radius: 5px;
+  border: 1px solid var(--background-modifier-border);
+  background: var(--interactive-normal);
+  color: var(--text-normal);
+  cursor: pointer;
+}
+.tcl-bulk-btn:hover {
+  background: var(--interactive-hover);
+}
+.tcl-bulk-btn-ghost {
+  background: transparent;
+  border-color: transparent;
+}
+
+/* Table */
+.tcl-table-wrap {
+  padding: 0 16px 16px;
+  overflow-x: auto;
+}
+.tcl-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+.tcl-table th {
+  text-align: left;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-faint);
+  font-weight: 600;
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--background-modifier-border);
+  white-space: nowrap;
+}
+.tcl-table td {
+  padding: 9px 10px;
+  border-bottom: 1px solid var(--divider-color);
+  vertical-align: top;
+}
+.tcl-table tr:hover td {
+  background: var(--background-modifier-hover);
+}
+.tcl-select-col {
+  width: 34px;
+}
+.tcl-select-col input {
+  cursor: pointer;
+}
+.tcl-tagname {
+  font-weight: 500;
+}
+.tcl-row-hidden .tcl-tagname {
+  color: var(--text-faint);
+  text-decoration: line-through;
+}
+.tcl-row-flagged .tcl-tagname {
+  color: var(--text-warning);
+}
+.tcl-src {
+  font-size: 10.5px;
+  color: var(--text-faint);
+  border: 1px solid var(--divider-color);
+  border-radius: 4px;
+  padding: 1px 5px;
+}
+.tcl-vis {
+  font-size: 11px;
+  text-transform: lowercase;
+}
+.tcl-vis-shown {
+  color: var(--text-success);
+}
+.tcl-vis-hidden {
+  color: var(--text-accent);
+}
+.tcl-vis-flagged {
+  color: var(--text-warning);
+}
+.tcl-rule-link {
+  color: var(--text-accent);
+  font-size: 12px;
+  line-height: 1.5;
+}
+.tcl-rule-none {
+  color: var(--text-faint);
+  font-size: 12px;
+}
+
+/* Help icon with hover tooltip on column headers */
+.tcl-help-ic {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 14px;
+  height: 14px;
+  margin-left: 5px;
+  border-radius: 50%;
+  border: 1px solid var(--background-modifier-border);
+  color: var(--text-muted);
+  font-size: 9.5px;
+  font-weight: 700;
+  cursor: help;
+  position: relative;
+  vertical-align: middle;
+  text-transform: none;
+  letter-spacing: 0;
+}
+.tcl-help-ic:hover {
+  color: var(--text-normal);
+  border-color: var(--background-modifier-border-hover);
+}
+.tcl-tip {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: calc(100% + 8px);
+  background: var(--background-secondary);
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 7px;
+  padding: 9px 11px;
+  font-size: 11.5px;
+  font-weight: 400;
+  line-height: 1.5;
+  color: var(--text-normal);
+  width: 260px;
+  text-align: left;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.18);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.12s ease;
+  z-index: 10;
+  text-transform: none;
+  letter-spacing: 0;
+  white-space: normal;
+}
+.tcl-help-ic:hover .tcl-tip {
+  opacity: 1;
+}
