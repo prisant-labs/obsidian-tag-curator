@@ -35,16 +35,16 @@ describe('RuleEngine.evaluateTag', () => {
     expect(result).toEqual({ matched: true, ruleId: 'a', ruleName: 'A' });
   });
 
-  it('applies last-match-wins among multiple matches in priority order', () => {
-    // Sorted desc by priority, then iterated; lastMatch is the LAST one to match in the loop
-    // = the LOWEST priority among matching rules.
+  it('the highest-priority matching rule wins', () => {
+    // Rules sorted priority-desc, then first match wins. Higher priority number
+    // = more important. Lower-priority rules never override a higher-priority match.
     const rules: Rule[] = [
       rule({ id: 'high', name: 'high', priority: 100 }),
       rule({ id: 'mid', name: 'mid', priority: 50 }),
       rule({ id: 'low', name: 'low', priority: 10 }),
     ];
     const result = RuleEngine.evaluateTag('t', undefined, rules);
-    expect(result).toEqual({ matched: true, ruleId: 'low', ruleName: 'low' });
+    expect(result).toEqual({ matched: true, ruleId: 'high', ruleName: 'high' });
   });
 
   it('does not consider disabled rules even when they have highest priority', () => {
@@ -103,14 +103,14 @@ describe('RuleEngine.getRuleAttribution', () => {
     expect(result).toEqual({ tag: 'miss', effective: null, allMatches: [] });
   });
 
-  it('returns the winning rule under last-match-wins (lowest priority among matches)', () => {
+  it('effective rule is the highest-priority match; allMatches ordered priority-desc', () => {
     const rules: Rule[] = [
       rule({ id: 'high', name: 'high', priority: 100 }),
       rule({ id: 'mid', name: 'mid', priority: 50 }),
       rule({ id: 'low', name: 'low', priority: 10 }),
     ];
     const result = RuleEngine.getRuleAttribution('t', undefined, rules);
-    expect(result.effective?.ruleId).toBe('low');
+    expect(result.effective?.ruleId).toBe('high');
     expect(result.allMatches.map((m) => m.ruleId)).toEqual(['high', 'mid', 'low']);
   });
 

@@ -25,7 +25,7 @@ export default class TagCuratorPlugin extends Plugin {
     this.tagPaneObserver = new TagPaneObserver(this.app, this);
     this.tagPaneObserver.setRules(resolveActiveRules(settings));
     this.tagPaneObserver.setMetadata(this.tagMetaManager.all());
-    this.tagPaneObserver.setDryRun(settings.dryRun);
+    this.tagPaneObserver.setPreviewMode(settings.previewMode);
     this.tagPaneObserver.setEnabled(settings.enabled);
     this.tagPaneObserver.init();
 
@@ -43,7 +43,7 @@ export default class TagCuratorPlugin extends Plugin {
       const next = this.settingsManager.get();
       this.tagMetaManager.setDebounceMs(next.sidecarDebounceMs);
       this.tagPaneObserver.setRules(resolveActiveRules(next));
-      this.tagPaneObserver.setDryRun(next.dryRun);
+      this.tagPaneObserver.setPreviewMode(next.previewMode);
       this.tagPaneObserver.setEnabled(next.enabled);
       this.refreshStatusBar();
     });
@@ -87,10 +87,10 @@ export default class TagCuratorPlugin extends Plugin {
       callback: () => this.panicDisable(),
     });
     this.addCommand({
-      id: 'toggle-dry-run',
-      name: 'Toggle dry-run mode',
+      id: 'toggle-preview-mode',
+      name: 'Toggle preview mode',
       callback: () => {
-        void this.toggleDryRun();
+        void this.togglePreviewMode();
       },
     });
     this.addCommand({
@@ -127,7 +127,7 @@ export default class TagCuratorPlugin extends Plugin {
     await this.settingsManager.reload();
     const next = this.settingsManager.get();
     this.tagPaneObserver.setRules(resolveActiveRules(next));
-    this.tagPaneObserver.setDryRun(next.dryRun);
+    this.tagPaneObserver.setPreviewMode(next.previewMode);
     this.tagPaneObserver.setEnabled(next.enabled);
     this.refreshStatusBar();
   }
@@ -144,10 +144,10 @@ export default class TagCuratorPlugin extends Plugin {
     new Notice(`Tag Curator ${!current ? 'enabled' : 'disabled'}`);
   }
 
-  private async toggleDryRun(): Promise<void> {
-    const current = this.settingsManager.get().dryRun;
-    await this.settingsManager.setDryRun(!current);
-    new Notice(`Dry-run ${!current ? 'on' : 'off'}`);
+  private async togglePreviewMode(): Promise<void> {
+    const current = this.settingsManager.get().previewMode;
+    await this.settingsManager.setPreviewMode(!current);
+    new Notice(`Preview mode ${!current ? 'on' : 'off'}`);
   }
 
   private panicDisable(): void {
@@ -195,8 +195,8 @@ export default class TagCuratorPlugin extends Plugin {
       this.statusBarEl.setText('Tag Curator: off');
       return;
     }
-    if (settings.dryRun) {
-      this.statusBarEl.setText(`Tag Curator (dry-run): ${flagged} flagged`);
+    if (settings.previewMode) {
+      this.statusBarEl.setText(`Tag Curator (preview): ${flagged} flagged`);
       return;
     }
     this.statusBarEl.setText(

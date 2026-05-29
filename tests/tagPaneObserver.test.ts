@@ -225,14 +225,14 @@ describe('TagPaneObserver.apply', () => {
   });
 });
 
-describe('TagPaneObserver dry-run', () => {
-  it('adds FLAG_CLASS instead of HIDDEN_CLASS when dryRun is true', async () => {
+describe('TagPaneObserver preview mode', () => {
+  it('adds FLAG_CLASS instead of HIDDEN_CLASS when previewMode is true', async () => {
     const container = makeTagPane(['t']);
     document.body.appendChild(container);
     const { app } = makeApp([container]);
     const obs = new TagPaneObserver(app as never, new Plugin());
     obs.setRules([rule()]);
-    obs.setDryRun(true);
+    obs.setPreviewMode(true);
     obs.attachAll();
     await flushRaf();
 
@@ -243,17 +243,17 @@ describe('TagPaneObserver dry-run', () => {
     expect(row.getAttribute(TAG_ATTR)).toBe('r');
   });
 
-  it('swaps from FLAG to HIDDEN when dryRun is turned off', async () => {
+  it('swaps from FLAG to HIDDEN when previewMode is turned off', async () => {
     const container = makeTagPane(['t']);
     document.body.appendChild(container);
     const { app } = makeApp([container]);
     const obs = new TagPaneObserver(app as never, new Plugin());
     obs.setRules([rule()]);
-    obs.setDryRun(true);
+    obs.setPreviewMode(true);
     obs.attachAll();
     await flushRaf();
 
-    obs.setDryRun(false);
+    obs.setPreviewMode(false);
     await flushRaf();
 
     const row = container.querySelector('.tag-pane-tag') as HTMLElement;
@@ -313,13 +313,13 @@ describe('TagPaneObserver counts and lookups', () => {
     expect(obs.countHidden()).toBe(2);
   });
 
-  it('countFlagged reflects flagged rows in dry-run', async () => {
+  it('countFlagged reflects flagged rows in preview mode', async () => {
     const a = makeTagPane(['t', 't', 'other']);
     document.body.appendChild(a);
     const { app } = makeApp([a]);
     const obs = new TagPaneObserver(app as never, new Plugin());
     obs.setRules([rule()]);
-    obs.setDryRun(true);
+    obs.setPreviewMode(true);
     obs.attachAll();
     await flushRaf();
 

@@ -43,25 +43,22 @@ function attribute(rule: Rule, tagMeta: TagMeta | undefined): AttributedMatch {
 
 export class RuleEngine {
   /**
-   * Evaluate all rules against a tag and return matching rules
-   * Rules are evaluated in priority order (highest first)
-   * Last match wins
+   * Evaluate enabled rules against a tag and return the winning match.
+   * Rules are evaluated in priority order (highest first); the highest-priority
+   * matching rule wins. Returns null when nothing matches.
    */
   static evaluateTag(
     tag: string,
     tagMeta: TagMeta | undefined,
     rules: Rule[]
   ): MatchResult | null {
-    // Sort by priority descending (highest priority first)
     const sortedRules = [...rules]
       .filter(r => r.enabled)
       .sort((a, b) => b.priority - a.priority);
 
-    let lastMatch: MatchResult | null = null;
-
     for (const rule of sortedRules) {
       if (TagMatcher.matches(tag, tagMeta, rule.match)) {
-        lastMatch = {
+        return {
           matched: true,
           ruleId: rule.id,
           ruleName: rule.name,
@@ -69,7 +66,7 @@ export class RuleEngine {
       }
     }
 
-    return lastMatch;
+    return null;
   }
 
   /**
@@ -104,8 +101,9 @@ export class RuleEngine {
 
   /**
    * Diagnostic helper for "why is this tag affected?" UIs.
-   * Returns the winning rule (last-match-wins under priority order) plus the
-   * full chain of matching enabled rules with human-readable reasons.
+   * Returns the winning rule (highest-priority match) plus the full chain of
+   * matching enabled rules, ordered priority-descending, with human-readable
+   * reasons.
    */
   static getRuleAttribution(
     tag: string,
@@ -123,7 +121,7 @@ export class RuleEngine {
       }
     }
 
-    const effective = allMatches.length > 0 ? allMatches[allMatches.length - 1] : null;
+    const effective = allMatches.length > 0 ? allMatches[0] : null;
     return { tag, effective, allMatches };
   }
 }

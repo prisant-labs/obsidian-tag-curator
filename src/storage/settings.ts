@@ -10,6 +10,8 @@ type LegacyV0Settings = Partial<TagCuratorSettings> & {
   rules?: Rule[];
   enabledRules?: string[];
   tagMetadata?: unknown;
+  // Pre-v2 name for previewMode. Carried so the v1 -> v2 migration can map it.
+  dryRun?: boolean;
 };
 
 export class SettingsManager {
@@ -52,6 +54,12 @@ export class SettingsManager {
         ...r,
         enabled: r.enabled ?? enabledIds.has(r.id),
       }));
+    }
+    if (inferred < 2) {
+      // Renamed dryRun -> previewMode. Carry the old value forward verbatim.
+      if (typeof raw.dryRun === 'boolean') {
+        merged.previewMode = raw.dryRun;
+      }
     }
     return merged;
   }
@@ -102,8 +110,8 @@ export class SettingsManager {
     await this.persist();
   }
 
-  async setDryRun(dryRun: boolean): Promise<void> {
-    this.settings.dryRun = dryRun;
+  async setPreviewMode(previewMode: boolean): Promise<void> {
+    this.settings.previewMode = previewMode;
     await this.persist();
   }
 

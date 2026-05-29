@@ -69,13 +69,13 @@ export class TagCuratorSettingTab extends PluginSettingTab {
       });
 
     new Setting(containerEl)
-      .setName('Dry run mode')
-      .setDesc('Show what rules would hide without actually hiding')
+      .setName('Preview mode')
+      .setDesc('Flag tags that would be hidden instead of hiding them, so you can see a rule\'s impact before committing.')
       .addToggle(toggle => {
         toggle
-          .setValue(settings.dryRun)
+          .setValue(settings.previewMode)
           .onChange(async value => {
-            await this.plugin.settingsManager.update({ dryRun: value });
+            await this.plugin.settingsManager.setPreviewMode(value);
           });
       });
   }
