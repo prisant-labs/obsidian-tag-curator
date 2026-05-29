@@ -57,7 +57,7 @@ Test each preset rule with real vault data:
 - [ ] Rules can be deleted (trash icon)
 - [ ] Disabled rules don't affect tag visibility
 - [ ] Multiple rules can exist together
-- [ ] Last-match-wins strategy works (last matching rule determines visibility)
+- [ ] Highest-priority-match-wins strategy works (the highest-priority enabled rule matching a tag determines visibility; create two rules at priority 100 and 50 that both match the same tag and verify the priority-100 rule attributes as the effective rule; Q-005)
 
 ### UI/UX
 

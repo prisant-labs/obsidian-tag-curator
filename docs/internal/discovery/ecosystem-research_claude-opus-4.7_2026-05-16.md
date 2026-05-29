@@ -11,8 +11,14 @@ sources:
   - https://www.obsidianstats.com/tags/ui-enhancement
   - https://publish.obsidian.md/hub/02+-+Community+Expansions/02.01+Plugins+by+Category/Tag+management+plugins
 status: research-input
+last_reconciled: 2026-05-28
 informs:
   - docs/internal/release-plans/plan_v0.1.0.md
+  - docs/internal/scope-and-decisions.md
+notes:
+  - Some occurrences of "dry-run" below predate the rename to "preview mode" (D-003).
+  - Tag Wrangler bulk-action delegation is now formally specced in spec section 6.1.1.
+  - Colored Tags Wrangler delegate integration is deferred to v0.2+ (B004 covers detection in the welcome modal only).
   - docs/internal/discovery/tag-curator-spec_opus-4.7_2026-04-30.md
 ---
 

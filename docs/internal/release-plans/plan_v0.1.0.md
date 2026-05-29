@@ -2,6 +2,64 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
+---
+
+## 📌 Status as of 2026-05-28
+
+The checkboxes below were **never synced** as work proceeded - the team relied on `git log` and the session logs as the authoritative record of what was done. Treat the checkboxes as the original prescription, not the current state.
+
+### Engine + storage + tests: **complete**
+
+Confirmed by `npm test` (118/118 pass), `tsc --noEmit` (clean), `npm run lint` (clean), `npm run build` (artifacts present). Recent commits include the `previewMode` rename (D-003, schema v1 → v2), the Q-005 rule-precedence fix, 3 new migration tests, observer + storage test suites, and CI typecheck gate.
+
+| Concern | State | Evidence |
+|---|---|---|
+| Settings storage with schemaVersion + atomic writes | ✓ | `src/storage/settings.ts`, `tests/settings.test.ts` |
+| `tags.json` sidecar + indexing | ✓ | `src/storage/tagMeta.ts`, `tests/tagMetaManager.test.ts` (18 tests) |
+| Tag-pane observer (multi-pane, class-based, ARIA, `registerEvent`) | ✓ | `src/observers/tagPaneObserver.ts`, `tests/tagPaneObserver.test.ts` (17 tests) |
+| Rule engine (regex, frequency, list) + Q-005 fix | ✓ | `src/engine/ruleEngine.ts`, `tests/ruleEngine.test.ts` (19 tests) |
+| 5 built-in presets | ✓ | `src/engine/presets.ts` |
+| `previewMode` (renamed from `dryRun`) + v1 → v2 migration | ✓ | types, settings, observer, main, settingsTab |
+| 6 commands | ✓ | `src/main.ts` |
+| Panic disable | ✓ | `src/ui/panicDisable.ts` + command |
+| Status bar item | ✓ | `src/main.ts` |
+| Schema migration guard against future-version downgrade | ✓ | `src/storage/settings.ts` |
+| ESLint config + lint pass on CI | ✓ | `.eslintrc.cjs`, `.github/workflows/build.yml` |
+| Manifest + versions + release workflow | ✓ | `manifest.json`, `versions.json`, `.github/workflows/release.yml` |
+
+### UI design: **locked, implementation pending**
+
+The locked design is in `docs/internal/release-plans/plan_v0.1.0/ui-design_v0.1.0_converged.html` (7 rounds of crit review, approved 2026-05-28). All design decisions are recorded in `docs/internal/scope-and-decisions.md` as **D-001 through D-011**; open questions are **Q-001 through Q-008**. Highlights:
+
+- **D-010** rule editor = card view + right-docked preview (supersedes D-001's master-detail; D-002 wizard closed).
+- **D-011** Tag list = single component rendered in both the sidebar leaf and a Settings tab.
+- **D-009** priority architected, hidden from UI for v0.1 (drag-to-reorder in v0.2 via B012).
+- **D-007** persistent state banner above every Tag Curator surface in non-default states.
+- **D-008** welcome modal rebuilt: state-aware header, toggleable preset cards, per-plugin integration cards.
+- **D-003** dry-run → preview mode, end-to-end rename with migration.
+
+The original Phase C tasks (10, 11, 12, 13) for `tagListView.ts`, `settingsTab.ts`, `styles.css`, `ruleEditor.ts` are **redirected** to implement the locked design rather than the descriptions in those task bodies. The task bodies below predate the design lock and should be treated as the rough shape, not the final implementation.
+
+### Backlog → GitHub issues
+
+12 backlog items (B001-B012) are now GitHub issues #6-#17 in `jprisant/obsidian-tag-curator`, linked to project [#2](https://github.com/users/jprisant/projects/2). Pre-existing issues #1-#4 are also linked.
+
+### Remaining to ship v0.1.0
+
+1. **Implement the locked UI** in `src/ui/settingsTab.ts`, `src/ui/tagListView.ts`, `src/ui/ruleEditor.ts`. Source the design from `ui-design_v0.1.0_converged.html`; tests in `tests/` should pass unchanged.
+2. **Release dry-run** - confirm `manifest.json` `minAppVersion: 1.9.10`, `versions.json` ships the right pin, `release.yml` attaches the right artifact triple, and a BRAT smoke install works end-to-end against the smoke matrix in `TESTING.md`.
+3. **Tag and release** - cut `v0.1.0`, push, verify the GitHub release artifacts land.
+
+### Source of truth (when this plan and reality disagree)
+
+- **Code**: `src/` and `tests/`.
+- **Design**: `docs/internal/release-plans/plan_v0.1.0/ui-design_v0.1.0_converged.html`.
+- **Decisions**: `docs/internal/scope-and-decisions.md`.
+- **Spec**: `docs/internal/discovery/tag-curator-spec_opus-4.7_2026-04-30.md` (with `→ v0.1 reality:` notes calling out divergences).
+- **Backlog**: `docs/internal/backlog.md` (B001-B012) and GitHub issues #1-#17.
+
+---
+
 **Goal:** Ship a robust, attractive, BRAT-distributable v0.1.0 of the Tag Curator Obsidian plugin that delivers tag-pane filtering with a rule engine, a sortable tag-list view, five built-in presets, an honest panic-disable, hidden-tag diagnostics, and full reversibility - all without modifying user note content.
 
 **Architecture:** DOM-only filtering on the native tag pane via a scoped `MutationObserver` (no monkey-patching of Obsidian internals, no metadata patching). Rules evaluate against an in-memory tag-metadata sidecar driven by `metadataCache` events. Two persistent JSON files in `.obsidian/plugins/tag-curator/`: `data.json` for settings, rules, profiles; `tags.json` for per-tag metadata (firstSeen, lastSeen, count, sources). Mobile-safe regex, schema-versioned migrations, atomic-cleanup contract on unload.
@@ -20,10 +78,10 @@
 - Profiles (v0.3)
 - Tag Wrangler / Notebook Navigator / Colored Tags Wrangler integrations (v0.3-v0.4)
 - Inbox mode, suggested merges, export/import, community rule packs (v0.3-v0.4)
-- Onboarding wizard (v0.2 - defer; v0.1 ships safe defaults instead)
+- Multi-step onboarding wizard (dropped; D-002 closed). v0.1 ships a single first-run welcome modal (D-008) instead.
 
 **Scope held for v0.1.0 (per spec §9 + overview "Recommended MVP" + minimal robust polish):**
-- Three-match-type rule engine (regex, frequency, list) with last-match-wins
+- Three-match-type rule engine (regex, frequency, list); highest-priority match wins (Q-005 fixed; the earlier "last-match-wins under priority-desc iteration" was a bug that selected the lowest-priority match)
 - Hide action only, tag-pane scope only
 - 5 built-in presets (hex, URL anchor, single-char, orphan, numeric)
 - Custom rule editor with live test
@@ -2677,7 +2735,7 @@ Initial public release.
 ### Added
 
 - Rule engine with three match types: regex, frequency, and explicit list.
-- Priority-based rule evaluation (last match wins among enabled rules sorted by priority).
+- Priority-based rule evaluation: the highest-priority matching enabled rule wins (Q-005).
 - Five built-in presets: hex color codes, URL anchor fragments, single-character tags, purely numeric tags, orphan tags.
 - Tag-pane filtering via scoped MutationObserver and class-based hiding (no DOM removal).
 - Tag list view: sortable, searchable, with filter chips (All, Hidden, Orphans, Recent 30d) and rule-attribution status column.
@@ -2710,7 +2768,7 @@ Initial public release.
 
 ## Planned releases
 
-- v0.2: graph view and autocomplete scopes, properties chips, recently created / orphan / stale panels, allow-only mode, onboarding wizard.
+- v0.2: graph view and autocomplete scopes, properties chips, recently created / orphan / stale panels, allow-only mode (formal onboarding wizard dropped per D-002).
 - v0.3: aliases, profiles, Tag Wrangler integration, inbox mode.
 - v0.4: Notebook Navigator integration, suggested merges, export / import, community rule packs.
 - v0.5+: Bases scope, Colored Tags Wrangler compatibility, mobile polish, community plugin directory submission.

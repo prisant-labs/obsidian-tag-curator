@@ -16,6 +16,14 @@
 
 ---
 
+> **📌 v0.1 Implementation Status (2026-05-28).** This overview is the **strategic framing** that informed v0.1. The MVP framing has held; what has changed is the concrete UI direction (settled after a 7-round design review). For the canonical record:
+>
+> - **What is shipping in v0.1** -> see `docs/internal/release-plans/plan_v0.1.0.md` "Status as of 2026-05-28" section, plus the locked design in `docs/internal/release-plans/plan_v0.1.0/ui-design_v0.1.0_converged.html`.
+> - **All design decisions** (D-001 through D-011) and **open questions** (Q-001 through Q-008) are in `docs/internal/scope-and-decisions.md`. Cross-reference there before treating any specific UI / IA description below as authoritative.
+> - **Engine + storage** are complete and tested (118/118). UI implementation against the locked design is the remaining v0.1 work.
+
+---
+
 ## Table of Contents
 
 1. [Executive Summary](#executive-summary)
@@ -270,7 +278,7 @@ Potential scopes:
 
 ## Rule priority model
 
-Rules should compose by priority with documented conflict resolution. (confidence: high) The draft model uses last-match-wins behavior plus an always-show override for safety. (confidence: high)
+Rules should compose by priority with documented conflict resolution. (confidence: high) The shipping model is **highest-priority match wins** (Q-005, corrected 2026-05-28: the earlier draft used "last-match-wins" wording which the engine implemented as priority-desc sort + last in loop, which inverted the semantics to lowest-priority-wins; fixed) plus an always-show override for safety. (confidence: high)
 
 The UX should make conflict resolution visible because invisible priority behavior can cause user confusion. (confidence: high)
 
@@ -678,7 +686,7 @@ Recommended settings areas:
 
 ## Onboarding
 
-A first-run wizard should help users enable safe presets and understand where filtering will apply. (confidence: high)
+A first-run welcome experience should help users enable safe presets and understand where filtering will apply. (v0.1 reality: the multi-step wizard described in earlier drafts is dropped per D-002; v0.1 ships a single first-run welcome modal per D-008 instead.) (confidence: high)
 
 Recommended onboarding flow:
 
@@ -715,15 +723,13 @@ The UI should respect light themes, dark themes, and common community themes. (c
 
 Goal: Prove the core display-layer filtering model in the native tag pane. (confidence: high)
 
-Scope:
+Scope (locked as of 2026-05-28; see `release-plans/plan_v0.1.0.md` status section for exact code/design state):
 
-1. Rule engine with regex, frequency, and list match types. (confidence: high)
-2. Hide action only. (confidence: high)
-3. Tag pane scope only. (confidence: high)
-4. Built-in presets for hex, URL anchor, numeric, single-character, and orphan tags. (confidence: high)
-5. Basic settings UI. (confidence: high)
-6. Tag list sorted by count. (confidence: high)
-7. Panic disable command. (confidence: high)
+1. **Engine + storage** (shipped). Rule engine with regex, frequency, and list match types; highest-priority match wins (Q-005). 5 built-in toggleable presets (hex, URL anchor, single-character, numeric, orphan). `previewMode` setting (renamed from `dryRun`, schema v2 migration; D-003). Tag metadata sidecar (`tags.json` with `firstSeen`, `lastSeen`, `count`, `sources`). Multi-pane tag observer with ARIA preservation and `registerEvent` hygiene. 118/118 tests pass.
+2. **Tag pane scope only** (confirmed; graph + autocomplete + properties chip = v0.2). (confidence: high)
+3. **6 commands** (`toggle-enable`, `panic-disable`, `toggle-preview-mode`, `open-tag-list`, `open-tag-list-hidden`, `rescan-tags`) + status bar item + persistent state banner (D-007) for non-default plugin state.
+4. **UI design locked** (round-7 approved; UI code pending). Top-tab Settings shell with Tag List rendered both as a Settings tab and as a sidebar leaf (D-011). Rule editor = card view + right-docked preview (D-010, supersedes the earlier master-detail and wizard plans; D-002 closed). Welcome modal on first run (D-008). Priority architected, hidden from UI (D-009).
+5. **GitHub project** [#2](https://github.com/users/jprisant/projects/2) with 16 issues (#1-#4 historical scope notes; #6-#17 backlog items B001-B012).
 
 ## v0.2: Broader UI filtering
 

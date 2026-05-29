@@ -3,9 +3,21 @@
 **A vault-wide tag visibility and curation engine for Obsidian.**
 
 Version: Draft 0.1
-Date: April 29, 2026
-License (proposed): Apache 2.0
-Org (proposed): `product-on-purpose`
+Original date: April 29, 2026
+Last reconciled: May 28, 2026 (with locked v0.1 design)
+License: Apache 2.0
+Org: `product-on-purpose`
+
+---
+
+> **📌 v0.1 Implementation Status (2026-05-28).** This spec is the canonical product reference. Where the spec and the locked v0.1 design diverge, the **locked design wins** for v0.1 - this section calls out the deltas. All open questions, decisions, and the running record of design changes live in **`docs/internal/scope-and-decisions.md`** (D-001 through D-011, Q-001 through Q-008). Source of truth for what is shipping in v0.1:
+>
+> - **Code state.** Engine, observer, storage, settings, status bar, panic disable, and 6 commands are implemented. 118/118 tests pass. Build, lint, and tsc are green.
+> - **Design state (locked).** Settings tab layout, Tag list view, Rule editor (card view + right-docked preview), Welcome modal, state banner, preview-mode naming. See `docs/internal/release-plans/plan_v0.1.0/ui-design_v0.1.0_converged.html`.
+> - **Engine behavior.** `previewMode` (renamed from `dryRun`, schema v2 migration); **highest-priority match wins** (Q-005 fixed - earlier "last-match-wins" was a bug); priority is hidden from the UI for v0.1 (architected, default 50; v0.2 will surface drag-to-reorder, B012).
+> - **Remaining work to ship.** Translate the locked design to `src/ui/settingsTab.ts`, `tagListView.ts`, `ruleEditor.ts`; release dry-run (`build`/`test`/`lint`/CI sanity); BRAT smoke test sweep.
+>
+> Sections below mark major divergences with a `→ v0.1 reality:` note pointing to the relevant decision (D-xxx) or open question (Q-xxx).
 
 ---
 
@@ -43,6 +55,7 @@ The Obsidian forum has tracked variations of these complaints since 2020. Forum 
 5. **Progressive disclosure.** Beginners get sensible presets; power users get a full rule engine.
 6. **Performance first.** Scoped DOM observers, debounced writes, predictable resource use.
 7. **Local-first.** No telemetry, no network calls, all data in vault `.obsidian` folder.
+8. **State visibility.** Any non-default plugin state (Preview mode on, plugin disabled) is shown as a persistent banner above every Tag Curator surface, with a one-click action to restore the default. Actions that produce state (panic disable) name the resulting state plainly. See D-007.
 
 ---
 
@@ -83,7 +96,9 @@ The engine has three orthogonal planes that compose into rules:
 - Notebook Navigator tag tree (if installed)
 - Tag Wrangler context menu (if installed)
 
-A **rule** = (detection, action, scope). Rules compose by priority. Last match wins; a special "always show" override exists for safety.
+A **rule** = (detection, action, scope). Rules compose by priority. **The highest-priority matching enabled rule wins** (Q-005: an earlier "last match wins under priority-desc iteration" implementation produced the opposite - lowest-priority win - and was fixed 2026-05-28). A special "always show" override exists for safety.
+
+→ **v0.1 reality:** priority is architected in the engine but **hidden from the UI** for v0.1 (D-009). New custom rules default to `priority: 50`; built-in presets keep their values (80-100). v0.2 surfaces drag-to-reorder (B012).
 
 ### 4.2 Data model
 
@@ -150,25 +165,34 @@ Updated incrementally on `metadata-cache:changed` events. Debounced sidecar writ
 
 ### 5.1 Built-in rule presets
 
-Ship with a curated set of toggleable presets. Users can disable, edit, copy, or delete:
+Ship with a curated set of toggleable presets. Presets are `builtin: true` (toggleable but not editable or deletable); a user who wants to change one copies it into a custom rule. Tags are matched **without** the leading `#` (the matcher strips it), so patterns are anchored against the bare tag name.
 
-- **Hide hex color codes** (`/^#[0-9A-Fa-f]{3,8}$/`)
-- **Hide URL anchors** (configurable list of common patterns)
-- **Hide pure-numeric tags** (note: Obsidian already strips these, but useful for edge cases)
-- **Hide single-character tags** (`#a`, `#x`)
-- **Hide orphan tags** (count <= 1)
-- **Hide stale tags** (lastSeen > 365 days ago)
-- **Hide clipping-folder tags** (tags only ever appearing in `Clippings/`)
-- **Flag near-duplicate tags** (Levenshtein distance <= 2)
+**v0.1 ships exactly 5 presets** (source: `src/engine/presets.ts`). The two marked "on" are enabled by default; the rest are off until the user opts in:
+
+| Preset id | Name | Match | Default | Notes |
+|-----------|------|-------|---------|-------|
+| `hide-hex-codes` | Hide hex color codes | regex `^[0-9A-Fa-f]{3,8}$` | **on** | CSS hex codes from web clippings (esp. MarkDownload). |
+| `hide-url-anchors` | Hide URL anchor fragments | regex `^(top\|bottom\|navigation\|content\|main\|header\|footer\|sidebar\|toc)$\|^[a-z]+-[0-9]+$` | **on** | Common URL fragment patterns from web clippings. |
+| `hide-single-char` | Hide single-character tags | regex `^[A-Za-z]$` | off | Likely typos or single-character shortcuts (`#a`, `#x`). |
+| `hide-numeric` | Hide purely numeric tags | regex `^[0-9]+$` | off | Obsidian usually strips these; catchall for the edge cases. |
+| `hide-orphans` | Hide orphan tags (count <= 1) | frequency `count <= 1` | off | Tags appearing in one or fewer notes; likely typos or experiments. |
+
+**Deferred to v0.2+** (require data the v0.1 engine does not yet compute, or new match types):
+
+- **Hide stale tags** (`lastSeen` > 365 days ago) - needs a date-comparison match type.
+- **Hide clipping-folder tags** (tags only ever appearing in `Clippings/`) - needs per-tag folder provenance.
+- **Flag near-duplicate tags** (Levenshtein distance <= 2) - needs a cross-tag similarity match type; pairs with the merge/alias workflow.
 
 ### 5.2 Modes
 
 - **Default mode.** Rules hide matched tags.
 - **Allow-only mode (whitelist).** Show only tags that match at least one allow rule. Useful for users with a curated taxonomy who treat unknown tags as drafts.
 - **Inbox mode.** Newly-detected tags land in a "needs review" queue. Until reviewed, they show with a visual indicator. Reviewing means accepting (add to taxonomy), hiding (add to hide list), or merging (alias to existing).
-- **Dry-run mode.** Show what a rule would hide without actually hiding it. Useful for testing new rules safely.
+- **Preview mode.** Show what a rule would hide by visibly flagging matched tags instead of hiding them. Useful for testing new rules safely. (Internal setting key: `previewMode`. Pre-v2 schema called this `dryRun`; migrated automatically.)
 
 ### 5.3 Tag list view (the main UI)
+
+→ **v0.1 reality (D-011):** the Tag list ships as a **single component rendered in two host containers**: (1) a sidebar leaf opened by `Tag Curator: Open tag list view`, (2) a Settings tab between General and Presets. State (selection, filter, sort) lives on the plugin, so both views stay in sync. Earlier proposal to keep them separate was reversed in the round-3/4 review when "doubling up two surfaces" was correctly identified as not a real concern.
 
 A sortable, filterable table of every tag in the vault:
 
@@ -189,29 +213,34 @@ Filter the list itself: show only orphans, show only frontmatter tags, show only
 
 ### 5.4 Rule editor
 
-For each rule, a form with:
+→ **v0.1 reality (D-010, supersedes D-001):** the rule editor is a **card view + right-docked scrollable preview panel**. The main area shows rules as cards (name + Type + enable toggle + "N tags affected" chip). Clicking a card swaps the main area to edit mode; clicking the dashed `+ New rule` card opens edit mode with sensible defaults - **no separate wizard** (D-002 closed). A right-docked preview panel stays visible across both views: vault-wide affected tags in card view; filtered to the selected rule in edit mode, with a stats row (Unique tags / Total instances / Notes touched).
+>
+> Per D-009, **priority is hidden from the UI** in v0.1 (no drag-to-reorder; engine defaults custom rules to 50). v0.2 surfaces drag-to-reorder via B012.
 
-- Name and description
-- Enabled toggle
-- Priority (drag to reorder)
-- Match criteria (form switches based on active match type)
-- Action selector
-- Scope checkboxes (with global default fallback indicator)
-- **Live preview**: list of tags currently affected by this rule
-- **Test field**: type a tag string, see whether the rule would match (and which other rules also affect it)
+In **edit mode**, the sectioned form runs top to bottom:
+
+- **Type** (first row): `regex` / `frequency` / `list`. Switches the visible match input.
+- **Identity**: Name (enabled toggle is in the view header and on the card; priority is hidden per D-009).
+- **Match** (sentence-builder): "When a tag's name `[matches the regex|has a count that|is one of]` `[input]`."
+- **Then**: Action (`hide` / `flag` / `show-only` / `group`) + Scope (`tag-pane` in v0.1; `+ graph`, `all surfaces` flagged v0.2).
+- **Preview** (right-docked panel): scannable list (tag - count) for tags this rule affects. Sortable by count.
 
 ### 5.5 Curation panels
 
-Dedicated views for common curation workflows:
+→ **v0.1 reality:** all curation panels are **deferred to v0.2+**. v0.1 ships only the tag list view with filter chips (Hidden, Orphans, Frontmatter, Unreviewed). Each panel below is tracked separately when individually scoped.
+
+Dedicated views for common curation workflows (v0.2+):
 
 - **Recently created tags.** Tags first seen in the last 7/30 days. Triage queue for the inbox-mode user.
 - **Recently used tags.** Tags whose `lastSeen` was within the last N days. "What am I writing about lately."
-- **Orphan tags.** Tags with count = 1.
-- **Stale tags.** Tags with `lastSeen` > 365 days ago.
-- **Suggested merges.** Pairs of tags within edit distance <= 2, with one-click "merge alias" or "rename via Tag Wrangler" actions.
+- **Orphan tags.** Tags with count = 1. (Filter chip in the v0.1 tag list approximates this.)
+- **Stale tags.** Tags with `lastSeen` > 365 days ago. (Needs the deferred `hide-stale-tags` preset; see §5.1.)
+- **Suggested merges.** Pairs of tags within edit distance <= 2, with one-click "merge alias" or "rename via Tag Wrangler" actions. (Pairs with B006.)
 - **Untagged notes.** Notes with zero tags (useful for taxonomy completeness checks).
 
 ### 5.6 Aliases and display-merging
+
+→ **v0.1 reality:** deferred to v0.3 (B006, D-004). `TagMeta.aliases` already exists in the type; the engine and observer wiring + Tag Wrangler rename delegation arrive in v0.3.
 
 Declarative tag aliasing without modifying files:
 
@@ -232,6 +261,8 @@ For users who want true file-content rewrites, Tag Curator surfaces a "rewrite v
 
 ### 5.7 Profiles
 
+→ **v0.1 reality:** deferred to v0.2 (Profiles tab in the v0.1 Settings shell is shown with a `v0.2` badge).
+
 Saved rule-set configurations the user can switch between:
 
 - **"Writing mode"** hides admin/process tags
@@ -245,34 +276,39 @@ Notebook Navigator already has a "Vault profiles" feature; if installed, offer a
 
 ### 5.8 Export / import
 
-- Export current rules + aliases + descriptions as JSON or YAML
-- Import from file
-- Import community rule packs (e.g., "web clipping cleanup," "academic writing," "developer notes," "PKM hygiene")
-- Diff view when importing: see which rules will be added, modified, removed
+→ **v0.1 reality:** deferred to v0.3 - file-import path first (B005), then a hosted community index. v0.1's data files (`data.json`, `tags.json`) are pretty-printed JSON for manual export/git-diff use.
+
+- Export current rules + aliases + descriptions as JSON or YAML (v0.3)
+- Import from file (v0.3)
+- Import community rule packs (e.g., "web clipping cleanup," "academic writing," "developer notes," "PKM hygiene") (v0.3+)
+- Diff view when importing: see which rules will be added, modified, removed (v0.3)
 
 Useful for sharing rule sets across vaults (e.g., personal vs work) or with the community.
 
 ### 5.9 Diagnostics
 
-- **"Why is this tag hidden?"** right-click action shows which rule(s) hid it
-- Optional debug log of rule evaluations (dev mode only, written to plugin folder, not console spam)
-- Status bar indicator: "X tags hidden by Y rules" (clickable to open tag list filtered to hidden)
-- **Health check** on plugin load: warn if integrations expected (Tag Wrangler, Notebook Navigator) are not detected, or if rule count is unusually high
+- **`RuleEngine.getRuleAttribution(tag, meta, rules)`** is the canonical diagnostic helper. Returns `{ effective, allMatches }` where `effective` is the highest-priority match (Q-005 fix) and `allMatches[]` is every matching rule in priority-descending order with `reason` strings. Powers the "why is this tag hidden?" UX across every surface.
+- **Persistent state banner (D-007).** Whenever the plugin is in a non-default state - Preview mode on, or plugin disabled - a top-docked banner appears above every Tag Curator surface (Settings, Tag list, Rule editor) showing the state and a one-click action to restore the default. Two variants: `Preview mode is on` (amber, with `Turn off preview`) and `Tag Curator is off` (muted, with `Turn on`).
+- Optional debug log of rule evaluations (Settings > Advanced > Debug logging).
+- Status bar indicator: "X tags hidden" (clickable to open tag list filtered to hidden); "(preview): N flagged" when Preview mode is on; "off" when the plugin is disabled.
+- **Health check** on plugin load: warn if integrations expected (Tag Wrangler, Notebook Navigator) are not detected, or if rule count is unusually high (deferred to v0.2; B004 covers the welcome-modal detection slice).
 
 ### 5.10 Command palette commands
 
-Every major action is exposed as a command:
+Every major action is exposed as a command. All appear in Obsidian's palette (Cmd/Ctrl+P); each is named for its outcome, not its implementation.
 
-- Toggle Tag Curator on/off (kill switch)
-- Open tag list view
-- Switch profile
-- Mark current tag (under cursor) as canonical
-- Add current tag to hide list
-- Quick-create rule from current tag
-- Show recently created tags panel
-- Show orphan tags panel
-- Run dry-run preview
-- Reload rule presets
+**v0.1 ships exactly 6 commands** (source: `src/main.ts`):
+
+| Command id | Palette name | Functionality |
+|------------|--------------|---------------|
+| `toggle-enable` | Toggle enable | Flips the plugin's `enabled` flag on/off (the kill switch). Shows a Notice with the new state. |
+| `panic-disable` | Panic disable (remove all DOM effects now) | One-shot action that produces the off state. Immediately removes **all** DOM modifications (un-hides every tag), sets `enabled = false`, runs `panicCleanup`, and triggers the persistent "Tag Curator is off" state banner across every Tag Curator surface (see §7.6 and D-007). Works even if the settings UI fails to load. |
+| `toggle-preview-mode` | Toggle preview mode | Flips `previewMode`. When on, matched tags are flagged (not hidden) so the user can preview rule impact before committing, and the persistent "Preview mode is on" state banner (D-007) appears above every Tag Curator surface. (Pre-v2 command id was `toggle-dry-run`; renamed.) |
+| `open-tag-list` | Open tag list view | Opens (or reveals) the Tag list view in the right sidebar. |
+| `open-tag-list-hidden` | Open tag list (hidden tags only) | Opens the Tag list view pre-filtered to tags currently hidden by a rule. Also the click target of the status-bar item. |
+| `rescan-tags` | Rescan vault tags | Re-runs `scanAll()` across every markdown file, rebuilding the tag metadata sidecar. Bookended by progress Notices. |
+
+**Deferred to v0.2+:** Switch profile, mark current tag as canonical, add current tag to hide list, quick-create rule from current tag, show recently-created / orphan panels, reload rule presets. (Profiles and inbox panels are themselves v0.2+ features.)
 
 ### 5.11 Hotkeys
 
@@ -305,6 +341,26 @@ Tag Wrangler ([github](https://github.com/pjeby/tag-wrangler), 870+ stars, activ
 If Tag Wrangler is absent, Tag Curator provides its own right-click handler with the same actions.
 
 A courtesy issue could be opened on Tag Wrangler describing the integration so the maintainer is aware. Not a PR (scope mismatch confirmed by maintainer's stated philosophy on [issue #34](https://github.com/pjeby/tag-wrangler/issues/34)).
+
+#### 6.1.1 Bulk "Send to Tag Wrangler" action (v0.1)
+
+The Tag list view's bulk-actions toolbar includes a **Send to Tag Wrangler** button. This is Tag Curator's primary delegation point for **renaming** - because renaming touches files, Tag Curator does not do it itself.
+
+**Detection.** The button is only enabled when `this.app.plugins.enabledPlugins.has('tag-wrangler')` is true. Otherwise it is hidden with a tooltip "Install Tag Wrangler to enable bulk rename."
+
+**Flow.**
+
+1. User selects N tags in the Tag list view via row checkboxes.
+2. User clicks `Send to Tag Wrangler`.
+3. For each selected tag, Tag Curator invokes Tag Wrangler's exposed rename command. Two attempted strategies in order:
+   - **a.** `this.app.commands.executeCommandById('tag-wrangler:rename-tag')` if the command id is present (preferred; survives Tag Wrangler internal changes).
+   - **b.** Triggering the workspace event Tag Wrangler listens on for the tag-pane context menu (`workspace.trigger('hover-link', ...)` shape; documented in spec §6.1 reference issue), passing the tag as payload.
+4. Tag Wrangler opens its native rename modal pre-loaded with the tag(s). The user chooses the new name there. Tag Wrangler edits the files.
+5. Tag Curator's Tag list view refreshes on the next `metadataCache.changed` event - no extra wiring needed because we already listen for it.
+
+**Why delegate.** Doing the rename ourselves would violate Tag Curator's file-safe contract (we don't write note content). Tag Wrangler is the trusted rename surface. This keeps Tag Curator's responsibilities clean: we curate the *display* of tags; Tag Wrangler curates the *content*.
+
+**Error handling.** If Tag Wrangler's command is not found at runtime (e.g. disabled after we cached the detection), the button shows a Notice "Tag Wrangler is not available - re-enable it and try again," and no Tag Curator state changes.
 
 ### 6.2 Notebook Navigator
 
@@ -395,7 +451,7 @@ DOM update cost: ~5-20ms initial sweep, ~1-5ms per incremental update.
 ### 7.6 Reliability and safety
 
 - All inline DOM modifications use a custom data attribute (`data-tag-curator-hidden`) so they're greppable and removable on uninstall.
-- A "panic disable" command in the palette nukes all DOM modifications immediately, even if settings UI fails to load.
+- **Panic disable** is a one-shot action that produces a state. The action: instantly removes every DOM modification (un-hides all tags) and runs `panicCleanup` even if the settings UI fails to load. The state: `enabled = false` is persisted, and a **persistent state banner** ("Tag Curator is off") appears at the top of every Tag Curator surface (Settings, Tag list, Rule editor) until the user re-enables. The banner carries an inline `Turn on` action so resolving the state is one click. Same banner pattern shows "Preview mode is on" (amber) when `previewMode = true`. See decision D-007 in `scope-and-decisions.md`.
 - Settings save is atomic (write-temp-then-rename).
 - No destructive operations without confirmation.
 - Sidecar corruption handled gracefully (rebuild from metadata cache on next load).
@@ -406,46 +462,39 @@ DOM update cost: ~5-20ms initial sweep, ~1-5ms per incremental update.
 
 ### 8.1 Settings tab structure
 
+→ **v0.1 reality (locked).** Top-tab layout. Tabs marked with a `v0.2` / `v0.3` badge are visible but show a deferred placeholder.
+
 ```
 Tag Curator
-├── General
-│   ├── Mode (default / allow-only / inbox)
-│   ├── Default scope (checkboxes for UI areas)
-│   ├── Profile selector
-│   └── Master enable/disable toggle
-├── Rules
-│   ├── [Rule list with drag-to-reorder]
-│   ├── [Filter and search]
-│   └── [+ Add rule]
-├── Tags
-│   ├── [Tag list view, filterable, sortable]
-│   ├── [Bulk operations toolbar]
-│   └── [Curation panels: recent / orphan / stale]
-├── Aliases
-│   └── [Canonical -> aliases mapping editor]
-├── Profiles
-│   └── [Saved rule-set configurations]
-├── Integrations
-│   ├── Tag Wrangler (auto-detected)
-│   ├── Notebook Navigator (auto-detected)
-│   └── Colored Tags Wrangler (auto-detected)
-└── Advanced
-    ├── Sidecar location
-    ├── Debug log toggle
-    ├── Export / import
-    └── Reset all
+├── General             ← master enable, Preview mode toggle, stats header, panic disable
+├── Tag list (1,542)    ← same component as the sidebar leaf (D-011)
+├── Presets (5)         ← 5 built-in toggleable presets (see §5.1)
+├── Custom rules (3)    ← card-view rule editor (D-010)
+├── Commands            ← reference for the 6 v0.1 commands (see §5.10)
+├── Advanced            ← Index maintenance (Reindex now), Performance, Troubleshooting
+├── Profiles [v0.2]     ← deferred (§5.7)
+└── Aliases [v0.3]      ← deferred (§5.6)
 ```
+
+- The **General** tab opens with a stats header (Total tags / Hidden now / Active rules / Orphans), then the master `Enable Tag Curator` toggle, the `Preview mode` toggle, and the `If something looks wrong` panic-disable row.
+- Whenever the plugin is in a non-default state, a **state banner** (D-007) sits above the panel content.
+- Defaults shown on every panel via the persistent banner mean the user always knows the current mode.
+- The pre-v0.1 spec had a `Tags` tab and a separate `Rules` tab. v0.1 ships the Tag list and Custom rules tabs (renamed accordingly).
 
 ### 8.2 Onboarding
 
-First-run wizard, skippable at any step:
+→ **v0.1 reality (D-008, D-002 closed).** Replaced the multi-step wizard with a single, prominent first-run **welcome modal**. Fires once on first enable (state gated by `seenWelcomeModal: true` in settings). The wizard is **dropped** for v0.1 (and unlikely to return - D-002 closed).
 
-1. "Welcome. Let's set up Tag Curator." (intro)
-2. "Pick presets you'd like enabled." (checkboxes for hex, URL, orphan, etc.)
-3. "Pick UI areas to filter." (checkboxes for tag pane, graph, autocomplete...)
-4. "Want to enable Inbox mode?" (yes / no / explain)
-5. "Detected integrations: [Tag Wrangler, Notebook Navigator]. Enable?"
-6. Done. Show tag list with current state.
+**Welcome modal structure** (locked design in `ui-design_v0.1.0_converged.html` section 4):
+
+1. **Header** acknowledges current state. Eyebrow: `Tag Curator is now enabled`. h3: `Choose how to start`. Sub: `Before any tag is curated, here is what you can expect.`
+2. **Safety promises** strip (success-tinted background, left-aligned check rows):
+   - ✓ **Display-only.** It never edits your notes.
+   - ✓ **File-safe.** No content is written to markdown.
+   - ✓ **Fully reversible.** Disable Tag Curator and everything returns.
+3. **Two presets will run** (toggleable cards). User can untick before committing. (Hex codes and URL anchors on by default; see §5.1.)
+4. **Integrations detected** (per-plugin cards with name + state pill + bulleted "what changes"). Detection logic gated to v0.2 (B004); v0.1 ships a hardcoded card set with `Tag Wrangler`, `Notebook Navigator`, `Colored Tags Wrangler`.
+5. **Footer.** Primary: `Start curating` (apply rules, matched tags hidden). Secondary: `Start in preview mode` (flag instead of hide). One-sentence explainer next to the buttons explains what Preview mode does.
 
 ### 8.3 Discoverability and the "where did my tag go?" prevention
 
@@ -467,34 +516,50 @@ Whenever a tag is hidden, the UI makes it discoverable why:
 
 ## 9. Roadmap
 
-**v0.1 (MVP, 2-3 weekends).**
-- Rule engine with regex, frequency, list match types
-- Hide action only
-- Tag pane scope only
-- 5 built-in presets (hex, URL anchor, numeric, single-char, orphan)
-- Basic settings UI
-- Tag list view with sort by count
+### v0.1 (current release).
 
-**v0.2.**
-- Graph view scope
-- Autocomplete scope
-- Tag metadata sidecar (firstSeen, lastSeen, count)
-- Recently created / orphan / stale curation panels
+**Engine + storage** (shipped):
+- Three-match-type rule engine (regex, frequency, list); highest-priority match wins (Q-005)
+- `previewMode` mode (renamed from `dryRun`, schema v1 → v2 migration; D-003)
+- 5 built-in toggleable presets (hex, URL anchor, single-char, numeric, orphans; §5.1)
+- Tag metadata sidecar (`tags.json`) with `firstSeen`, `lastSeen`, `count`, `sources`
+- 6 commands (§5.10); status bar; panic disable; persistent state banner pattern (D-007)
 
-**v0.3.**
-- Aliases / display-merge
-- Profiles
-- Tag Wrangler integration
+**UI** (locked design, implementation pending):
+- Top-tab Settings layout including Tag list tab (D-011)
+- Tag list view (row-based, sortable, virtualized; `Source` and other column tooltips)
+- Rule editor: card view + right-docked preview (D-010, supersedes D-001)
+- Welcome modal (D-008); state banner (D-007)
+- Priority architected, hidden from UI (D-009)
+
+### v0.2.
+- Graph view scope, autocomplete scope, properties chip scope
+- Compound criteria builder (AND/OR/NOT) and drag-drop canvas (B001/B002)
+- Conflict resolver view (B008)
+- Tag detail sheet (B009)
+- Hierarchy cascade toggle (B010)
+- File-extension file-filter on rules (B011, Q-008 reversal)
+- Drag-to-reorder rules in card view (B012)
+- Density toggle (B003)
+- Plugin-integration detection in welcome modal (B004)
+- Curation panels (§5.5)
+- Allow-only mode
+
+### v0.3.
+- Aliases / display-merge with Tag Wrangler rename delegation (B006, D-004)
+- Profiles (§5.7)
+- Rule library / preset gallery (B005)
+- Tag analytics dashboard (B007; flagged "liked" by reviewer)
 - Inbox mode
-- Dry-run mode
+- Tag Wrangler full integration (beyond the v0.1 §6.1.1 bulk action)
 
-**v0.4.**
-- Notebook Navigator integration
+### v0.4.
+- Notebook Navigator integration (full)
 - Suggested merges (Levenshtein)
 - Export / import
 - Community rule packs (curated collection in repo)
 
-**v0.5+.**
+### v0.5+.
 - Bases scope
 - Colored Tags Wrangler delegate integration
 - Mobile polish
@@ -528,7 +593,7 @@ Things Tag Curator deliberately will NOT do:
 - Performance on 50K+ note vaults (worth real-device test).
 - Whether to publish to community plugin directory or keep self-hosted.
 - Internationalization: do non-English tag names break any of the regex presets?
-- Conflict resolution when two rules target the same tag with different actions (priority + last-match-wins documented but UX needs polish).
+- Conflict-resolution UX. The semantics are resolved (highest priority wins, Q-005 fixed); a dedicated conflict-resolver view is deferred to v0.2 (B008). When conflicts are rare in v0.1 rule counts, the tag list's `Rule` column showing every matching rule stacked is sufficient.
 
 ---
 

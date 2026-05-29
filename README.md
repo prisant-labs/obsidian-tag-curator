@@ -44,13 +44,13 @@ You can also write your own rules: regex patterns, frequency thresholds, or expl
 
 Tag Curator never modifies note content. It does not patch `metadataCache.getTags()` or any other internal Obsidian API. Dataview, Tasks, and Bases see the real, unfiltered tag data.
 
-If the plugin behaves unexpectedly, run "Tag Curator: Panic disable" from the command palette. Every Tag Curator DOM modification is removed immediately and the plugin disables itself.
+If the plugin behaves unexpectedly, run "Tag Curator: Panic disable" from the command palette. This is a one-shot action that produces the "off" state: every Tag Curator DOM modification is removed immediately, the plugin disables itself, and a persistent banner shows "Tag Curator is off" at the top of every Tag Curator surface until you re-enable. The same banner shows "Preview mode is on" whenever preview mode is active, so you always know the plugin's current state.
 
 ## Commands
 
 - Tag Curator: Toggle enable
 - Tag Curator: Panic disable (remove all DOM effects now)
-- Tag Curator: Toggle dry-run mode
+- Tag Curator: Toggle preview mode
 - Tag Curator: Open tag list view
 - Tag Curator: Open tag list (hidden tags only)
 - Tag Curator: Rescan vault tags
@@ -58,8 +58,8 @@ If the plugin behaves unexpectedly, run "Tag Curator: Panic disable" from the co
 ## Modes
 
 - Default (v0.1.0): rules hide matching tags.
-- Dry-run (v0.1.0): rules visibly flag matching tags instead of hiding them, useful for preview.
-- Allow-only and inbox modes: preview options reserved for v0.2.
+- Preview mode (v0.1.0): rules visibly flag matching tags instead of hiding them, so you can see a rule's impact before committing.
+- Allow-only and inbox modes: reserved for v0.2.
 
 ## What lives in `.obsidian/plugins/tag-curator/`
 
@@ -74,7 +74,7 @@ For typical vaults (under 10k notes, under 1,500 unique tags), Tag Curator's ove
 
 ## Roadmap
 
-- v0.1: tag-pane filtering, rule engine, presets, custom rules, tag list view, panic disable, dry-run.
+- v0.1: tag-pane filtering, rule engine, presets, custom rules, tag list view, panic disable, preview mode.
 - v0.2: editor autocomplete and properties chip filtering, recently created / orphan / stale panels.
 - v0.3: aliases / display-merge, profiles, Tag Wrangler integration, inbox mode.
 - v0.4: Notebook Navigator integration, suggested merges, export and import, community rule packs.
