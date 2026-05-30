@@ -1,0 +1,169 @@
+import { RuleAttribution, TagMeta } from '../types';
+import { DecorationMode, ObservedRow, ObserverBase } from './observerBase';
+
+// Tag-Curator-owned decoration. These never collide with NN's nn-* namespace
+// and are the only classes/attrs this observer adds or removes.
+const HIDDEN_CLASS = 'tc-nn-hidden';
+const FLAG_CLASS = 'tc-nn-flagged';
+const RULE_ATTR = 'data-tc-nn-rule';
+
+// Notebook Navigator's leaf view type. Used for getLeavesOfType; if NN ever
+// renames it, the .nn-navigation-pane DOM fallback in attachAll still finds the
+// pane (findings Section 5, Approach A).
+const NN_VIEW_TYPE = 'notebook-navigator-view';
+
+// NN DOM contract (runtime interop only; facts about a running instance, not
+// copied source). findings Section 1, spec Section 5.1.
+const NN_PANE_SELECTOR = '.nn-navigation-pane';
+const NN_SCROLLER_SELECTOR = '.nn-navigation-pane-scroller[data-pane="navigation"]';
+const NN_TAG_ROW_SELECTOR = '.nn-tag[data-tag]';
+
+interface NnLeafView {
+  containerEl?: HTMLElement;
+}
+
+interface NnLeaf {
+  view?: NnLeafView;
+  isDeferred?: boolean;
+  loadIfDeferred?: () => void;
+}
+
+/**
+ * Decorates Notebook Navigator's tag tree (`.nn-navitem.nn-tag[data-tag]` rows)
+ * with Tag Curator's hide/flag rules at runtime. GPL boundary: this is runtime
+ * interop only - it observes and mutates NN's rendered DOM via stable data-*
+ * attributes and adds only `tc-nn-*` classes. It never imports NN source and
+ * never touches NN's own `nn-*` classes or settings.
+ *
+ * The shared MutationObserver + requestAnimationFrame lifecycle lives in
+ * ObserverBase. This subclass supplies the NN specifics:
+ *   - discover NN panes and observe the inner virtualized scroller,
+ *   - read each row's canonical lowercase tag from `data-tag`,
+ *   - toggle `tc-nn-hidden` / `tc-nn-flagged` and the `data-tc-nn-rule` marker,
+ *   - the flat-nesting descendant match (a rule on `photo` also hits
+ *     `photo/camera`), since NN renders nested tags as flat sibling rows.
+ *
+ * Because NN's tree is virtualized, rows scrolled out of view lose their DOM
+ * node and come back fresh and undecorated. The inherited MutationObserver on
+ * the scroller re-runs the idempotent decorate pass to re-assert state.
+ */
+export class NotebookNavigatorObserver extends ObserverBase {
+  init(): void {
+    this.app.workspace.onLayoutReady(() => this.attachAll());
+    this.plugin.registerEvent(
+      this.app.workspace.on('layout-change', () => this.attachAll()),
+    );
+  }
+
+  attachAll(): void {
+    const leaves = this.app.workspace.getLeavesOfType(NN_VIEW_TYPE) as NnLeaf[];
+    if (leaves.length > 0) {
+      for (const leaf of leaves) this.attachLeaf(leaf);
+      return;
+    }
+    // Fallback: NN's view type is unknown to us or unchanged - find panes by
+    // their stable container class instead (findings Section 5, Approach A).
+    const panes = document.querySelectorAll<HTMLElement>(NN_PANE_SELECTOR);
+    for (const pane of Array.from(panes)) this.attachScrollerWithin(pane);
+  }
+
+  private attachLeaf(leaf: NnLeaf): void {
+    if (leaf.isDeferred) leaf.loadIfDeferred?.();
+    const containerEl = leaf.view?.containerEl;
+    if (!containerEl) return;
+    this.attachScrollerWithin(containerEl);
+  }
+
+  /**
+   * Observe NN's inner scroll container (not the outer pane): that is the
+   * element TanStack mounts/unmounts rows into, so it is what must be watched.
+   * If the scroller is not present yet, fall back to the pane root so we still
+   * catch rows once NN renders them.
+   */
+  private attachScrollerWithin(root: HTMLElement): void {
+    // Prefer the inner scroller; fall back to the root itself so we still catch
+    // rows if NN has not rendered the scroller wrapper yet.
+    const scroller =
+      root.querySelector<HTMLElement>(NN_SCROLLER_SELECTOR) ?? root;
+    this.observeContainer(scroller);
+  }
+
+  protected findRows(root: HTMLElement): ObservedRow[] {
+    const rows = root.querySelectorAll<HTMLElement>(NN_TAG_ROW_SELECTOR);
+    return Array.from(rows).map((row) => ({
+      el: row,
+      // data-tag is already the canonical lowercase path; no leading '#'.
+      tag: row.getAttribute('data-tag') ?? '',
+    }));
+  }
+
+  /**
+   * Flat-nesting descendant match. NN renders `photo` and `photo/camera` as
+   * separate sibling rows, so hiding the parent does not structurally hide the
+   * child. We first resolve the row's own tag; if nothing applies to it, we
+   * walk its ancestor prefixes (`photo/camera` -> `photo`) and inherit the
+   * nearest ancestor that resolves to a hide. The row's own resolution always
+   * wins for itself - including an always-show override, which keeps the
+   * descendant visible despite an ancestor hide (spec Section 5.1).
+   */
+  protected resolveRow(tag: string, meta: TagMeta | undefined): RuleAttribution {
+    const own = super.resolveRow(tag, meta);
+    if (own.effective !== null) return own;
+
+    for (const ancestor of ancestorPrefixes(tag)) {
+      const ancestorMeta = this.metadata.get(ancestor);
+      const resolved = super.resolveRow(ancestor, ancestorMeta);
+      const { effective } = resolved;
+      // Inherit only a hide from an ancestor; an ancestor's always-show pin
+      // governs that ancestor row, not its descendants.
+      if (effective !== null && effective.overrideReason !== 'always-show') {
+        return resolved;
+      }
+    }
+    return own;
+  }
+
+  protected applyDecoration(
+    el: HTMLElement,
+    ruleId: string,
+    mode: DecorationMode,
+  ): void {
+    if (mode === 'hidden') {
+      el.classList.add(HIDDEN_CLASS);
+      el.classList.remove(FLAG_CLASS);
+      el.setAttribute('aria-hidden', 'true');
+      el.setAttribute(RULE_ATTR, ruleId);
+    } else {
+      el.classList.add(FLAG_CLASS);
+      el.classList.remove(HIDDEN_CLASS);
+      el.removeAttribute('aria-hidden');
+      el.setAttribute(RULE_ATTR, ruleId);
+    }
+  }
+
+  protected clearDecoration(el: HTMLElement): void {
+    el.classList.remove(HIDDEN_CLASS);
+    el.classList.remove(FLAG_CLASS);
+    el.removeAttribute('aria-hidden');
+    el.removeAttribute(RULE_ATTR);
+  }
+
+  protected findDecorated(root: HTMLElement): HTMLElement[] {
+    return Array.from(
+      root.querySelectorAll<HTMLElement>(`.${HIDDEN_CLASS}, .${FLAG_CLASS}`),
+    );
+  }
+}
+
+/**
+ * Ancestor tag prefixes of a canonical path, nearest first. For `a/b/c` ->
+ * ['a/b', 'a']. Returns [] for a top-level tag with no slash.
+ */
+function ancestorPrefixes(tag: string): string[] {
+  const segments = tag.split('/');
+  const out: string[] = [];
+  for (let i = segments.length - 1; i > 0; i--) {
+    out.push(segments.slice(0, i).join('/'));
+  }
+  return out;
+}
