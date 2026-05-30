@@ -166,6 +166,36 @@ export class TagListModel {
     return this.selected;
   }
 
+  /**
+   * Select every row that currently passes the active filter / search / rule
+   * filter. Virtualization-safe: the table renders only a window of rows, so
+   * "select all matching" must operate on the full filtered set (rows()), not
+   * just the rendered DOM (per Q-004 there are no pages). Additive: leaves any
+   * already-selected tag selected.
+   */
+  selectAllMatching(): void {
+    for (const row of this.rows()) this.selected.add(row.meta.tag);
+  }
+
+  /**
+   * Deselect every row in the current filtered set. The inverse of
+   * selectAllMatching; used by the header "select all" toggle when it is
+   * already fully checked. Leaves selections outside the current filter intact.
+   */
+  deselectAllMatching(): void {
+    for (const row of this.rows()) this.selected.delete(row.meta.tag);
+  }
+
+  /**
+   * True when every row in the current filtered set is selected (and there is
+   * at least one such row). Drives the header checkbox checked state.
+   */
+  allMatchingSelected(): boolean {
+    const rows = this.rows();
+    if (rows.length === 0) return false;
+    return rows.every((row) => this.selected.has(row.meta.tag));
+  }
+
   rowFor(tag: string): TagRow | undefined {
     return this.allRows().find((r) => r.meta.tag === tag);
   }

@@ -14,9 +14,12 @@
  */
 import { ItemView, WorkspaceLeaf } from 'obsidian';
 import TagCuratorPlugin from '../../main';
+import { resolveActiveRules } from '../../engine/presets';
 import { StateBanner } from '../stateBanner';
 import { TagListModel, TagListDataSource } from '../tagList/tagListModel';
 import { TagActions, TagActionsHost } from '../tagList/tagActions';
+import { TagTable } from './tagTable';
+import { TagListDiagnosticsHost } from './tagTableHost';
 
 export const CURATION_VIEW_TYPE = 'tag-curator-workspace';
 
@@ -31,11 +34,12 @@ export class CurationWorkspaceView extends ItemView {
   private banner: StateBanner | null = null;
 
   private model: TagListModel;
-  /** Wired at construction; per-row and bulk actions land in Phase 3. */
   private actions: TagActions;
 
-  // DOM hook for the live-refreshing table body.
-  private tbodyEl: HTMLElement | null = null;
+  // The virtualized tag table (Phase 3B-1). Built in buildUI, repainted by refresh.
+  private table: TagTable | null = null;
+  // Host surface the table uses for diagnostics + refresh.
+  private tableHost: TagListDiagnosticsHost;
 
   // Unsubscribe handle returned by settingsManager.onChange; called in onClose.
   private unsubscribeSettings: (() => void) | null = null;
@@ -51,13 +55,15 @@ export class CurationWorkspaceView extends ItemView {
     };
     this.model = new TagListModel(dataSource);
 
+    const isPluginEnabled = (id: string): boolean => {
+      const plugins = (this.app as unknown as {
+        plugins?: { enabledPlugins?: Set<string> };
+      }).plugins;
+      return Boolean(plugins?.enabledPlugins?.has(id));
+    };
+
     const host: TagActionsHost = {
-      isPluginEnabled: (id) => {
-        const plugins = (this.app as unknown as {
-          plugins?: { enabledPlugins?: Set<string> };
-        }).plugins;
-        return Boolean(plugins?.enabledPlugins?.has(id));
-      },
+      isPluginEnabled,
       executeCommand: (id) => {
         const commands = (this.app as unknown as {
           commands?: { executeCommandById?: (id: string) => boolean };
@@ -67,6 +73,14 @@ export class CurationWorkspaceView extends ItemView {
       setOverride: (tag, value) => this.plugin.settingsManager.setOverride(tag, value),
     };
     this.actions = new TagActions(host);
+
+    this.tableHost = {
+      getSettings: () => this.plugin.settingsManager.get(),
+      getMeta: () => this.plugin.tagMetaManager.all(),
+      getActiveRules: () => resolveActiveRules(this.plugin.settingsManager.get()),
+      isPluginEnabled,
+      requestRefresh: () => this.refresh(),
+    };
   }
 
   getViewType(): string {
@@ -91,6 +105,8 @@ export class CurationWorkspaceView extends ItemView {
   async onClose(): Promise<void> {
     this.unsubscribeSettings?.();
     this.unsubscribeSettings = null;
+    this.table?.destroy();
+    this.table = null;
     this.banner?.destroy();
     this.banner = null;
   }
@@ -115,14 +131,9 @@ export class CurationWorkspaceView extends ItemView {
     const header = this.container.createDiv({ cls: 'tcw-header' });
     header.createEl('h2', { text: 'Curation Workspace' });
 
-    const tableWrap = this.container.createDiv({ cls: 'tcw-table-wrap' });
-    const table = tableWrap.createEl('table', { cls: 'tcw-table' });
-    const thead = table.createEl('thead');
-    const headRow = thead.createEl('tr');
-    headRow.createEl('th', { text: 'Tag' });
-    headRow.createEl('th', { text: 'Count' });
-    headRow.createEl('th', { text: 'Visible?' });
-    this.tbodyEl = table.createEl('tbody');
+    // The virtualized sortable tag table renders below the banner + header.
+    // It owns its own toolbar (chips + search + sort), bulk bar, and rows.
+    this.table = new TagTable(this.container, this.model, this.actions, this.tableHost);
   }
 
   // -----------------------------------------------------------------
@@ -130,29 +141,6 @@ export class CurationWorkspaceView extends ItemView {
   // -----------------------------------------------------------------
 
   private refresh(): void {
-    if (!this.tbodyEl) return;
-    const rows = this.model.rows();
-
-    this.tbodyEl.empty();
-    if (rows.length === 0) {
-      const emptyRow = this.tbodyEl.createEl('tr');
-      const cell = emptyRow.createEl('td');
-      cell.colSpan = 3;
-      cell.setText('No tags yet. Start tagging notes to populate this list.');
-      cell.addClass('tcw-empty');
-      return;
-    }
-
-    for (const row of rows) {
-      const tr = this.tbodyEl.createEl('tr');
-      if (row.visibility === 'hidden') tr.addClass('tcw-row-hidden');
-      if (row.visibility === 'flagged') tr.addClass('tcw-row-flagged');
-      tr.createEl('td', { text: '#' + row.meta.tag });
-      tr.createEl('td', { text: String(row.meta.count) });
-      tr.createEl('td', {
-        cls: 'tcw-vis tcw-vis-' + row.visibility,
-        text: row.visibility,
-      });
-    }
+    this.table?.refresh();
   }
 }
