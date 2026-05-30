@@ -51,3 +51,46 @@ describe('TagListModel.allRows', () => {
     expect(model.allRows()[0].matches.map((m) => m.ruleName)).toContain('hide drop');
   });
 });
+
+describe('TagListModel filtering and search', () => {
+  it('hidden chip keeps only non-shown rows', () => {
+    const model = new TagListModel(
+      source([meta('keep'), meta('drop')], { customRules: [hideRule('drop')] }),
+    );
+    model.setFilter('hidden');
+    expect(model.rows().map((r) => r.meta.tag)).toEqual(['drop']);
+  });
+
+  it('orphans chip keeps only count <= 1', () => {
+    const model = new TagListModel(
+      source([meta('rare', { count: 1 }), meta('common', { count: 9 })]),
+    );
+    model.setFilter('orphans');
+    expect(model.rows().map((r) => r.meta.tag)).toEqual(['rare']);
+  });
+
+  it('frontmatter chip keeps only frontmatter-only tags', () => {
+    const model = new TagListModel(
+      source([
+        meta('fm', { sources: ['frontmatter'] }),
+        meta('both', { sources: ['frontmatter', 'inline'] }),
+      ]),
+    );
+    model.setFilter('frontmatter');
+    expect(model.rows().map((r) => r.meta.tag)).toEqual(['fm']);
+  });
+
+  it('unreviewed chip keeps only rows without reviewed=true', () => {
+    const model = new TagListModel(
+      source([meta('new'), meta('done', { reviewed: true })]),
+    );
+    model.setFilter('unreviewed');
+    expect(model.rows().map((r) => r.meta.tag)).toEqual(['new']);
+  });
+
+  it('search is a case-insensitive substring on the tag name', () => {
+    const model = new TagListModel(source([meta('Project'), meta('area')]));
+    model.setSearch('PROJ');
+    expect(model.rows().map((r) => r.meta.tag)).toEqual(['Project']);
+  });
+});
