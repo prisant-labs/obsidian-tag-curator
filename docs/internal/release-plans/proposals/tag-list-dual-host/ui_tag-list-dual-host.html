@@ -1,0 +1,787 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tag List Dual-Host Redesign - UI Mockup</title>
+<style>
+  :root[data-theme="dark"] {
+    --background-primary: #1e1e1e;
+    --background-primary-alt: #1a1a1a;
+    --background-secondary: #252525;
+    --background-secondary-alt: #2a2a2a;
+    --background-tertiary: #151515;
+    --background-modifier-hover: #2f2f2f;
+    --background-modifier-border: #333;
+    --background-modifier-border-hover: #444;
+    --background-modifier-error: #5b2828;
+    --background-modifier-success: #25522a;
+    --background-modifier-form-field: #1a1a1a;
+    --text-normal: #dcddde;
+    --text-muted: #999;
+    --text-faint: #6e6e6e;
+    --text-on-accent: #ffffff;
+    --text-accent: #a78bfa;
+    --text-error: #ff7878;
+    --text-success: #67d391;
+    --text-warning: #f5c97c;
+    --interactive-accent: #7c3aed;
+    --interactive-accent-hover: #8b5cf6;
+    --interactive-normal: #2a2a2a;
+    --interactive-hover: #353535;
+    --divider-color: #2a2a2a;
+    --shadow-s: 0 1px 2px rgba(0,0,0,0.4);
+    --shadow-m: 0 4px 12px rgba(0,0,0,0.4);
+    --shadow-l: 0 12px 28px rgba(0,0,0,0.5);
+    --code-bg: #161616;
+    --selection: rgba(124, 58, 237, 0.35);
+  }
+  :root[data-theme="light"] {
+    --background-primary: #ffffff;
+    --background-primary-alt: #fafafa;
+    --background-secondary: #f5f6f8;
+    --background-secondary-alt: #ebedf0;
+    --background-tertiary: #e6e8eb;
+    --background-modifier-hover: #eef0f3;
+    --background-modifier-border: #d9dce0;
+    --background-modifier-border-hover: #c2c6cb;
+    --background-modifier-error: #fee2e2;
+    --background-modifier-success: #d1fae5;
+    --background-modifier-form-field: #ffffff;
+    --text-normal: #1f2328;
+    --text-muted: #5b6168;
+    --text-faint: #8a9098;
+    --text-on-accent: #ffffff;
+    --text-accent: #6d28d9;
+    --text-error: #b91c1c;
+    --text-success: #047857;
+    --text-warning: #b45309;
+    --interactive-accent: #7c3aed;
+    --interactive-accent-hover: #6d28d9;
+    --interactive-normal: #f1f3f5;
+    --interactive-hover: #e6e9ec;
+    --divider-color: #e6e8eb;
+    --shadow-s: 0 1px 2px rgba(0,0,0,0.08);
+    --shadow-m: 0 4px 12px rgba(0,0,0,0.08);
+    --shadow-l: 0 12px 28px rgba(0,0,0,0.12);
+    --code-bg: #f5f6f8;
+    --selection: rgba(124, 58, 237, 0.18);
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: var(--background-tertiary);
+    color: var(--text-normal);
+    font-family: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    font-size: 14px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+  ::selection { background: var(--selection); }
+  code { background: var(--code-bg); padding: 1px 5px; border-radius: 4px; font-size: 0.92em; font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace; }
+
+  /* Page shell */
+  .wrap { max-width: 1340px; margin: 0 auto; padding: 36px 40px 120px; }
+
+  .page-head { margin-bottom: 28px; }
+  .page-eyebrow { font-size: 11px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-faint); margin-bottom: 7px; }
+  .page-title { font-size: 27px; margin: 0 0 10px; letter-spacing: -0.01em; }
+  .page-desc { color: var(--text-muted); font-size: 14.5px; max-width: 860px; }
+  .page-desc strong { color: var(--text-normal); }
+
+  .toprow { display: flex; align-items: center; gap: 14px; margin-top: 20px; flex-wrap: wrap; }
+  .layout-toggle { display: inline-flex; background: var(--background-secondary); border: 1px solid var(--divider-color); border-radius: 8px; padding: 3px; gap: 2px; }
+  .layout-toggle button { background: transparent; border: 0; color: var(--text-muted); font: inherit; font-size: 12.5px; padding: 7px 14px; border-radius: 6px; cursor: pointer; }
+  .layout-toggle button.is-active { background: var(--interactive-accent); color: var(--text-on-accent); }
+  .theme-toggle { display: inline-flex; background: var(--background-secondary); border: 1px solid var(--divider-color); border-radius: 8px; padding: 3px; gap: 2px; }
+  .theme-toggle button { background: transparent; border: 0; color: var(--text-muted); font: inherit; font-size: 12.5px; padding: 7px 13px; border-radius: 6px; cursor: pointer; }
+  .theme-toggle button.is-active { background: var(--background-primary); color: var(--text-normal); box-shadow: var(--shadow-s); }
+  .legend { display: flex; flex-wrap: wrap; gap: 9px; margin-left: auto; }
+  .legend .chip { font-size: 11px; padding: 4px 10px; border-radius: 999px; border: 1px solid var(--divider-color); background: var(--background-secondary); color: var(--text-muted); }
+
+  /* Surface grid */
+  .surfaces { display: grid; gap: 26px; align-items: start; margin-top: 26px; }
+  .surfaces.side-by-side { grid-template-columns: 372px 1fr; }
+  .surfaces.stacked { grid-template-columns: 1fr; }
+  .surface[hidden] { display: none; }
+
+  .surface-label { display: flex; align-items: baseline; gap: 10px; margin-bottom: 10px; }
+  .surface-label .sl-name { font-size: 15px; font-weight: 700; }
+  .surface-label .sl-meta { font-size: 12px; color: var(--text-muted); }
+  .surface-label .sl-tag { font-size: 10px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-accent); background: rgba(124,58,237,0.12); border: 1px solid rgba(124,58,237,0.3); border-radius: 5px; padding: 2px 7px; }
+
+  /* Mockup frame (matches converged design) */
+  .mockup { background: var(--background-primary); border: 1px solid var(--background-modifier-border); border-radius: 12px; overflow: hidden; box-shadow: var(--shadow-l); }
+  .mockup-titlebar { display: flex; align-items: center; gap: 8px; padding: 10px 14px; background: var(--background-secondary); border-bottom: 1px solid var(--divider-color); font-size: 12px; color: var(--text-muted); }
+  .traffic { display: flex; gap: 6px; }
+  .traffic span { width: 11px; height: 11px; border-radius: 50%; display: inline-block; background: var(--background-modifier-border); }
+  .traffic span:nth-child(1){ background:#ff5f57; } .traffic span:nth-child(2){ background:#febc2e; } .traffic span:nth-child(3){ background:#28c840; }
+  .mockup-title { flex: 1; text-align: center; font-weight: 500; color: var(--text-normal); font-size: 12px; }
+
+  /* ===== Shared bits ===== */
+  .toggle { width: 38px; height: 22px; border-radius: 999px; background: var(--background-modifier-border); position: relative; cursor: pointer; transition: background 0.15s ease; flex-shrink: 0; }
+  .toggle::after { content: ""; position: absolute; width: 16px; height: 16px; border-radius: 50%; background: #fff; top: 3px; left: 3px; transition: left 0.15s ease; box-shadow: var(--shadow-s); }
+  .toggle.on { background: var(--interactive-accent); }
+  .toggle.on::after { left: 19px; }
+  .toggle.small { width: 28px; height: 16px; }
+  .toggle.small::after { width: 12px; height: 12px; top: 2px; left: 2px; }
+  .toggle.small.on::after { left: 14px; }
+
+  .btn { font: inherit; font-size: 12.5px; padding: 6px 12px; border-radius: 6px; border: 1px solid var(--background-modifier-border); background: var(--interactive-normal); color: var(--text-normal); cursor: pointer; }
+  .btn:hover { background: var(--interactive-hover); }
+  .btn.accent { background: var(--interactive-accent); border-color: var(--interactive-accent); color: var(--text-on-accent); }
+  .btn.accent:hover { background: var(--interactive-accent-hover); }
+  .btn.small { padding: 4px 9px; font-size: 11.5px; }
+  .btn.ghost { background: transparent; border-color: transparent; }
+  .btn[disabled] { opacity: 0.5; cursor: not-allowed; }
+
+  .filter-chip { font-size: 12px; padding: 5px 11px; border-radius: 999px; border: 1px solid var(--background-modifier-border); background: var(--background-secondary); color: var(--text-muted); cursor: pointer; user-select: none; }
+  .filter-chip:hover { color: var(--text-normal); border-color: var(--background-modifier-border-hover); }
+  .filter-chip.active { background: rgba(124,58,237,0.16); border-color: rgba(124,58,237,0.4); color: var(--text-accent); }
+  .filter-chip .cnt { font-variant-numeric: tabular-nums; opacity: 0.75; margin-left: 4px; font-size: 11px; }
+
+  .search { flex: 1; min-width: 150px; display: flex; align-items: center; gap: 8px; background: var(--background-modifier-form-field); border: 1px solid var(--background-modifier-border); border-radius: 7px; padding: 7px 11px; }
+  .search .ic { color: var(--text-faint); font-size: 12px; }
+  .search input { flex: 1; background: transparent; border: 0; outline: 0; color: var(--text-normal); font: inherit; font-size: 13px; }
+  .search input::placeholder { color: var(--text-faint); }
+
+  /* Bulk bar */
+  .bulk-bar { display: flex; align-items: center; gap: 10px; padding: 9px 12px; background: rgba(124,58,237,0.1); border: 1px solid rgba(124,58,237,0.3); border-radius: 9px; font-size: 13px; flex-wrap: wrap; }
+  .bulk-bar .count { font-weight: 600; color: var(--text-accent); }
+  .bulk-bar .spacer { flex: 1; }
+  .bulk-bar[hidden] { display: none; }
+
+  .callout { display: flex; gap: 10px; border-radius: 9px; padding: 11px 13px; font-size: 12px; line-height: 1.55; }
+  .callout .ic { width: 18px; height: 18px; border-radius: 50%; flex-shrink: 0; display: grid; place-items: center; font-weight: 700; font-size: 11px; }
+  .callout.info { background: rgba(124,58,237,0.08); border: 1px solid rgba(124,58,237,0.25); }
+  .callout.info .ic { background: var(--interactive-accent); color: #fff; }
+  .callout strong { color: var(--text-normal); }
+  .b009-note { font-size: 11px; color: var(--text-faint); }
+  .b009-note code { font-size: 10.5px; }
+  .b009-pill { display: inline-block; font-size: 9.5px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-warning); border: 1px dashed rgba(245,201,124,0.45); border-radius: 5px; padding: 1px 6px; vertical-align: middle; }
+
+  /* Help icon + tooltip */
+  .help-ic { display: inline-flex; align-items: center; justify-content: center; width: 14px; height: 14px; margin-left: 5px; border-radius: 50%; border: 1px solid var(--background-modifier-border); color: var(--text-muted); font-size: 9.5px; font-weight: 700; cursor: help; position: relative; vertical-align: middle; text-transform: none; letter-spacing: 0; }
+  .help-ic:hover { color: var(--text-normal); border-color: var(--background-modifier-border-hover); }
+  .help-ic::before { content: "?"; line-height: 1; }
+  .help-ic .tip { position: absolute; left: 50%; transform: translateX(-50%); bottom: calc(100% + 8px); background: var(--background-secondary); border: 1px solid var(--background-modifier-border); border-radius: 7px; padding: 9px 11px; font-size: 11.5px; font-weight: 400; line-height: 1.5; color: var(--text-normal); width: 250px; text-align: left; box-shadow: var(--shadow-m); opacity: 0; pointer-events: none; transition: opacity 0.12s ease; z-index: 20; white-space: normal; }
+  .help-ic .tip::after { content: ""; position: absolute; left: 50%; top: 100%; transform: translateX(-50%); border: 5px solid transparent; border-top-color: var(--background-modifier-border); }
+  .help-ic:hover .tip { opacity: 1; }
+  .help-ic .tip code { font-size: 11px; }
+
+  /* Source pill */
+  .src { font-size: 10.5px; color: var(--text-faint); border: 1px solid var(--divider-color); border-radius: 4px; padding: 1px 6px; white-space: nowrap; }
+  .src.both { color: var(--text-accent); border-color: rgba(124,58,237,0.3); }
+  .src.frontmatter { color: var(--text-success); border-color: rgba(103,211,145,0.3); }
+
+  input[type=checkbox].cb { width: 15px; height: 15px; accent-color: var(--interactive-accent); cursor: pointer; margin: 0; }
+
+  /* ========================================================
+     SIDEBAR VIEWER
+     ======================================================== */
+  .viewer-host { padding: 0; }
+  .viewer-head { display: flex; align-items: center; gap: 8px; padding: 12px 14px 4px; }
+  .viewer-head h2 { margin: 0; font-size: 16px; font-weight: 700; flex: 1; }
+  .mode-switch { display: inline-flex; background: var(--background-tertiary); border: 1px solid var(--divider-color); border-radius: 7px; padding: 2px; gap: 2px; }
+  .mode-switch button { background: transparent; border: 0; color: var(--text-muted); font: inherit; font-size: 11.5px; padding: 4px 10px; border-radius: 5px; cursor: pointer; }
+  .mode-switch button.is-active { background: var(--background-primary); color: var(--text-normal); box-shadow: var(--shadow-s); }
+
+  .viewer-toolbar { display: flex; flex-direction: column; gap: 8px; padding: 8px 14px 10px; }
+  .viewer-toolbar .chips { display: flex; gap: 6px; flex-wrap: wrap; }
+
+  .viewer-bulk { margin: 0 14px 10px; }
+
+  table.tags { width: 100%; border-collapse: collapse; font-size: 13px; }
+  table.tags th { text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-faint); font-weight: 600; padding: 8px 10px; border-bottom: 1px solid var(--background-modifier-border); cursor: pointer; white-space: nowrap; user-select: none; }
+  table.tags th:hover { color: var(--text-muted); }
+  table.tags th .sort { color: var(--text-accent); margin-left: 3px; }
+  table.tags th.num { text-align: right; }
+  table.tags td { padding: 9px 10px; border-bottom: 1px solid var(--divider-color); vertical-align: middle; }
+  table.tags td.num { text-align: right; font-variant-numeric: tabular-nums; color: var(--text-muted); }
+  table.tags tbody tr { cursor: pointer; }
+  table.tags tbody tr:hover td { background: var(--background-modifier-hover); }
+  table.tags tr.is-hidden .tagname { color: var(--text-faint); text-decoration: line-through; }
+  table.tags tr.is-flagged .tagname { color: var(--text-warning); }
+  .tagname { font-weight: 500; }
+  .tagname .hash { color: var(--text-faint); }
+
+  .viewer-table-wrap { padding: 0 14px 6px; }
+  .row-search-ic { color: var(--text-faint); font-size: 12px; opacity: 0; transition: opacity 0.1s ease; }
+  table.tags tbody tr:hover .row-search-ic { opacity: 1; }
+  .eye-btn { background: transparent; border: 0; color: var(--text-faint); cursor: pointer; font-size: 14px; padding: 2px 4px; border-radius: 4px; line-height: 1; }
+  .eye-btn:hover { color: var(--text-normal); background: var(--background-modifier-hover); }
+  td.manage-cell { width: 30px; }
+  td.eye-cell { width: 34px; text-align: center; }
+
+  .viewer-foot { padding: 8px 14px 14px; font-size: 11px; color: var(--text-faint); border-top: 1px solid var(--divider-color); }
+
+  /* ========================================================
+     SETTINGS FULL TABLE
+     ======================================================== */
+  .settings-host { padding: 0; }
+  .settings-top-tabs { display: flex; gap: 2px; padding: 10px 18px 0; background: var(--background-secondary); border-bottom: 1px solid var(--divider-color); overflow-x: auto; }
+  .stt-tab { padding: 8px 14px; font-size: 13px; color: var(--text-muted); cursor: pointer; border-bottom: 2px solid transparent; white-space: nowrap; display: flex; align-items: center; gap: 6px; }
+  .stt-tab:hover { color: var(--text-normal); }
+  .stt-tab.active { color: var(--text-normal); border-bottom-color: var(--interactive-accent); }
+  .stt-badge { font-size: 10px; background: var(--background-modifier-border); color: var(--text-muted); border-radius: 999px; padding: 1px 6px; font-variant-numeric: tabular-nums; }
+
+  .settings-panel { padding: 18px 22px 24px; }
+  .settings-head { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
+  .settings-head .sh-title { font-size: 15px; font-weight: 700; }
+  .settings-head .sh-sub { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+  .settings-head .spacer { flex: 1; }
+  .open-in-sidebar { font-size: 12.5px; color: var(--text-accent); cursor: pointer; display: inline-flex; align-items: center; gap: 6px; text-decoration: none; }
+  .open-in-sidebar:hover { text-decoration: underline; }
+
+  .settings-toolbar { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 12px; }
+  .settings-toolbar .chips { display: flex; gap: 6px; flex-wrap: wrap; }
+
+  .settings-bulk { margin-bottom: 12px; }
+
+  table.fulltags { width: 100%; border-collapse: collapse; font-size: 13px; }
+  table.fulltags th { text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-faint); font-weight: 600; padding: 8px 10px; border-bottom: 1px solid var(--background-modifier-border); cursor: pointer; white-space: nowrap; user-select: none; }
+  table.fulltags th:hover { color: var(--text-muted); }
+  table.fulltags th .sort { color: var(--text-accent); margin-left: 3px; }
+  table.fulltags th.num { text-align: right; }
+  table.fulltags td { padding: 9px 10px; border-bottom: 1px solid var(--divider-color); vertical-align: top; }
+  table.fulltags td.num { text-align: right; font-variant-numeric: tabular-nums; color: var(--text-muted); }
+  table.fulltags td.date { color: var(--text-muted); white-space: nowrap; font-size: 12.5px; }
+  table.fulltags tr:hover td { background: var(--background-modifier-hover); }
+  table.fulltags tr.is-hidden .tagname { color: var(--text-faint); text-decoration: line-through; }
+  table.fulltags tr.is-flagged .tagname { color: var(--text-warning); }
+  table.fulltags td.sel-col { width: 32px; }
+  .rule-attrib { margin-top: 5px; display: flex; flex-direction: column; gap: 2px; }
+  .rule-attrib .ra-line { font-size: 11.5px; color: var(--text-accent); display: flex; align-items: center; gap: 6px; }
+  .rule-attrib .ra-line .ra-arrow { color: var(--text-faint); }
+  .rule-attrib .ra-none { font-size: 11.5px; color: var(--text-faint); }
+
+  .vis-dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; margin-right: 6px; vertical-align: middle; }
+  .vis-dot.hidden { background: var(--text-accent); }
+  .vis-dot.flagged { background: var(--text-warning); }
+  .vis-dot.shown { background: var(--text-success); }
+
+  /* Toast */
+  .toast { position: fixed; bottom: 26px; left: 50%; transform: translateX(-50%) translateY(20px); background: var(--background-secondary); border: 1px solid var(--background-modifier-border); color: var(--text-normal); padding: 11px 16px; border-radius: 9px; box-shadow: var(--shadow-l); font-size: 13px; opacity: 0; pointer-events: none; transition: opacity 0.18s ease, transform 0.18s ease; z-index: 100; display: flex; align-items: center; gap: 9px; }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  .toast .t-ic { color: var(--text-accent); font-size: 14px; }
+  .toast code { font-size: 12px; }
+
+  @media (max-width: 1080px) {
+    .surfaces.side-by-side { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="page-head">
+    <div class="page-eyebrow">Proposal / unreleased - tag-list-dual-host</div>
+    <h1 class="page-title">Tag List Dual-Host Redesign</h1>
+    <p class="page-desc">Two differentiated surfaces sharing one tested core. The <strong>sidebar viewer</strong> is a lightweight browse-and-search pane with an optional manage toggle. The <strong>settings table</strong> is the full curation surface with every column, rule attribution, and the analysis chip set. State lives on the plugin; view state (sort / filter / search / selection) is per host, so selecting in one surface does not disturb the other.</p>
+    <div class="toprow">
+      <div class="layout-toggle" id="layoutToggle">
+        <button data-layout="side-by-side" class="is-active">Side by side</button>
+        <button data-layout="viewer">Sidebar viewer only</button>
+        <button data-layout="settings">Settings table only</button>
+      </div>
+      <div class="theme-toggle" id="themeToggle">
+        <button data-theme-set="dark" class="is-active">Dark</button>
+        <button data-theme-set="light">Light</button>
+      </div>
+      <div class="legend">
+        <span class="chip">Hidden tags struck through, still listed under All</span>
+        <span class="chip">Display-only, files untouched</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="surfaces side-by-side" id="surfaces">
+
+    <!-- ============================================================
+         (A) SIDEBAR VIEWER
+         ============================================================ -->
+    <div class="surface" id="surface-viewer">
+      <div class="surface-label">
+        <span class="sl-name">A - Sidebar viewer</span>
+        <span class="sl-tag">TagViewer</span>
+        <span class="sl-meta">narrow pane - browse, search, light manage</span>
+      </div>
+      <div class="mockup">
+        <div class="mockup-titlebar"><div class="traffic"><span></span><span></span><span></span></div><div class="mockup-title">Tag Curator - sidebar</div></div>
+        <div class="viewer-host">
+          <div class="viewer-head">
+            <h2>Tags</h2>
+            <div class="mode-switch" id="viewerMode">
+              <button data-vmode="view" class="is-active">View</button>
+              <button data-vmode="manage">Manage</button>
+            </div>
+          </div>
+
+          <div class="viewer-toolbar">
+            <div class="search">
+              <span class="ic">&#128269;</span>
+              <input id="viewerSearch" type="text" placeholder="Filter tags...">
+            </div>
+            <div class="chips" id="viewerChips">
+              <span class="filter-chip active" data-chip="all">All <span class="cnt">12</span></span>
+              <span class="filter-chip" data-chip="hidden">Hidden <span class="cnt">5</span></span>
+              <span class="filter-chip" data-chip="orphans">Orphans <span class="cnt">3</span></span>
+            </div>
+          </div>
+
+          <div class="bulk-bar viewer-bulk" id="viewerBulk" hidden>
+            <span class="count" id="viewerBulkCount">0 selected</span>
+            <div class="spacer"></div>
+            <button class="btn small" data-act="hide" title="Coming in v0.2 (B009)">Hide</button>
+            <button class="btn small" data-act="unhide" title="Coming in v0.2 (B009)">Unhide</button>
+            <button class="btn small" data-act="tw">Send to Tag Wrangler</button>
+            <button class="btn small ghost" data-act="clear">Clear</button>
+          </div>
+
+          <div class="viewer-table-wrap">
+            <table class="tags">
+              <thead>
+                <tr id="viewerHeadRow">
+                  <th class="manage-cell manage-only" style="display:none;"></th>
+                  <th data-sort="name">Tag <span class="sort" data-sortcaret="name">&uarr;</span></th>
+                  <th class="num" data-sort="count">Count <span class="sort" data-sortcaret="count"></span></th>
+                  <th class="eye-cell manage-only" style="display:none;"></th>
+                </tr>
+              </thead>
+              <tbody id="viewerBody"><!-- rows injected --></tbody>
+            </table>
+          </div>
+
+          <div class="viewer-foot" id="viewerFoot">
+            Click a tag to run a vault search for it. The viewer shows Tag and Count only - first/last seen, source, and rule attribution live in the settings table.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============================================================
+         (B) SETTINGS FULL TABLE
+         ============================================================ -->
+    <div class="surface" id="surface-settings">
+      <div class="surface-label">
+        <span class="sl-name">B - Settings table</span>
+        <span class="sl-tag">TagTable</span>
+        <span class="sl-meta">full curation surface - all columns, stacked rule attribution, bulk</span>
+      </div>
+      <div class="mockup">
+        <div class="mockup-titlebar"><div class="traffic"><span></span><span></span><span></span></div><div class="mockup-title">Settings - Tag Curator</div></div>
+        <div class="settings-host">
+          <div class="settings-top-tabs">
+            <div class="stt-tab">General</div>
+            <div class="stt-tab active">Tag list <span class="stt-badge">12</span></div>
+            <div class="stt-tab">Presets <span class="stt-badge">5</span></div>
+            <div class="stt-tab">Custom rules <span class="stt-badge">3</span></div>
+            <div class="stt-tab">Commands</div>
+            <div class="stt-tab">Advanced</div>
+          </div>
+
+          <div class="settings-panel">
+            <div class="settings-head">
+              <div>
+                <div class="sh-title">Tag list</div>
+                <div class="sh-sub">Every tag the plugin has indexed. Sort, filter, and curate in bulk. Hidden tags stay listed (struck through) so nothing disappears on you.</div>
+              </div>
+              <div class="spacer"></div>
+              <a class="open-in-sidebar" id="openInSidebar">&#9776; Open in sidebar</a>
+            </div>
+
+            <div class="settings-toolbar">
+              <div class="search">
+                <span class="ic">&#128269;</span>
+                <input id="settingsSearch" type="text" placeholder="Filter tags...">
+              </div>
+              <div class="chips" id="settingsChips">
+                <span class="filter-chip active" data-chip="all">All <span class="cnt">12</span></span>
+                <span class="filter-chip" data-chip="hidden">Hidden <span class="cnt">5</span></span>
+                <span class="filter-chip" data-chip="orphans">Orphans <span class="cnt">3</span></span>
+                <span class="filter-chip" data-chip="frontmatter">Frontmatter <span class="cnt">4</span></span>
+                <span class="filter-chip" data-chip="unreviewed">Unreviewed <span class="cnt">6</span></span>
+              </div>
+            </div>
+
+            <div class="bulk-bar settings-bulk" id="settingsBulk" hidden>
+              <span class="count" id="settingsBulkCount">0 selected</span>
+              <span style="color:var(--text-muted);" id="settingsBulkOf">of 12</span>
+              <div class="spacer"></div>
+              <button class="btn small" data-act="hide" title="Coming in v0.2 (B009)">Hide</button>
+              <button class="btn small" data-act="unhide" title="Coming in v0.2 (B009)">Unhide</button>
+              <button class="btn small" data-act="tw">Send to Tag Wrangler</button>
+              <button class="btn small ghost" data-act="clear">Clear</button>
+            </div>
+
+            <table class="fulltags">
+              <thead>
+                <tr>
+                  <th class="sel-col"><input type="checkbox" class="cb" id="settingsSelectAll"></th>
+                  <th data-sort="name">Tag <span class="sort" data-sortcaret="name">&uarr;</span></th>
+                  <th class="num" data-sort="count">Count <span class="sort" data-sortcaret="count"></span><span class="help-ic"><span class="tip">Number of notes in which this tag currently appears, from <code>TagMeta.count</code> in the sidecar.</span></span></th>
+                  <th data-sort="firstSeen">First seen <span class="sort" data-sortcaret="firstSeen"></span><span class="help-ic"><span class="tip">When Tag Curator first indexed this tag - <strong>not</strong> the note's created date. Stored in <code>TagMeta.firstSeen</code>.</span></span></th>
+                  <th data-sort="lastSeen">Last used <span class="sort" data-sortcaret="lastSeen"></span><span class="help-ic"><span class="tip">Most recent time the tag was seen in any indexed note. Stored in <code>TagMeta.lastSeen</code>.</span></span></th>
+                  <th data-sort="source">Source <span class="sort" data-sortcaret="source"></span><span class="help-ic"><span class="tip">Where the tag is written: <code>inline</code> (body text), <code>frontmatter</code> (YAML), or <code>both</code>.</span></span></th>
+                </tr>
+              </thead>
+              <tbody id="settingsBody"><!-- rows injected --></tbody>
+            </table>
+
+            <div class="callout info" style="margin-top:14px;">
+              <div class="ic">i</div>
+              <div><strong>Rule attribution is stacked per row:</strong> a tag matched by several rules shows each on its own line. <span class="b009-pill">B009</span> Functional <strong>Hide / Unhide</strong> arrives in v0.2 (per-tag override store). Until then those buttons keep today's "coming in v0.2" notice. <strong>Send to Tag Wrangler</strong> works now.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div class="toast" id="toast"><span class="t-ic">&#128269;</span><span id="toastMsg"></span></div>
+
+<script>
+(function () {
+  "use strict";
+
+  // ---- Sample data: mirrors the test vault (hex noise, year tags, real tags, orphans) ----
+  // visibility: shown | hidden | flagged
+  // source: inline | frontmatter | both
+  var DATA = [
+    { name: "ai",            count: 47, firstSeen: "2026-01-02", lastSeen: "2026-05-20", source: "both",        visibility: "shown",   reviewed: true,  rules: [] },
+    { name: "project/acme",  count: 31, firstSeen: "2026-02-11", lastSeen: "2026-05-27", source: "frontmatter", visibility: "shown",   reviewed: true,  rules: [] },
+    { name: "area/finance",  count: 24, firstSeen: "2026-01-18", lastSeen: "2026-05-22", source: "frontmatter", visibility: "shown",   reviewed: true,  rules: [] },
+    { name: "FF0000",        count: 22, firstSeen: "2026-03-01", lastSeen: "2026-05-28", source: "inline",      visibility: "hidden",  reviewed: true,  rules: [ { id: "hex", name: "Hide hex color codes" } ] },
+    { name: "reading",       count: 19, firstSeen: "2026-01-24", lastSeen: "2026-05-19", source: "frontmatter", visibility: "shown",   reviewed: false, rules: [] },
+    { name: "year-2024",     count: 14, firstSeen: "2026-02-02", lastSeen: "2026-04-30", source: "inline",      visibility: "flagged", reviewed: false, rules: [ { id: "year", name: "Flag bare year tags" } ] },
+    { name: "0CA923",        count: 11, firstSeen: "2026-03-09", lastSeen: "2026-05-26", source: "inline",      visibility: "hidden",  reviewed: true,  rules: [ { id: "hex", name: "Hide hex color codes" } ] },
+    { name: "meeting",       count:  9, firstSeen: "2026-01-30", lastSeen: "2026-05-15", source: "both",        visibility: "shown",   reviewed: false, rules: [] },
+    { name: "6F5DA2",        count:  7, firstSeen: "2026-03-14", lastSeen: "2026-05-21", source: "inline",      visibility: "hidden",  reviewed: true,  rules: [ { id: "hex", name: "Hide hex color codes" }, { id: "orphanish", name: "Hide rare tags (count <= 8)" } ] },
+    { name: "tmp",           count:  1, firstSeen: "2026-05-12", lastSeen: "2026-05-12", source: "inline",      visibility: "hidden",  reviewed: false, rules: [ { id: "orphans", name: "Hide orphan tags" } ] },
+    { name: "test123",       count:  1, firstSeen: "2026-05-18", lastSeen: "2026-05-18", source: "inline",      visibility: "hidden",  reviewed: false, rules: [ { id: "orphans", name: "Hide orphan tags" } ] },
+    { name: "oneshot",       count:  1, firstSeen: "2026-05-24", lastSeen: "2026-05-24", source: "frontmatter", visibility: "shown",   reviewed: false, rules: [] }
+  ];
+
+  // ---- Helpers ----
+  function fmtDate(iso) {
+    var parts = iso.split("-");
+    var months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+    return months[parseInt(parts[1], 10) - 1] + " " + parseInt(parts[2], 10) + ", " + parts[0];
+  }
+  function isOrphan(r) { return r.count <= 1; }
+
+  // ---- Toast ----
+  var toastEl = document.getElementById("toast");
+  var toastMsg = document.getElementById("toastMsg");
+  var toastTimer = null;
+  function showToast(html) {
+    toastMsg.innerHTML = html;
+    toastEl.classList.add("show");
+    if (toastTimer) clearTimeout(toastTimer);
+    toastTimer = setTimeout(function () { toastEl.classList.remove("show"); }, 2200);
+  }
+
+  // ====================================================================
+  // Generic host controller (shared filter/search/sort logic, per host)
+  // ====================================================================
+  function makeHost(cfg) {
+    var state = {
+      sortKey: cfg.defaultSort || "name",
+      sortDesc: false,
+      filter: "all",
+      search: "",
+      selection: {}
+    };
+
+    function matchesFilter(r) {
+      switch (state.filter) {
+        case "hidden": return r.visibility === "hidden";
+        case "orphans": return isOrphan(r);
+        case "frontmatter": return r.source === "frontmatter" || r.source === "both";
+        case "unreviewed": return !r.reviewed;
+        default: return true;
+      }
+    }
+    function matchesSearch(r) {
+      if (!state.search) return true;
+      return r.name.toLowerCase().indexOf(state.search.toLowerCase()) !== -1;
+    }
+    function compare(a, b) {
+      var k = state.sortKey, av, bv;
+      if (k === "count") { av = a.count; bv = b.count; }
+      else if (k === "firstSeen" || k === "lastSeen") { av = a[k]; bv = b[k]; }
+      else if (k === "source") { av = a.source; bv = b.source; }
+      else { av = a.name.toLowerCase(); bv = b.name.toLowerCase(); }
+      var cmp = av < bv ? -1 : av > bv ? 1 : 0;
+      return state.sortDesc ? -cmp : cmp;
+    }
+    function visibleRows() {
+      return DATA.filter(function (r) { return matchesFilter(r) && matchesSearch(r); }).sort(compare);
+    }
+    function selectedCount() { return Object.keys(state.selection).length; }
+
+    function updateCarets() {
+      cfg.root.querySelectorAll("[data-sortcaret]").forEach(function (el) {
+        if (el.getAttribute("data-sortcaret") === state.sortKey) {
+          el.textContent = state.sortDesc ? "↓" : "↑";
+        } else {
+          el.textContent = "";
+        }
+      });
+    }
+    function updateChips() {
+      cfg.root.querySelectorAll("[data-chip]").forEach(function (el) {
+        el.classList.toggle("active", el.getAttribute("data-chip") === state.filter);
+      });
+    }
+
+    function bindHeaders() {
+      cfg.root.querySelectorAll("th[data-sort]").forEach(function (th) {
+        th.addEventListener("click", function () {
+          var k = th.getAttribute("data-sort");
+          if (state.sortKey === k) { state.sortDesc = !state.sortDesc; }
+          else { state.sortKey = k; state.sortDesc = (k === "count"); }
+          render();
+        });
+      });
+    }
+    function bindChips() {
+      cfg.root.querySelectorAll("[data-chip]").forEach(function (el) {
+        el.addEventListener("click", function () {
+          state.filter = el.getAttribute("data-chip");
+          render();
+        });
+      });
+    }
+    function bindSearch() {
+      if (!cfg.searchEl) return;
+      cfg.searchEl.addEventListener("input", function () {
+        state.search = cfg.searchEl.value;
+        render();
+      });
+    }
+
+    function render() {
+      updateCarets();
+      updateChips();
+      cfg.renderBody(state, visibleRows());
+      if (cfg.renderBulk) cfg.renderBulk(state, selectedCount());
+    }
+
+    return {
+      state: state,
+      render: render,
+      init: function () { bindHeaders(); bindChips(); bindSearch(); if (cfg.init) cfg.init(this); render(); },
+      visibleRows: visibleRows,
+      selectedCount: selectedCount
+    };
+  }
+
+  // ====================================================================
+  // (A) Sidebar viewer
+  // ====================================================================
+  var viewerMode = "view";
+  var viewerBody = document.getElementById("viewerBody");
+  var viewerBulk = document.getElementById("viewerBulk");
+  var viewerBulkCount = document.getElementById("viewerBulkCount");
+  var viewerFoot = document.getElementById("viewerFoot");
+
+  var viewer = makeHost({
+    root: document.getElementById("surface-viewer"),
+    searchEl: document.getElementById("viewerSearch"),
+    defaultSort: "count",
+    renderBody: function (state, rows) {
+      viewerBody.innerHTML = "";
+      rows.forEach(function (r) {
+        var tr = document.createElement("tr");
+        tr.className = (r.visibility === "hidden" ? "is-hidden" : r.visibility === "flagged" ? "is-flagged" : "");
+
+        var html = "";
+        if (viewerMode === "manage") {
+          html += '<td class="manage-cell"><input type="checkbox" class="cb"' + (state.selection[r.name] ? " checked" : "") + '></td>';
+        }
+        html += '<td><span class="tagname"><span class="hash">#</span>' + r.name + '</span> <span class="row-search-ic" title="Search vault for this tag">&#128269;</span></td>';
+        html += '<td class="num">' + r.count + '</td>';
+        if (viewerMode === "manage") {
+          var eye = r.visibility === "hidden" ? "&#128065;" : "&#128064;";
+          html += '<td class="eye-cell"><button class="eye-btn" title="' + (r.visibility === "hidden" ? "Unhide" : "Hide") + ' (coming in v0.2 - B009)">' + eye + '</button></td>';
+        }
+        tr.innerHTML = html;
+
+        // Row click: view = search; manage = toggle selection
+        tr.addEventListener("click", function (ev) {
+          if (ev.target.closest(".eye-btn")) {
+            showToast('Hide / Unhide is <span class="b009-pill">coming in v0.2 (B009)</span>');
+            return;
+          }
+          if (viewerMode === "manage" && !ev.target.closest(".row-search-ic")) {
+            if (state.selection[r.name]) { delete state.selection[r.name]; }
+            else { state.selection[r.name] = true; }
+            viewer.render();
+            return;
+          }
+          showToast('Searching vault for <code>tag:#' + r.name + '</code>');
+        });
+        viewerBody.appendChild(tr);
+      });
+    },
+    renderBulk: function (state, n) {
+      if (viewerMode === "manage" && n > 0) {
+        viewerBulk.hidden = false;
+        viewerBulkCount.textContent = n + " selected";
+      } else {
+        viewerBulk.hidden = true;
+      }
+    }
+  });
+
+  // Manage-mode column visibility + foot copy
+  function applyViewerMode() {
+    var isManage = (viewerMode === "manage");
+    document.querySelectorAll("#surface-viewer .manage-only").forEach(function (el) {
+      el.style.display = isManage ? "" : "none";
+    });
+    viewerFoot.innerHTML = isManage
+      ? 'Select rows, then act in bulk. <span class="b009-pill">B009</span> Hide / Unhide light up in v0.2; Send to Tag Wrangler works now. The per-row eye toggles visibility for a single tag.'
+      : 'Click a tag to run a vault search for it. The viewer shows Tag and Count only - first/last seen, source, and rule attribution live in the settings table.';
+    viewer.render();
+  }
+
+  document.getElementById("viewerMode").addEventListener("click", function (ev) {
+    var btn = ev.target.closest("button[data-vmode]");
+    if (!btn) return;
+    viewerMode = btn.getAttribute("data-vmode");
+    this.querySelectorAll("button").forEach(function (b) { b.classList.toggle("is-active", b === btn); });
+    if (viewerMode === "view") { viewer.state.selection = {}; }
+    applyViewerMode();
+  });
+
+  viewerBulk.addEventListener("click", function (ev) {
+    var btn = ev.target.closest("button[data-act]");
+    if (!btn) return;
+    var act = btn.getAttribute("data-act");
+    if (act === "clear") { viewer.state.selection = {}; viewer.render(); return; }
+    if (act === "tw") { showToast("Sent selection to Tag Wrangler"); return; }
+    showToast('Hide / Unhide is <span class="b009-pill">coming in v0.2 (B009)</span>');
+  });
+
+  // ====================================================================
+  // (B) Settings full table
+  // ====================================================================
+  var settingsBody = document.getElementById("settingsBody");
+  var settingsBulk = document.getElementById("settingsBulk");
+  var settingsBulkCount = document.getElementById("settingsBulkCount");
+  var settingsBulkOf = document.getElementById("settingsBulkOf");
+  var settingsSelectAll = document.getElementById("settingsSelectAll");
+
+  var settings = makeHost({
+    root: document.getElementById("surface-settings"),
+    searchEl: document.getElementById("settingsSearch"),
+    defaultSort: "count",
+    renderBody: function (state, rows) {
+      settingsBody.innerHTML = "";
+      rows.forEach(function (r) {
+        var tr = document.createElement("tr");
+        tr.className = (r.visibility === "hidden" ? "is-hidden" : r.visibility === "flagged" ? "is-flagged" : "");
+
+        var ruleHtml;
+        if (r.rules.length) {
+          ruleHtml = '<div class="rule-attrib">' + r.rules.map(function (rule) {
+            return '<span class="ra-line"><span class="ra-arrow">&rarr;</span> ' + rule.name + '</span>';
+          }).join("") + '</div>';
+        } else {
+          ruleHtml = '<div class="rule-attrib"><span class="ra-none">no rule</span></div>';
+        }
+
+        var dotClass = r.visibility;
+        var srcClass = r.source === "both" ? "both" : r.source === "frontmatter" ? "frontmatter" : "";
+
+        tr.innerHTML =
+          '<td class="sel-col"><input type="checkbox" class="cb"' + (state.selection[r.name] ? " checked" : "") + '></td>' +
+          '<td><span class="vis-dot ' + dotClass + '"></span><span class="tagname"><span class="hash">#</span>' + r.name + '</span>' + ruleHtml + '</td>' +
+          '<td class="num">' + r.count + '</td>' +
+          '<td class="date">' + fmtDate(r.firstSeen) + '</td>' +
+          '<td class="date">' + fmtDate(r.lastSeen) + '</td>' +
+          '<td><span class="src ' + srcClass + '">' + r.source + '</span></td>';
+
+        var cb = tr.querySelector(".cb");
+        cb.addEventListener("change", function () {
+          if (cb.checked) { state.selection[r.name] = true; }
+          else { delete state.selection[r.name]; }
+          settings.render();
+        });
+        settingsBody.appendChild(tr);
+      });
+    },
+    renderBulk: function (state, n) {
+      settingsBulk.hidden = (n === 0);
+      settingsBulkCount.textContent = n + " selected";
+      settingsBulkOf.textContent = "of " + DATA.length;
+      // keep select-all in sync with the visible set
+      var vis = settings.visibleRows();
+      var allSel = vis.length > 0 && vis.every(function (r) { return state.selection[r.name]; });
+      settingsSelectAll.checked = allSel;
+      settingsSelectAll.indeterminate = !allSel && n > 0;
+    }
+  });
+
+  settingsSelectAll.addEventListener("change", function () {
+    var vis = settings.visibleRows();
+    if (settingsSelectAll.checked) {
+      vis.forEach(function (r) { settings.state.selection[r.name] = true; });
+    } else {
+      vis.forEach(function (r) { delete settings.state.selection[r.name]; });
+    }
+    settings.render();
+  });
+
+  settingsBulk.addEventListener("click", function (ev) {
+    var btn = ev.target.closest("button[data-act]");
+    if (!btn) return;
+    var act = btn.getAttribute("data-act");
+    if (act === "clear") { settings.state.selection = {}; settings.render(); return; }
+    if (act === "tw") { showToast("Sent selection to Tag Wrangler"); return; }
+    showToast('Hide / Unhide is <span class="b009-pill">coming in v0.2 (B009)</span>');
+  });
+
+  document.getElementById("openInSidebar").addEventListener("click", function () {
+    showToast("Opening the tag list in the sidebar");
+  });
+
+  // ====================================================================
+  // Page chrome: layout + theme toggles
+  // ====================================================================
+  document.getElementById("layoutToggle").addEventListener("click", function (ev) {
+    var btn = ev.target.closest("button[data-layout]");
+    if (!btn) return;
+    this.querySelectorAll("button").forEach(function (b) { b.classList.toggle("is-active", b === btn); });
+    var layout = btn.getAttribute("data-layout");
+    var surfaces = document.getElementById("surfaces");
+    var v = document.getElementById("surface-viewer");
+    var s = document.getElementById("surface-settings");
+    if (layout === "side-by-side") {
+      surfaces.className = "surfaces side-by-side"; v.hidden = false; s.hidden = false;
+    } else if (layout === "viewer") {
+      surfaces.className = "surfaces stacked"; v.hidden = false; s.hidden = true;
+    } else {
+      surfaces.className = "surfaces stacked"; v.hidden = true; s.hidden = false;
+    }
+  });
+
+  document.getElementById("themeToggle").addEventListener("click", function (ev) {
+    var btn = ev.target.closest("button[data-theme-set]");
+    if (!btn) return;
+    this.querySelectorAll("button").forEach(function (b) { b.classList.toggle("is-active", b === btn); });
+    document.documentElement.setAttribute("data-theme", btn.getAttribute("data-theme-set"));
+  });
+
+  // ---- Boot ----
+  viewer.init();
+  settings.init();
+  applyViewerMode();
+})();
+</script>
+</body>
+</html>
