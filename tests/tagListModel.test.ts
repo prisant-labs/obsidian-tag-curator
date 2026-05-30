@@ -94,3 +94,26 @@ describe('TagListModel filtering and search', () => {
     expect(model.rows().map((r) => r.meta.tag)).toEqual(['Project']);
   });
 });
+
+describe('TagListModel sorting', () => {
+  it('sorts by count descending by default', () => {
+    const model = new TagListModel(
+      source([meta('a', { count: 2 }), meta('b', { count: 9 })]),
+    );
+    expect(model.rows().map((r) => r.meta.tag)).toEqual(['b', 'a']);
+  });
+
+  it('setSort toggles direction when the same key is set again', () => {
+    const model = new TagListModel(
+      source([meta('a', { count: 2 }), meta('b', { count: 9 })]),
+    );
+    model.setSort('count');
+    expect(model.rows().map((r) => r.meta.tag)).toEqual(['a', 'b']);
+  });
+
+  it('sorts by name ascending', () => {
+    const model = new TagListModel(source([meta('zebra'), meta('apple')]));
+    model.setSort('name', false);
+    expect(model.rows().map((r) => r.meta.tag)).toEqual(['apple', 'zebra']);
+  });
+});

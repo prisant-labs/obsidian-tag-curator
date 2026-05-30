@@ -72,7 +72,56 @@ export class TagListModel {
     }
   }
 
+  setSort(key: SortKey, desc?: boolean): void {
+    if (desc === undefined) {
+      this.sortDesc = this.sortBy === key ? !this.sortDesc : true;
+    } else {
+      this.sortDesc = desc;
+    }
+    this.sortBy = key;
+  }
+  get sortState(): { key: SortKey; desc: boolean } {
+    return { key: this.sortBy, desc: this.sortDesc };
+  }
+
+  compare(a: TagRow, b: TagRow): number {
+    let av: string | number = 0;
+    let bv: string | number = 0;
+    switch (this.sortBy) {
+      case 'name':
+        av = a.meta.tag;
+        bv = b.meta.tag;
+        break;
+      case 'count':
+        av = a.meta.count;
+        bv = b.meta.count;
+        break;
+      case 'firstSeen':
+        av = a.meta.firstSeen;
+        bv = b.meta.firstSeen;
+        break;
+      case 'lastSeen':
+        av = a.meta.lastSeen;
+        bv = b.meta.lastSeen;
+        break;
+      case 'source':
+        av = a.meta.sources.join(',');
+        bv = b.meta.sources.join(',');
+        break;
+      case 'visible':
+        av = a.visibility;
+        bv = b.visibility;
+        break;
+    }
+    if (typeof av === 'string' && typeof bv === 'string') {
+      return this.sortDesc ? bv.localeCompare(av) : av.localeCompare(bv);
+    }
+    return this.sortDesc ? (bv as number) - (av as number) : (av as number) - (bv as number);
+  }
+
   rows(): TagRow[] {
-    return this.allRows().filter((r) => this.matchesFilter(r));
+    const filtered = this.allRows().filter((r) => this.matchesFilter(r));
+    filtered.sort((a, b) => this.compare(a, b));
+    return filtered;
   }
 }
