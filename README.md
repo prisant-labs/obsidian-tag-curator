@@ -56,6 +56,17 @@ Tag Curator never modifies note content. It does not patch `metadataCache.getTag
 
 If the plugin behaves unexpectedly, run "Tag Curator: Panic disable" from the command palette. This is a one-shot action that produces the "off" state: every Tag Curator DOM modification is removed immediately, the plugin disables itself, and a persistent banner shows "Tag Curator is off" at the top of every Tag Curator surface until you re-enable. The same banner shows "Preview mode is on" whenever preview mode is active, so you always know the plugin's current state.
 
+## Compatibility
+
+Tag Curator is display-only and file-safe, so it plays well with the rest of your tag ecosystem.
+
+- **Dataview, Tasks, and Bases**: unaffected. Because Tag Curator only changes how tags render and never patches the metadata cache or note content, every metadata-cache consumer sees the full, unfiltered tag set. Your queries, indexes, and results are exactly what they would be without Tag Curator installed.
+- **Tag Wrangler** (the rename surface): Tag Curator delegates renaming to Tag Wrangler and never writes note content itself. When Tag Wrangler is enabled, the Curation Workspace adds a per-row "Rename with Tag Wrangler" menu item and a bulk "Send to Tag Wrangler" action. When it is not installed, those actions are hidden or disabled and everything else still works.
+- **Style Settings** (optional): install it to customize Tag Curator's flagged-tag colors through a GUI. Tag Curator ships built-in defaults for every themeable value, so styling works fully without Style Settings.
+- **Notebook Navigator** (optional): when present, Tag Curator decorates Notebook Navigator's tag tree through runtime interop only. There is no source coupling between the two (Notebook Navigator is GPL-3.0, Tag Curator is Apache-2.0); Tag Curator targets the rendered rows from the outside and is a no-op when Notebook Navigator is absent.
+
+None of these plugins is required. Tag Curator works fully standalone; each integration is an optional enhancement that activates only when the partner plugin is enabled.
+
 ## Commands
 
 - Tag Curator: Toggle enable
