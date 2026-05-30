@@ -72,7 +72,7 @@ export class SettingsManager {
     if (inferred < 4) {
       // Added per-tag overrides (D-015). Default to an empty map; existing
       // installs have no pinned tags until the user creates them.
-      if (typeof merged.overrides !== 'object' || merged.overrides === null) {
+      if (!merged.overrides || typeof merged.overrides !== 'object' || Array.isArray(merged.overrides)) {
         merged.overrides = {};
       }
     }

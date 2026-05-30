@@ -300,6 +300,17 @@ describe('SettingsManager.load - v3 to v4 migration (overrides)', () => {
     expect(onDisk.overrides).toEqual({});
   });
 
+  it('resets overrides to {} when v3 data has an array instead of an object', async () => {
+    const v3 = {
+      ...DEFAULT_SETTINGS,
+      schemaVersion: 3,
+      overrides: [] as unknown,
+    };
+    const mgr = new SettingsManager(pluginWith(v3));
+    await mgr.load();
+    expect(mgr.get().overrides).toEqual({});
+  });
+
   it('does not downgrade or persist when reading a future-version file with overrides', async () => {
     const future = {
       ...DEFAULT_SETTINGS,
