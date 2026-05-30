@@ -110,12 +110,20 @@ export class NotebookNavigatorObserver extends ObserverBase {
     const own = super.resolveRow(tag, meta);
     if (own.effective !== null) return own;
 
+    // Perf note: each iteration calls RuleEngine.resolveVisibility - O(rules)
+    // per ancestor - so the walk is O(ancestorDepth * ruleCount) per row.
+    // This is acceptable at realistic NN scale (shallow tag trees, modest rule
+    // counts). Intentionally NOT memoized to keep the observer simple; a
+    // per-apply-pass cache is the right future optimization if depth or rule
+    // counts grow materially (YAGNI).
     for (const ancestor of ancestorPrefixes(tag)) {
       const ancestorMeta = this.metadata.get(ancestor);
       const resolved = super.resolveRow(ancestor, ancestorMeta);
       const { effective } = resolved;
-      // Inherit only a hide from an ancestor; an ancestor's always-show pin
-      // governs that ancestor row, not its descendants.
+      // Inherit the ancestor's effective result only when it is NOT an
+      // always-show override: a rule hide or an always-hide override propagates
+      // down to this descendant, but an ancestor always-show pin governs only
+      // that ancestor row and must NOT propagate to its descendants.
       if (effective !== null && effective.overrideReason !== 'always-show') {
         return resolved;
       }

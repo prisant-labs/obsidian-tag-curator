@@ -200,6 +200,24 @@ describe('NotebookNavigatorObserver descendant match (flat nesting)', () => {
     expect(rowFor(scroller, 'photography').classList.contains(HIDDEN_CLASS)).toBe(false);
   });
 
+  it('an always-hide override on an ancestor propagates to its descendant', async () => {
+    const { pane, scroller } = makeNnPane([
+      ['photo', 0],
+      ['photo/camera', 1],
+    ]);
+    document.body.appendChild(pane);
+    const { app } = makeApp([pane]);
+    const obs = new NotebookNavigatorObserver(app as never, new Plugin());
+    // No rules - the hide comes purely from the always-hide override on the ancestor.
+    obs.setRules([]);
+    obs.setOverrides({ photo: 'hide' });
+    obs.attachAll();
+    await flushRaf();
+
+    expect(rowFor(scroller, 'photo').classList.contains(HIDDEN_CLASS)).toBe(true);
+    expect(rowFor(scroller, 'photo/camera').classList.contains(HIDDEN_CLASS)).toBe(true);
+  });
+
   it('an always-show override on the descendant beats an ancestor hide', async () => {
     const { pane, scroller } = makeNnPane([
       ['photo', 0],
