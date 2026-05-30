@@ -1,0 +1,43 @@
+name: build
+
+# CI gate for every PR and every push to main.
+# Runs the full verification chain: lint -> typecheck -> test -> build -> verify-artifacts.
+# Keep permissions minimal: this job only reads the repo, it never writes.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+# Cancel an in-flight run when a newer commit arrives on the same ref.
+# Saves CI minutes on rapid pushes; the latest commit is the only one that matters.
+concurrency:
+  group: build-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          # Single source of truth for the Node version: .nvmrc (currently 20).
+          # Bump Node by editing .nvmrc, not this file.
+          node-version-file: '.nvmrc'
+          cache: 'npm'
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run typecheck
+      - run: npm run test
+      - run: npm run build
+      - name: Verify build artifacts
+        run: |
+          test -f main.js
+          test -f manifest.json
+          test -f styles.css
+          test -f versions.json

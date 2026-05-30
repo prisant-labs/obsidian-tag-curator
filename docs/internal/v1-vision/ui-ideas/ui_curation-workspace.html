@@ -1,0 +1,776 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tag Curator v1 - Curation Workspace (hero mockup)</title>
+<style>
+  :root[data-theme="dark"] {
+    --background-primary: #1e1e1e;
+    --background-primary-alt: #1a1a1a;
+    --background-secondary: #252525;
+    --background-secondary-alt: #2a2a2a;
+    --background-tertiary: #151515;
+    --background-modifier-hover: #2f2f2f;
+    --background-modifier-border: #333;
+    --background-modifier-border-hover: #444;
+    --background-modifier-error: #5b2828;
+    --background-modifier-success: #25522a;
+    --background-modifier-form-field: #1a1a1a;
+    --text-normal: #dcddde;
+    --text-muted: #999;
+    --text-faint: #6e6e6e;
+    --text-on-accent: #ffffff;
+    --text-accent: #a78bfa;
+    --text-error: #ff7878;
+    --text-success: #67d391;
+    --text-warning: #f5c97c;
+    --interactive-accent: #7c3aed;
+    --interactive-accent-hover: #8b5cf6;
+    --interactive-normal: #2a2a2a;
+    --interactive-hover: #353535;
+    --divider-color: #2a2a2a;
+    --shadow-s: 0 1px 2px rgba(0,0,0,0.4);
+    --shadow-m: 0 4px 12px rgba(0,0,0,0.4);
+    --shadow-l: 0 12px 28px rgba(0,0,0,0.5);
+    --code-bg: #161616;
+    --selection: rgba(124, 58, 237, 0.35);
+  }
+  :root[data-theme="light"] {
+    --background-primary: #ffffff;
+    --background-primary-alt: #fafafa;
+    --background-secondary: #f5f6f8;
+    --background-secondary-alt: #ebedf0;
+    --background-tertiary: #e6e8eb;
+    --background-modifier-hover: #eef0f3;
+    --background-modifier-border: #d9dce0;
+    --background-modifier-border-hover: #c2c6cb;
+    --background-modifier-error: #fee2e2;
+    --background-modifier-success: #d1fae5;
+    --background-modifier-form-field: #ffffff;
+    --text-normal: #1f2328;
+    --text-muted: #5b6168;
+    --text-faint: #8a9098;
+    --text-on-accent: #ffffff;
+    --text-accent: #6d28d9;
+    --text-error: #b91c1c;
+    --text-success: #047857;
+    --text-warning: #b45309;
+    --interactive-accent: #7c3aed;
+    --interactive-accent-hover: #6d28d9;
+    --interactive-normal: #f1f3f5;
+    --interactive-hover: #e6e9ec;
+    --divider-color: #e6e8eb;
+    --shadow-s: 0 1px 2px rgba(0,0,0,0.08);
+    --shadow-m: 0 4px 12px rgba(0,0,0,0.08);
+    --shadow-l: 0 12px 28px rgba(0,0,0,0.12);
+    --code-bg: #f5f6f8;
+    --selection: rgba(124, 58, 237, 0.18);
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: var(--background-tertiary);
+    color: var(--text-normal);
+    font-family: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    font-size: 14px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+  ::selection { background: var(--selection); }
+  code { background: var(--code-bg); padding: 1px 5px; border-radius: 4px; font-size: 0.92em; font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace; }
+
+  .canvas { padding: 40px 48px 96px; max-width: 1480px; margin: 0 auto; }
+
+  /* Page header + thesis caption */
+  .page-head { display: flex; align-items: flex-start; gap: 24px; margin-bottom: 22px; }
+  .page-head .ph-text { flex: 1; min-width: 0; }
+  .ph-eyebrow { font-size: 11px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-faint); margin-bottom: 7px; }
+  .ph-title { font-size: 27px; font-weight: 700; letter-spacing: -0.01em; margin: 0 0 10px; }
+  .ph-thesis { color: var(--text-muted); font-size: 15px; max-width: 1020px; }
+  .ph-thesis strong { color: var(--text-normal); }
+
+  .theme-toggle { display: flex; background: var(--background-secondary); border: 1px solid var(--divider-color); border-radius: 8px; padding: 3px; gap: 2px; flex-shrink: 0; }
+  .theme-toggle button { background: transparent; border: 0; color: var(--text-muted); font: inherit; font-size: 12px; padding: 6px 13px; border-radius: 5px; cursor: pointer; }
+  .theme-toggle button.is-active { background: var(--background-primary); color: var(--text-normal); box-shadow: var(--shadow-s); }
+
+  /* Decision chips row (from-review style) + legend */
+  .meta-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 22px; }
+  .from-review { display: inline-block; font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-accent); background: rgba(124,58,237,0.12); border: 1px solid rgba(124,58,237,0.3); border-radius: 5px; padding: 3px 9px; }
+  .from-review .fr-d { font-weight: 700; }
+  .legend { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; margin-left: auto; font-size: 11.5px; color: var(--text-muted); }
+  .legend .lg-item { display: flex; align-items: center; gap: 6px; }
+  .legend .lg-dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
+  .legend .lg-dot.visible { background: var(--text-success); }
+  .legend .lg-dot.hidden { background: var(--text-accent); }
+  .legend .lg-dot.flagged { background: var(--text-warning); }
+
+  /* Mockup frame */
+  .mockup { background: var(--background-primary); border: 1px solid var(--background-modifier-border); border-radius: 12px; overflow: hidden; box-shadow: var(--shadow-l); }
+  .mockup-titlebar { display: flex; align-items: center; gap: 8px; padding: 10px 14px; background: var(--background-secondary); border-bottom: 1px solid var(--divider-color); font-size: 12px; color: var(--text-muted); }
+  .traffic { display: flex; gap: 6px; }
+  .traffic span { width: 11px; height: 11px; border-radius: 50%; display: inline-block; background: var(--background-modifier-border); }
+  .traffic span:nth-child(1){ background:#ff5f57; } .traffic span:nth-child(2){ background:#febc2e; } .traffic span:nth-child(3){ background:#28c840; }
+  .mockup-title { flex: 1; text-align: center; font-weight: 500; color: var(--text-normal); font-size: 12px; }
+  .mockup-tb-right { display: flex; align-items: center; gap: 6px; }
+  .tb-chip { font-size: 11px; color: var(--text-faint); }
+
+  /* The two-pane workspace split: wide Curation Workspace leaf | narrow native tag pane */
+  .split { display: grid; grid-template-columns: 1fr 322px; min-height: 720px; }
+  .leaf { display: flex; flex-direction: column; border-right: 2px solid var(--background-modifier-border); min-width: 0; }
+  .native-pane { background: var(--background-secondary); display: flex; flex-direction: column; min-width: 0; }
+
+  /* Leaf tab header (Obsidian ItemView tab bar) */
+  .leaf-tabbar { display: flex; align-items: center; gap: 8px; padding: 0 12px; height: 38px; background: var(--background-secondary); border-bottom: 1px solid var(--divider-color); }
+  .leaf-tab { display: flex; align-items: center; gap: 7px; font-size: 12.5px; color: var(--text-normal); background: var(--background-primary); border: 1px solid var(--divider-color); border-bottom: none; border-radius: 7px 7px 0 0; padding: 7px 13px; margin-bottom: -1px; }
+  .leaf-tab .tab-ic { color: var(--text-accent); font-size: 13px; }
+  .leaf-tabbar .tb-spacer { flex: 1; }
+  .leaf-tabbar .tb-iconbtn { width: 26px; height: 26px; display: grid; place-items: center; border-radius: 5px; color: var(--text-muted); cursor: pointer; font-size: 14px; }
+  .leaf-tabbar .tb-iconbtn:hover { background: var(--background-modifier-hover); color: var(--text-normal); }
+
+  /* State header / toolbar inside the leaf */
+  .leaf-state { display: flex; align-items: center; gap: 12px; padding: 11px 16px; border-bottom: 1px solid var(--divider-color); background: var(--background-primary-alt); }
+  .leaf-state .ls-title { font-size: 14px; font-weight: 700; letter-spacing: -0.005em; }
+  .leaf-state .ls-sub { font-size: 11.5px; color: var(--text-muted); }
+  .leaf-state .spacer { flex: 1; }
+  .ls-stat { display: flex; flex-direction: column; align-items: flex-end; padding: 0 12px; border-left: 1px solid var(--divider-color); }
+  .ls-stat .v { font-size: 16px; font-weight: 700; font-variant-numeric: tabular-nums; line-height: 1.1; }
+  .ls-stat .v.accent { color: var(--text-accent); }
+  .ls-stat .l { font-size: 10px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-faint); margin-top: 2px; }
+
+  .leaf-body { flex: 1; padding: 14px 16px; overflow-y: auto; }
+
+  /* Toolbar: filter chips + search */
+  .toolbar { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
+  .filter-chip { font-size: 12px; padding: 5px 11px; border-radius: 999px; border: 1px solid var(--background-modifier-border); background: var(--background-secondary); color: var(--text-muted); cursor: pointer; white-space: nowrap; }
+  .filter-chip:hover { border-color: var(--background-modifier-border-hover); color: var(--text-normal); }
+  .filter-chip.active { background: rgba(124,58,237,0.16); border-color: rgba(124,58,237,0.4); color: var(--text-accent); }
+  .search { flex: 1; min-width: 170px; display: flex; align-items: center; gap: 8px; background: var(--background-modifier-form-field); border: 1px solid var(--background-modifier-border); border-radius: 7px; padding: 7px 11px; color: var(--text-faint); font-size: 13px; }
+
+  /* Bulk-action bar (appears because rows are selected) */
+  .bulk-bar { display: flex; align-items: center; gap: 10px; padding: 10px 14px; background: rgba(124,58,237,0.1); border: 1px solid rgba(124,58,237,0.3); border-radius: 9px; margin-bottom: 12px; font-size: 13px; flex-wrap: wrap; }
+  .bulk-bar .count { font-weight: 600; color: var(--text-accent); }
+  .bulk-bar .of { color: var(--text-muted); }
+  .bulk-bar .spacer { flex: 1; }
+
+  /* Tag table */
+  .table-wrap { border: 1px solid var(--divider-color); border-radius: 10px; overflow: hidden; }
+  .table-scroll { max-height: 318px; overflow-y: auto; }
+  table.tags { width: 100%; border-collapse: collapse; font-size: 13px; }
+  table.tags thead th { position: sticky; top: 0; z-index: 2; background: var(--background-secondary); text-align: left; font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-faint); font-weight: 600; padding: 9px 10px; border-bottom: 1px solid var(--background-modifier-border); cursor: pointer; white-space: nowrap; }
+  table.tags thead th .sort { color: var(--text-accent); margin-left: 4px; }
+  table.tags td { padding: 8px 10px; border-bottom: 1px solid var(--divider-color); vertical-align: middle; }
+  table.tags tbody tr:hover td { background: var(--background-modifier-hover); }
+  table.tags tbody tr.sel td { background: rgba(124,58,237,0.09); }
+  table.tags tbody tr.is-hidden td .tagname { color: var(--text-faint); text-decoration: line-through; }
+  table.tags tbody tr.is-flagged td .tagname { color: var(--text-warning); }
+  .tagname { font-weight: 500; }
+  .tag-hash { color: var(--text-faint); }
+  .vfill { height: 30px; }
+  .vfill td { text-align: center; color: var(--text-faint); font-size: 11px; padding: 7px 10px; background: var(--background-primary-alt); }
+
+  /* Visibility dot + label */
+  .vis { display: inline-flex; align-items: center; gap: 7px; font-size: 12px; }
+  .vis .vdot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .vis.shown { color: var(--text-success); } .vis.shown .vdot { background: var(--text-success); }
+  .vis.hidden { color: var(--text-accent); } .vis.hidden .vdot { background: var(--text-accent); }
+  .vis.flagged { color: var(--text-warning); } .vis.flagged .vdot { background: var(--text-warning); }
+
+  .src { font-size: 10.5px; color: var(--text-faint); border: 1px solid var(--divider-color); border-radius: 4px; padding: 1px 5px; white-space: nowrap; }
+  .rule-link { color: var(--text-accent); font-size: 12px; cursor: pointer; }
+  .rule-link.none { color: var(--text-faint); }
+  .count-c { font-variant-numeric: tabular-nums; color: var(--text-muted); }
+  .lastused { color: var(--text-muted); font-size: 12px; white-space: nowrap; }
+  input[type=checkbox].cb { width: 15px; height: 15px; accent-color: var(--interactive-accent); cursor: pointer; vertical-align: middle; }
+
+  /* Override badge (always-show / always-hide) - D-015 */
+  .ovr { font-size: 10px; font-weight: 600; padding: 1px 6px; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.04em; margin-left: 7px; }
+  .ovr.show { background: rgba(103,211,145,0.15); color: var(--text-success); border: 1px solid rgba(103,211,145,0.35); }
+  .ovr.hide { background: rgba(124,58,237,0.15); color: var(--text-accent); border: 1px solid rgba(124,58,237,0.35); }
+
+  /* Per-row more-actions control */
+  .row-more { width: 24px; height: 24px; display: inline-grid; place-items: center; border-radius: 5px; color: var(--text-faint); cursor: pointer; }
+  .row-more:hover { background: var(--background-modifier-hover); color: var(--text-normal); }
+
+  /* "Why is this hidden?" popover (D-015 diagnostics + override affordance) */
+  .why-anchor { position: relative; }
+  .why-pop { position: absolute; right: 6px; top: 30px; width: 296px; background: var(--background-secondary); border: 1px solid var(--background-modifier-border); border-radius: 10px; box-shadow: var(--shadow-l); padding: 14px 15px; z-index: 20; text-align: left; }
+  .why-pop .wp-eyebrow { font-size: 10px; text-transform: uppercase; letter-spacing: 0.07em; color: var(--text-faint); }
+  .why-pop .wp-title { font-size: 13.5px; font-weight: 700; margin: 3px 0 9px; }
+  .why-pop .wp-chain { font-size: 12px; color: var(--text-muted); line-height: 1.6; }
+  .why-pop .wp-chain .win { color: var(--text-accent); font-weight: 600; }
+  .why-pop .wp-chain .lose { color: var(--text-faint); text-decoration: line-through; }
+  .why-pop .wp-div { height: 1px; background: var(--divider-color); margin: 11px 0; }
+  .why-pop .wp-ovr-label { font-size: 11px; color: var(--text-muted); margin-bottom: 7px; }
+  .why-pop .wp-ovr-row { display: flex; gap: 7px; }
+  .why-pop .wp-arrow { position: absolute; right: 16px; top: -6px; width: 10px; height: 10px; background: var(--background-secondary); border-left: 1px solid var(--background-modifier-border); border-top: 1px solid var(--background-modifier-border); transform: rotate(45deg); }
+
+  /* Buttons */
+  .btn { font: inherit; font-size: 12.5px; padding: 6px 12px; border-radius: 6px; border: 1px solid var(--background-modifier-border); background: var(--interactive-normal); color: var(--text-normal); cursor: pointer; white-space: nowrap; }
+  .btn:hover { background: var(--interactive-hover); }
+  .btn.accent { background: var(--interactive-accent); border-color: var(--interactive-accent); color: var(--text-on-accent); }
+  .btn.accent:hover { background: var(--interactive-accent-hover); }
+  .btn.small { padding: 4px 10px; font-size: 11.5px; }
+  .btn.ghost { background: transparent; }
+  .btn.tw { border-color: rgba(124,58,237,0.4); color: var(--text-accent); }
+
+  /* Rule editor: card view + right-docked live preview (D-010) */
+  .editor-head { display: flex; align-items: center; gap: 10px; margin: 22px 0 12px; padding-top: 4px; }
+  .editor-head .eh-title { font-size: 11px; text-transform: uppercase; letter-spacing: 0.07em; color: var(--text-faint); font-weight: 600; }
+  .editor-head .eh-d { font-size: 10px; color: var(--text-accent); border: 1px solid rgba(124,58,237,0.3); background: rgba(124,58,237,0.1); border-radius: 5px; padding: 1px 7px; text-transform: uppercase; letter-spacing: 0.05em; }
+  .editor-head .spacer { flex: 1; }
+
+  .editor-frame { display: grid; grid-template-columns: 1fr 286px; border: 1px solid var(--divider-color); border-radius: 11px; overflow: hidden; min-height: 320px; }
+  .editor-main { padding: 14px 16px; display: flex; flex-direction: column; gap: 10px; background: var(--background-primary); }
+
+  .rule-card { border: 1px solid var(--divider-color); border-radius: 10px; background: var(--background-secondary); padding: 12px 15px; cursor: pointer; display: grid; grid-template-columns: auto 1fr auto auto; align-items: center; gap: 14px; }
+  .rule-card:hover { border-color: var(--background-modifier-border-hover); }
+  .rule-card.off { opacity: 0.6; }
+  .rule-card .rc-info { min-width: 0; }
+  .rule-card .rc-name { font-size: 14px; font-weight: 700; }
+  .rule-card .rc-meta { font-size: 11.5px; color: var(--text-muted); margin-top: 3px; display: flex; align-items: center; gap: 7px; flex-wrap: wrap; }
+  .rule-card .rc-type-pill { font-size: 10px; padding: 2px 8px; border-radius: 999px; background: var(--background-modifier-form-field); border: 1px solid var(--divider-color); color: var(--text-muted); }
+  .rule-card .rc-affected { color: var(--text-accent); font-weight: 600; font-size: 12.5px; white-space: nowrap; }
+  .rule-card .rc-chevron { color: var(--text-faint); font-size: 16px; }
+  .rule-card.editing { border-color: var(--interactive-accent); box-shadow: 0 0 0 1px var(--interactive-accent) inset; cursor: default; display: block; padding: 0; }
+  .rule-card.new-card { border-style: dashed; background: transparent; grid-template-columns: 1fr; text-align: center; color: var(--text-muted); font-weight: 600; }
+  .rule-card.new-card:hover { border-color: var(--interactive-accent); color: var(--text-accent); }
+  .rule-card.new-card .new-sub { font-size: 11px; font-weight: 400; color: var(--text-faint); margin-top: 3px; }
+
+  /* In-place edit panel (card expanded to edit mode) */
+  .edit-panel { padding: 0; }
+  .edit-panel .ep-head { display: flex; align-items: center; gap: 12px; padding: 13px 16px; border-bottom: 1px solid var(--divider-color); background: var(--background-primary-alt); }
+  .edit-panel .ep-head .toggle { flex-shrink: 0; }
+  .edit-panel .ep-head .ep-name { font-size: 16px; font-weight: 700; letter-spacing: -0.005em; }
+  .edit-panel .ep-head .spacer { flex: 1; }
+  .edit-panel .ep-head .ep-collapse { color: var(--text-faint); cursor: pointer; font-size: 18px; }
+  .edit-panel .ep-body { padding: 15px 16px 16px; display: flex; flex-direction: column; gap: 14px; }
+  .ep-section-label { font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.07em; color: var(--text-faint); font-weight: 600; margin-bottom: 7px; }
+  .ep-row { display: flex; align-items: center; gap: 12px; }
+  .ep-row .ep-label { width: 70px; font-size: 12.5px; color: var(--text-muted); flex-shrink: 0; }
+  .select, .input { background: var(--background-modifier-form-field); border: 1px solid var(--background-modifier-border); border-radius: 6px; padding: 7px 10px; color: var(--text-normal); font: inherit; font-size: 13px; }
+  .select.tight { flex: 0 0 150px; }
+  .ep-row .input { flex: 1; }
+
+  /* Match as a sentence */
+  .match-sentence { background: var(--background-secondary); border: 1px solid var(--divider-color); border-radius: 9px; padding: 13px 15px; font-size: 13.5px; line-height: 1.95; }
+  .match-sentence .lead { color: var(--text-muted); }
+  .match-sentence .select, .match-sentence .input { display: inline-block; width: auto; min-width: 110px; vertical-align: baseline; padding: 4px 9px; margin: 0 2px; font-size: 13px; }
+  .match-sentence .input.wide { min-width: 200px; }
+
+  .ep-foot { display: flex; gap: 9px; justify-content: flex-end; align-items: center; }
+  .ep-foot .ep-foot-note { flex: 1; font-size: 11px; color: var(--text-faint); }
+
+  /* Right-docked live preview panel */
+  .preview-dock { border-left: 1px solid var(--divider-color); background: var(--background-primary-alt); display: flex; flex-direction: column; overflow: hidden; }
+  .preview-dock .pd-head { padding: 12px 14px; border-bottom: 1px solid var(--divider-color); }
+  .preview-dock .pd-eyebrow { font-size: 10px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-faint); }
+  .preview-dock .pd-title { font-size: 13px; font-weight: 600; margin-top: 3px; display: flex; align-items: center; gap: 7px; }
+  .preview-dock .pd-title .live-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--text-success); position: relative; }
+  .preview-dock .pd-title .live-dot::after { content: ""; position: absolute; inset: -4px; border-radius: 50%; border: 1px solid var(--text-success); opacity: 0.5; animation: pulse 1.8s ease-out infinite; }
+  @keyframes pulse { 0% { transform: scale(0.6); opacity: 0.6; } 100% { transform: scale(1.8); opacity: 0; } }
+  .pd-stats { display: flex; gap: 6px; margin-top: 11px; }
+  .pd-stat { flex: 1; background: var(--background-secondary); border: 1px solid var(--divider-color); border-radius: 7px; padding: 7px 8px; }
+  .pd-stat .l { font-size: 9px; color: var(--text-faint); text-transform: uppercase; letter-spacing: 0.04em; line-height: 1.3; }
+  .pd-stat .v { font-size: 16px; font-weight: 700; font-variant-numeric: tabular-nums; margin-top: 2px; }
+  .preview-dock .pd-sub { font-size: 11px; color: var(--text-muted); margin-top: 9px; }
+  .preview-dock .pd-body { flex: 1; overflow-y: auto; padding: 5px 0; }
+  .preview-dock .pd-row { display: flex; align-items: center; gap: 9px; padding: 6px 14px; font-size: 12.5px; }
+  .preview-dock .pd-row:hover { background: var(--background-modifier-hover); }
+  .preview-dock .pd-row + .pd-row { border-top: 1px solid var(--divider-color); }
+  .preview-dock .pd-tag { flex: 1; font-weight: 500; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .preview-dock .pd-tag.new { color: var(--text-warning); }
+  .preview-dock .pd-tag.new::before { content: "+ "; font-weight: 700; }
+  .preview-dock .pd-count { color: var(--text-muted); font-variant-numeric: tabular-nums; font-size: 11px; }
+
+  /* ===== Native Obsidian tag pane (RIGHT, narrow) ===== */
+  .np-tabbar { display: flex; align-items: center; gap: 6px; padding: 0 10px; height: 38px; background: var(--background-secondary-alt); border-bottom: 1px solid var(--divider-color); }
+  .np-tab { display: flex; align-items: center; gap: 6px; font-size: 12.5px; color: var(--text-muted); padding: 7px 10px; }
+  .np-tab.active { color: var(--text-normal); }
+  .np-tab .tab-ic { font-size: 13px; }
+  .np-search { margin: 10px 12px 4px; display: flex; align-items: center; gap: 7px; background: var(--background-modifier-form-field); border: 1px solid var(--background-modifier-border); border-radius: 7px; padding: 6px 10px; color: var(--text-faint); font-size: 12.5px; }
+  .np-head { display: flex; align-items: center; justify-content: space-between; padding: 8px 14px 4px; font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-faint); }
+  .np-list { padding: 2px 6px 14px; flex: 1; overflow-y: auto; }
+  .np-item { display: flex; align-items: center; gap: 8px; padding: 5px 10px; border-radius: 6px; font-size: 13px; color: var(--text-normal); cursor: default; }
+  .np-item:hover { background: var(--background-modifier-hover); }
+  .np-item .np-collapse { color: var(--text-faint); font-size: 10px; width: 10px; flex-shrink: 0; }
+  .np-item .np-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .np-item .np-count { font-size: 11px; color: var(--text-faint); background: var(--background-secondary); border-radius: 999px; padding: 0 7px; font-variant-numeric: tabular-nums; }
+  .np-item.child { padding-left: 26px; }
+  /* The live effect of the rule being edited on the left: struck / hidden tags */
+  .np-item.struck .np-name { color: var(--text-faint); text-decoration: line-through; }
+  .np-item.struck .np-count { opacity: 0.5; }
+  .np-item.flagged .np-name { color: var(--text-warning); }
+  .np-item.flagged .np-count { color: var(--text-warning); background: rgba(245,201,124,0.14); }
+  .np-item.fade { opacity: 0.45; }
+
+  /* annotation tying "edit here" -> "updates here, live" */
+  .live-tie { display: flex; align-items: center; gap: 9px; margin: 12px 12px 6px; padding: 9px 11px; background: rgba(103,211,145,0.08); border: 1px solid rgba(103,211,145,0.28); border-radius: 8px; font-size: 11.5px; color: var(--text-success); line-height: 1.45; }
+  .live-tie .lt-ic { width: 18px; height: 18px; border-radius: 50%; background: var(--text-success); color: #14321f; display: grid; place-items: center; font-weight: 700; font-size: 11px; flex-shrink: 0; }
+  .live-tie strong { color: var(--text-normal); }
+
+  /* The big "edit here -> updates here" caption bridging the two panes */
+  .seam-caption { display: flex; align-items: center; gap: 10px; margin: 18px 0 0; padding: 11px 16px; background: rgba(124,58,237,0.07); border: 1px solid rgba(124,58,237,0.22); border-radius: 9px; font-size: 12.5px; color: var(--text-muted); }
+  .seam-caption .sc-ic { width: 20px; height: 20px; border-radius: 50%; background: var(--interactive-accent); color: #fff; display: grid; place-items: center; font-weight: 700; font-size: 12px; flex-shrink: 0; }
+  .seam-caption strong { color: var(--text-normal); }
+  .seam-caption .sc-d { color: var(--text-accent); font-weight: 600; }
+
+  /* State banner (Preview mode on) - reused from converged design */
+  .state-banner { display: flex; align-items: center; gap: 11px; padding: 8px 16px; font-size: 12px; border-bottom: 1px solid var(--divider-color); }
+  .state-banner .sb-ic { width: 17px; height: 17px; border-radius: 50%; display: grid; place-items: center; font-size: 11px; font-weight: 700; flex-shrink: 0; }
+  .state-banner .sb-msg { flex: 1; line-height: 1.4; }
+  .state-banner .sb-msg strong { color: var(--text-normal); }
+  .state-banner.preview { background: rgba(245,201,124,0.1); }
+  .state-banner.preview .sb-ic { background: var(--text-warning); color: #1a1a1a; }
+  .state-banner.preview .sb-msg { color: var(--text-warning); }
+  .state-banner .sb-action { background: transparent; border: 1px solid currentColor; color: inherit; font: inherit; font-size: 11px; padding: 3px 9px; border-radius: 5px; cursor: pointer; opacity: 0.85; }
+  .state-banner .sb-action:hover { opacity: 1; }
+
+  .toggle { width: 34px; height: 19px; border-radius: 999px; background: var(--background-modifier-border); position: relative; cursor: pointer; transition: background 0.15s ease; flex-shrink: 0; }
+  .toggle::after { content: ""; position: absolute; width: 14px; height: 14px; border-radius: 50%; background: #fff; top: 2.5px; left: 2.5px; transition: left 0.15s ease; box-shadow: var(--shadow-s); }
+  .toggle.on { background: var(--interactive-accent); }
+  .toggle.on::after { left: 17px; }
+
+  .footnote { font-size: 11.5px; color: var(--text-faint); margin-top: 16px; line-height: 1.6; max-width: 1020px; }
+  .footnote code { font-size: 11px; }
+
+  @media (max-width: 1180px) {
+    .split { grid-template-columns: 1fr; }
+    .native-pane { border-top: 2px solid var(--background-modifier-border); }
+    .editor-frame { grid-template-columns: 1fr; }
+    .preview-dock { border-left: none; border-top: 1px solid var(--divider-color); }
+    .legend { margin-left: 0; }
+  }
+</style>
+</head>
+<body>
+<div class="canvas">
+
+  <div class="page-head">
+    <div class="ph-text">
+      <div class="ph-eyebrow">Tag Curator v1.0 &middot; "Curation, in context" &middot; hero mockup</div>
+      <h1 class="ph-title">The Curation Workspace, docked beside the tag pane</h1>
+      <p class="ph-thesis">The active curation loop leaves the Settings modal and moves into a workspace leaf that lives <strong>beside</strong> the native tag pane. You edit a rule on the left and watch every tag hide, flag, or return on the right, in real time, without a single context switch. <strong>This is the whole UX win:</strong> see, edit, preview, act, in one continuous glance.</p>
+    </div>
+    <div class="theme-toggle">
+      <button data-theme-set="dark" class="is-active">Dark</button>
+      <button data-theme-set="light">Light</button>
+    </div>
+  </div>
+
+  <div class="meta-row">
+    <span class="from-review"><span class="fr-d">D-010</span> &middot; inline rule editor</span>
+    <span class="from-review"><span class="fr-d">D-012</span> &middot; workspace leaf is primary</span>
+    <span class="from-review"><span class="fr-d">D-013</span> &middot; side-by-side live preview</span>
+    <span class="from-review"><span class="fr-d">D-015</span> &middot; per-tag overrides</span>
+    <div class="legend">
+      <span class="lg-item"><span class="lg-dot visible"></span> visible</span>
+      <span class="lg-item"><span class="lg-dot hidden"></span> hidden (a rule hides it)</span>
+      <span class="lg-item"><span class="lg-dot flagged"></span> flagged (preview would hide)</span>
+    </div>
+  </div>
+
+  <div class="mockup">
+    <div class="mockup-titlebar">
+      <div class="traffic"><span></span><span></span><span></span></div>
+      <div class="mockup-title">curation vault - Obsidian</div>
+      <div class="mockup-tb-right"><span class="tb-chip">Open Curation Workspace beside the tag pane</span></div>
+    </div>
+
+    <!-- Preview-mode state banner spans the workspace (D-007 carries into v1) -->
+    <div class="state-banner preview">
+      <div class="sb-ic">!</div>
+      <div class="sb-msg"><strong>Preview mode is on.</strong> Matched tags are flagged in place, not hidden, so you can confirm a rule before committing. The same banner shows in every Tag Curator surface while this state is active.</div>
+      <button class="sb-action">Turn off preview</button>
+    </div>
+
+    <div class="split">
+
+      <!-- ===================== LEFT: Curation Workspace leaf ===================== -->
+      <section class="leaf">
+        <div class="leaf-tabbar">
+          <div class="leaf-tab"><span class="tab-ic">&#9670;</span> Curation Workspace</div>
+          <div class="tb-spacer"></div>
+          <div class="tb-iconbtn" title="Open beside the tag pane">&#8862;</div>
+          <div class="tb-iconbtn" title="More options">&#8943;</div>
+        </div>
+
+        <div class="leaf-state">
+          <div>
+            <div class="ls-title">Curation Workspace</div>
+            <div class="ls-sub">curation vault &middot; indexed 2 min ago</div>
+          </div>
+          <div class="spacer"></div>
+          <div class="ls-stat"><div class="v">1,542</div><div class="l">Tags</div></div>
+          <div class="ls-stat"><div class="v accent">318</div><div class="l">Hidden</div></div>
+          <div class="ls-stat"><div class="v">5</div><div class="l">Rules</div></div>
+          <div class="ls-stat"><div class="v">204</div><div class="l">Orphans</div></div>
+        </div>
+
+        <div class="leaf-body">
+
+          <!-- Filter chips + search -->
+          <div class="toolbar">
+            <div class="filter-chip active">Hidden</div>
+            <div class="filter-chip">Flagged</div>
+            <div class="filter-chip">Orphans</div>
+            <div class="filter-chip">Frontmatter</div>
+            <div class="filter-chip">Inline</div>
+            <div class="filter-chip">Unreviewed</div>
+            <div class="filter-chip">By rule</div>
+            <div class="search">&#128269; Filter tags...</div>
+          </div>
+
+          <!-- Bulk-action toolbar (shown because rows are selected) -->
+          <div class="bulk-bar">
+            <span class="count">3 selected</span>
+            <span class="of">of 318 hidden</span>
+            <div class="spacer"></div>
+            <button class="btn small">Hide</button>
+            <button class="btn small">Unhide</button>
+            <button class="btn small">Flag</button>
+            <button class="btn small">Alias</button>
+            <button class="btn small">Add description</button>
+            <button class="btn small tw">Send to Tag Wrangler</button>
+            <button class="btn small ghost">Clear</button>
+          </div>
+
+          <!-- Virtualized tag table -->
+          <div class="table-wrap">
+            <div class="table-scroll">
+              <table class="tags">
+                <thead>
+                  <tr>
+                    <th style="width:30px;"><input type="checkbox" class="cb" checked></th>
+                    <th>Tag <span class="sort">&darr;</span></th>
+                    <th style="width:56px;">Count</th>
+                    <th style="width:96px;">Last used</th>
+                    <th style="width:78px;">Source</th>
+                    <th style="width:96px;">Visible?</th>
+                    <th>Rule</th>
+                    <th style="width:34px;"></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr class="vfill"><td colspan="8">12 rows scrolled above &middot; virtualized window</td></tr>
+
+                  <tr class="is-hidden sel">
+                    <td><input type="checkbox" class="cb" checked></td>
+                    <td><span class="tagname"><span class="tag-hash">#</span>FFAA00</span></td>
+                    <td class="count-c">3</td>
+                    <td class="lastused">Apr 18</td>
+                    <td><span class="src">inline</span></td>
+                    <td><span class="vis hidden"><span class="vdot"></span> hidden</span></td>
+                    <td><span class="rule-link">Hide hex color codes</span></td>
+                    <td class="why-anchor">
+                      <span class="row-more" id="whyBtn" title="Why is this hidden?">&#8943;</span>
+                      <!-- "why is this hidden?" popover + always-show / always-hide override (D-015) -->
+                      <div class="why-pop" id="whyPop" hidden>
+                        <div class="wp-arrow"></div>
+                        <div class="wp-eyebrow">Why is this hidden?</div>
+                        <div class="wp-title">#FFAA00</div>
+                        <div class="wp-chain">
+                          Resolved by highest priority (Q-005):<br>
+                          <span class="win">&#10003; Hide hex color codes</span> (regex, priority 60)<br>
+                          <span class="lose">Hide orphans</span> (frequency, priority 40)
+                        </div>
+                        <div class="wp-div"></div>
+                        <div class="wp-ovr-label">Override for this one tag (beats every rule):</div>
+                        <div class="wp-ovr-row">
+                          <button class="btn small">Always show</button>
+                          <button class="btn small accent">Always hide</button>
+                        </div>
+                      </div>
+                    </td>
+                  </tr>
+
+                  <tr class="is-hidden sel">
+                    <td><input type="checkbox" class="cb" checked></td>
+                    <td><span class="tagname"><span class="tag-hash">#</span>section-3</span></td>
+                    <td class="count-c">1</td>
+                    <td class="lastused">May 01</td>
+                    <td><span class="src">inline</span></td>
+                    <td><span class="vis hidden"><span class="vdot"></span> hidden</span></td>
+                    <td><span class="rule-link">Hide URL anchors</span></td>
+                    <td><span class="row-more" title="More actions">&#8943;</span></td>
+                  </tr>
+
+                  <tr class="is-hidden sel">
+                    <td><input type="checkbox" class="cb" checked></td>
+                    <td><span class="tagname"><span class="tag-hash">#</span>x</span></td>
+                    <td class="count-c">1</td>
+                    <td class="lastused">May 20</td>
+                    <td><span class="src">inline</span></td>
+                    <td><span class="vis hidden"><span class="vdot"></span> hidden</span></td>
+                    <td><span class="rule-link">Hide single-character tags</span></td>
+                    <td><span class="row-more" title="More actions">&#8943;</span></td>
+                  </tr>
+
+                  <tr class="is-hidden">
+                    <td><input type="checkbox" class="cb"></td>
+                    <td><span class="tagname"><span class="tag-hash">#</span>archive-2021</span><span class="ovr hide">always hide</span></td>
+                    <td class="count-c">47</td>
+                    <td class="lastused">2021</td>
+                    <td><span class="src">frontmatter</span></td>
+                    <td><span class="vis hidden"><span class="vdot"></span> hidden</span></td>
+                    <td><span class="rule-link none">override</span></td>
+                    <td><span class="row-more" title="More actions">&#8943;</span></td>
+                  </tr>
+
+                  <tr class="is-flagged">
+                    <td><input type="checkbox" class="cb"></td>
+                    <td><span class="tagname"><span class="tag-hash">#</span>AI</span></td>
+                    <td class="count-c">9</td>
+                    <td class="lastused">2 days ago</td>
+                    <td><span class="src">both</span></td>
+                    <td><span class="vis flagged"><span class="vdot"></span> flagged</span></td>
+                    <td><span class="rule-link">Flag capitalization variants</span></td>
+                    <td><span class="row-more" title="More actions">&#8943;</span></td>
+                  </tr>
+
+                  <tr>
+                    <td><input type="checkbox" class="cb"></td>
+                    <td><span class="tagname"><span class="tag-hash">#</span>ai</span><span class="ovr show">always show</span></td>
+                    <td class="count-c">214</td>
+                    <td class="lastused">today</td>
+                    <td><span class="src">both</span></td>
+                    <td><span class="vis shown"><span class="vdot"></span> shown</span></td>
+                    <td><span class="rule-link none">override</span></td>
+                    <td><span class="row-more" title="More actions">&#8943;</span></td>
+                  </tr>
+
+                  <tr>
+                    <td><input type="checkbox" class="cb"></td>
+                    <td><span class="tagname"><span class="tag-hash">#</span>project/active</span></td>
+                    <td class="count-c">142</td>
+                    <td class="lastused">today</td>
+                    <td><span class="src">both</span></td>
+                    <td><span class="vis shown"><span class="vdot"></span> shown</span></td>
+                    <td><span class="rule-link none">none</span></td>
+                    <td><span class="row-more" title="More actions">&#8943;</span></td>
+                  </tr>
+
+                  <tr>
+                    <td><input type="checkbox" class="cb"></td>
+                    <td><span class="tagname"><span class="tag-hash">#</span>meeting-notes</span></td>
+                    <td class="count-c">63</td>
+                    <td class="lastused">yesterday</td>
+                    <td><span class="src">frontmatter</span></td>
+                    <td><span class="vis shown"><span class="vdot"></span> shown</span></td>
+                    <td><span class="rule-link none">none</span></td>
+                    <td><span class="row-more" title="More actions">&#8943;</span></td>
+                  </tr>
+
+                  <tr class="vfill"><td colspan="8">1,526 more rows below &middot; rendered on scroll</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- ===== Inline rule editor: card view + right-docked live preview (D-010) ===== -->
+          <div class="editor-head">
+            <span class="eh-title">Rules</span>
+            <span class="eh-d">D-010 inline editor</span>
+            <div class="spacer"></div>
+            <button class="btn small">Filter: All &darr;</button>
+            <button class="btn small">Sort: Priority &darr;</button>
+          </div>
+
+          <div class="editor-frame">
+            <div class="editor-main">
+
+              <!-- One card expanded into edit mode -->
+              <div class="rule-card editing">
+                <div class="edit-panel">
+                  <div class="ep-head">
+                    <div class="toggle on" data-toggle title="Enable / disable rule"></div>
+                    <div class="ep-name">Hide URL anchors</div>
+                    <div class="spacer"></div>
+                    <span style="font-size:11px; color:var(--text-faint);">editing</span>
+                    <span class="ep-collapse" title="Collapse to card">&#9650;</span>
+                  </div>
+                  <div class="ep-body">
+                    <div>
+                      <div class="ep-section-label">Type</div>
+                      <div class="ep-row">
+                        <div class="ep-label">Match by</div>
+                        <select class="select tight">
+                          <option>regex</option>
+                          <option>frequency</option>
+                          <option>list</option>
+                        </select>
+                        <span style="font-size:11.5px; color:var(--text-faint);">pattern match on the tag name</span>
+                      </div>
+                    </div>
+
+                    <div>
+                      <div class="ep-section-label">Match</div>
+                      <div class="match-sentence">
+                        <span class="lead">When a tag's name</span>
+                        <select class="select"><option>matches the regex</option></select>
+                        <input class="input wide" value="^section-\d+$">
+                      </div>
+                    </div>
+
+                    <div>
+                      <div class="ep-section-label">Then</div>
+                      <div class="ep-row" style="gap:18px;">
+                        <div style="display:flex; align-items:center; gap:10px;">
+                          <span class="ep-label" style="width:auto;">Action</span>
+                          <select class="select tight"><option>hide</option><option>flag</option><option>show-only</option></select>
+                        </div>
+                        <div style="display:flex; align-items:center; gap:10px;">
+                          <span class="ep-label" style="width:auto;">Scope</span>
+                          <select class="select tight"><option>all scopes</option><option>tag pane</option><option>Notebook Navigator</option><option>Properties</option><option>Autocomplete</option></select>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div class="ep-foot">
+                      <span class="ep-foot-note">Saving applies live across every enabled scope (D-014). Priority hidden in v1 (D-009).</span>
+                      <button class="btn ghost small">Delete</button>
+                      <button class="btn accent small">Save rule</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Collapsed cards -->
+              <div class="rule-card">
+                <div class="toggle on" data-toggle></div>
+                <div class="rc-info">
+                  <div class="rc-name">Hide hex color codes</div>
+                  <div class="rc-meta"><span class="rc-type-pill">regex</span> <span>matches <code>^[0-9a-f]{6}$</code></span></div>
+                </div>
+                <div class="rc-affected">42 tags</div>
+                <div class="rc-chevron">&rsaquo;</div>
+              </div>
+
+              <div class="rule-card">
+                <div class="toggle on" data-toggle></div>
+                <div class="rc-info">
+                  <div class="rc-name">Flag capitalization variants</div>
+                  <div class="rc-meta"><span class="rc-type-pill">list</span> <span>flags <code>#AI</code>, <code>#Ai</code> beside <code>#ai</code></span></div>
+                </div>
+                <div class="rc-affected">9 tags</div>
+                <div class="rc-chevron">&rsaquo;</div>
+              </div>
+
+              <div class="rule-card off">
+                <div class="toggle" data-toggle></div>
+                <div class="rc-info">
+                  <div class="rc-name">Hide rare tags</div>
+                  <div class="rc-meta"><span class="rc-type-pill">frequency</span> <span>when <code>count &lt;= 2</code></span></div>
+                </div>
+                <div class="rc-affected" style="color:var(--text-faint);">off</div>
+                <div class="rc-chevron">&rsaquo;</div>
+              </div>
+
+              <div class="rule-card new-card">
+                <div>+ New rule</div>
+                <div class="new-sub">Opens this editor with defaults. No separate wizard (D-002).</div>
+              </div>
+            </div>
+
+            <!-- Right-docked live preview -->
+            <aside class="preview-dock">
+              <div class="pd-head">
+                <div class="pd-eyebrow">Live preview &middot; filtered to</div>
+                <div class="pd-title"><span class="live-dot"></span> Hide URL anchors</div>
+                <div class="pd-stats">
+                  <div class="pd-stat"><div class="l">Unique tags</div><div class="v">6</div></div>
+                  <div class="pd-stat"><div class="l">Total instances</div><div class="v">11</div></div>
+                  <div class="pd-stat"><div class="l">Notes touched</div><div class="v">9</div></div>
+                </div>
+                <div class="pd-sub">Updates as you type the regex. The native tag pane on the right reacts at the same instant.</div>
+              </div>
+              <div class="pd-body">
+                <div class="pd-row"><span class="pd-tag">section-3</span><span class="pd-count">1</span></div>
+                <div class="pd-row"><span class="pd-tag">section-12</span><span class="pd-count">3</span></div>
+                <div class="pd-row"><span class="pd-tag new">section-1</span><span class="pd-count">2</span></div>
+                <div class="pd-row"><span class="pd-tag new">section-2</span><span class="pd-count">2</span></div>
+                <div class="pd-row"><span class="pd-tag">section-4</span><span class="pd-count">2</span></div>
+                <div class="pd-row"><span class="pd-tag">section-7</span><span class="pd-count">1</span></div>
+              </div>
+            </aside>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- ===================== RIGHT: native Obsidian tag pane ===================== -->
+      <aside class="native-pane">
+        <div class="np-tabbar">
+          <div class="np-tab active"><span class="tab-ic">&#35;</span> Tags</div>
+        </div>
+        <div class="np-search">&#128269; Filter...</div>
+
+        <!-- annotation tying edit -> live update -->
+        <div class="live-tie">
+          <div class="lt-ic">&#8635;</div>
+          <div>The rule you are editing on the left updates this <strong>native</strong> tag pane live. <code>#section-3</code> just struck through.</div>
+        </div>
+
+        <div class="np-head"><span>tags</span><span>1,224 shown</span></div>
+        <div class="np-list">
+          <div class="np-item"><span class="np-collapse">&rsaquo;</span><span class="np-name">ai</span><span class="np-count">214</span></div>
+          <div class="np-item flagged"><span class="np-collapse"></span><span class="np-name">AI</span><span class="np-count">9</span></div>
+          <div class="np-item"><span class="np-collapse">&rsaquo;</span><span class="np-name">project</span><span class="np-count">312</span></div>
+          <div class="np-item child"><span class="np-collapse"></span><span class="np-name">project/active</span><span class="np-count">142</span></div>
+          <div class="np-item"><span class="np-collapse"></span><span class="np-name">meeting-notes</span><span class="np-count">63</span></div>
+          <div class="np-item"><span class="np-collapse"></span><span class="np-name">reading</span><span class="np-count">67</span></div>
+          <!-- live effect: hex code + URL anchors struck/hidden by the left-pane rules -->
+          <div class="np-item struck" title="Hidden by 'Hide hex color codes'"><span class="np-collapse"></span><span class="np-name">FFAA00</span><span class="np-count">3</span></div>
+          <div class="np-item struck" title="Hidden by 'Hide URL anchors' (the rule being edited)"><span class="np-collapse"></span><span class="np-name">section-3</span><span class="np-count">1</span></div>
+          <div class="np-item struck fade" title="Hidden by 'Hide URL anchors'"><span class="np-collapse"></span><span class="np-name">section-12</span><span class="np-count">3</span></div>
+          <div class="np-item struck fade" title="Hidden by 'Hide single-character tags'"><span class="np-collapse"></span><span class="np-name">x</span><span class="np-count">1</span></div>
+          <div class="np-item"><span class="np-collapse"></span><span class="np-name">writing</span><span class="np-count">88</span></div>
+          <div class="np-item"><span class="np-collapse"></span><span class="np-name">inbox</span><span class="np-count">12</span></div>
+        </div>
+      </aside>
+
+    </div>
+  </div>
+
+  <!-- The seam caption bridging the two panes -->
+  <div class="seam-caption">
+    <div class="sc-ic">&#8594;</div>
+    <div>Edit a rule in the Curation Workspace (left). Watch <code>#FFAA00</code> and <code>#section-3</code> strike through in the native tag pane (right), live. No reopening Settings, no guessing. <strong>One continuous glance:</strong> <span class="sc-d">edit here</span> updates <span class="sc-d">there</span>, instantly. (D-013)</div>
+  </div>
+
+  <p class="footnote">
+    Display-only and file-safe: striking a tag through changes only what the tag pane renders, never note content. Every effect is reversible by disabling the rule, the scope, or the plugin. The Curation Workspace, the four scopes (tag pane, Notebook Navigator, Properties, Autocomplete - D-014), the per-tag overrides (D-015), and the inline editor (D-010) are all v1.0 "Curation, in context". Notebook Navigator coupling is runtime-interop only; Tag Curator is Apache-2.0 and never copies NN source.
+  </p>
+
+</div>
+
+<script>
+  // Theme toggle: flips data-theme on <html>
+  document.querySelectorAll('[data-theme-set]').forEach(function (b) {
+    b.addEventListener('click', function () {
+      document.documentElement.setAttribute('data-theme', b.dataset.themeSet);
+      document.querySelectorAll('[data-theme-set]').forEach(function (x) { x.classList.toggle('is-active', x === b); });
+    });
+  });
+  // Demo toggles
+  document.querySelectorAll('[data-toggle]').forEach(function (t) {
+    t.addEventListener('click', function () { t.classList.toggle('on'); });
+  });
+  // Filter chips (single-active within the toolbar)
+  document.querySelectorAll('.toolbar .filter-chip').forEach(function (c) {
+    c.addEventListener('click', function () {
+      c.parentElement.querySelectorAll('.filter-chip').forEach(function (x) { x.classList.toggle('active', x === c); });
+    });
+  });
+  // "Why is this hidden?" popover
+  var whyBtn = document.getElementById('whyBtn');
+  var whyPop = document.getElementById('whyPop');
+  if (whyBtn && whyPop) {
+    whyPop.hidden = false; // shown by default in the mockup to demonstrate the affordance
+    whyBtn.addEventListener('click', function (e) { e.stopPropagation(); whyPop.hidden = !whyPop.hidden; });
+    document.addEventListener('click', function (e) { if (!whyPop.contains(e.target) && e.target !== whyBtn) whyPop.hidden = true; });
+  }
+</script>
+</body>
+</html>
