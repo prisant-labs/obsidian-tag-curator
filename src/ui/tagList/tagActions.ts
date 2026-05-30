@@ -39,15 +39,15 @@ export class TagActions {
 
   // Per-tag overrides are real now (D-015): hide/show pin the tag, clear removes
   // the pin. The store resolves overrides ahead of rules, so every tag applies.
-  setVisibility(tags: string[], to: VisibilityIntent): VisibilityResult {
+  async setVisibility(tags: string[], to: VisibilityIntent): Promise<VisibilityResult> {
     const value: TagOverride | null = to === 'clear' ? null : to;
     for (const tag of tags) {
-      this.hostApi.setOverride(tag, value);
+      await this.hostApi.setOverride(tag, value);
     }
     return { applied: tags.length, deferred: 0 };
   }
 
-  applyBulk(tags: string[], action: BulkAction): number | VisibilityResult {
+  async applyBulk(tags: string[], action: BulkAction): Promise<number | VisibilityResult> {
     switch (action) {
       case 'send-to-tag-wrangler':
         return this.sendToTagWrangler(tags);

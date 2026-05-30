@@ -46,65 +46,65 @@ describe('TagActions.sendToTagWrangler', () => {
 });
 
 describe('TagActions visibility and bulk', () => {
-  it('setVisibility hide pins each tag to hide via the override store', () => {
+  it('setVisibility hide pins each tag to hide via the override store', async () => {
     const calls: Array<[string, string | null]> = [];
     const actions = new TagActions(
       host({ setOverride: (tag, value) => void calls.push([tag, value]) }),
     );
-    expect(actions.setVisibility(['a'], 'hide')).toEqual({ applied: 1, deferred: 0 });
+    expect(await actions.setVisibility(['a'], 'hide')).toEqual({ applied: 1, deferred: 0 });
     expect(calls).toEqual([['a', 'hide']]);
   });
 
-  it('setVisibility show pins each tag to show via the override store', () => {
+  it('setVisibility show pins each tag to show via the override store', async () => {
     const calls: Array<[string, string | null]> = [];
     const actions = new TagActions(
       host({ setOverride: (tag, value) => void calls.push([tag, value]) }),
     );
-    expect(actions.setVisibility(['a'], 'show')).toEqual({ applied: 1, deferred: 0 });
+    expect(await actions.setVisibility(['a'], 'show')).toEqual({ applied: 1, deferred: 0 });
     expect(calls).toEqual([['a', 'show']]);
   });
 
-  it('setVisibility clear removes the pin via the override store', () => {
+  it('setVisibility clear removes the pin via the override store', async () => {
     const calls: Array<[string, string | null]> = [];
     const actions = new TagActions(
       host({ setOverride: (tag, value) => void calls.push([tag, value]) }),
     );
-    expect(actions.setVisibility(['a'], 'clear')).toEqual({ applied: 1, deferred: 0 });
+    expect(await actions.setVisibility(['a'], 'clear')).toEqual({ applied: 1, deferred: 0 });
     expect(calls).toEqual([['a', null]]);
   });
 
-  it('setVisibility applies the override once per tag and counts every tag', () => {
+  it('setVisibility applies the override once per tag and counts every tag', async () => {
     const calls: Array<[string, string | null]> = [];
     const actions = new TagActions(
       host({ setOverride: (tag, value) => void calls.push([tag, value]) }),
     );
-    expect(actions.setVisibility(['a', 'b'], 'hide')).toEqual({ applied: 2, deferred: 0 });
+    expect(await actions.setVisibility(['a', 'b'], 'hide')).toEqual({ applied: 2, deferred: 0 });
     expect(calls).toEqual([
       ['a', 'hide'],
       ['b', 'hide'],
     ]);
   });
 
-  it('applyBulk routes send-to-tag-wrangler to a dispatch count', () => {
+  it('applyBulk routes send-to-tag-wrangler to a dispatch count', async () => {
     const actions = new TagActions(host());
-    expect(actions.applyBulk(['a', 'b'], 'send-to-tag-wrangler')).toBe(2);
+    expect(await actions.applyBulk(['a', 'b'], 'send-to-tag-wrangler')).toBe(2);
   });
 
-  it('applyBulk routes hide to a real hide override result', () => {
+  it('applyBulk routes hide to a real hide override result', async () => {
     const calls: Array<[string, string | null]> = [];
     const actions = new TagActions(
       host({ setOverride: (tag, value) => void calls.push([tag, value]) }),
     );
-    expect(actions.applyBulk(['a'], 'hide')).toEqual({ applied: 1, deferred: 0 });
+    expect(await actions.applyBulk(['a'], 'hide')).toEqual({ applied: 1, deferred: 0 });
     expect(calls).toEqual([['a', 'hide']]);
   });
 
-  it('applyBulk routes unhide to a show override result', () => {
+  it('applyBulk routes unhide to a show override result', async () => {
     const calls: Array<[string, string | null]> = [];
     const actions = new TagActions(
       host({ setOverride: (tag, value) => void calls.push([tag, value]) }),
     );
-    expect(actions.applyBulk(['a'], 'unhide')).toEqual({ applied: 1, deferred: 0 });
+    expect(await actions.applyBulk(['a'], 'unhide')).toEqual({ applied: 1, deferred: 0 });
     expect(calls).toEqual([['a', 'show']]);
   });
 });
