@@ -24,8 +24,11 @@ const RULE_ATTR = 'data-tc-prop-rule';
  *     We scope strictly to this row, so a non-tags property (author, aliases,
  *     a custom field whose value equals a hidden tag name) is NEVER decorated.
  *   - Each tag value renders as a multi-select pill: `.multi-select-pill` with
- *     the tag text in `.multi-select-pill-content`. Properties already strips
- *     the leading '#'; we still strip+lowercase to match the engine exactly.
+ *     the tag text in `.multi-select-pill-content`. We strip nothing here beyond
+ *     trimming; the base apply() strips a leading '#'. The engine, tagMeta keys,
+ *     and matchers are CASE-SENSITIVE (tags keep the case written in the vault),
+ *     so we pass case-preserved text identically to the tag-pane observer for
+ *     consistent cross-surface behavior.
  */
 const METADATA_CONTAINER_SELECTOR = '.metadata-container';
 const TAGS_PROPERTY_SELECTOR = '.metadata-property[data-property-key="tags"]';
@@ -85,10 +88,11 @@ export class PropertiesObserver extends ObserverBase {
       const pills = tagsRow.querySelectorAll<HTMLElement>(PILL_SELECTOR);
       for (const pill of Array.from(pills)) {
         const contentEl = pill.querySelector(PILL_CONTENT_SELECTOR) ?? pill;
-        // Normalize to match the engine: trim, then lowercase. The base apply()
-        // strips a leading '#' before lookup; we lowercase here so a pill
-        // rendered as `#Draft` resolves against a `draft` rule/metadata key.
-        const text = (contentEl.textContent ?? '').trim().toLowerCase();
+        // Pass case-preserved text. The base apply() strips a leading '#' before
+        // lookup. The engine and matchers are CASE-SENSITIVE, so we must not
+        // lowercase here - that would make the same tag behave differently in
+        // Properties vs the tag pane.
+        const text = (contentEl.textContent ?? '').trim();
         out.push({ el: pill, tag: text });
       }
     }

@@ -158,15 +158,18 @@ describe('PropertiesObserver basic decoration', () => {
     expect(pill.getAttribute('aria-hidden')).toBe('true');
   });
 
-  it('strips a leading hash and lowercases when matching pill text', async () => {
-    const container = makePropertiesContainer([{ key: 'tags', tags: ['#Draft'] }]);
+  it('strips a leading hash (case-preserved) when matching pill text', async () => {
+    // Pill text '#draft' -> base apply() strips '#' -> 'draft'. Rule list ['draft']
+    // matches because the case is the same. This tests the hash-strip path only;
+    // casing is unchanged so the match is valid.
+    const container = makePropertiesContainer([{ key: 'tags', tags: ['#draft'] }]);
     document.body.appendChild(container);
     const obs = new PropertiesObserver(makeApp().app as never, new Plugin());
     obs.setRules([rule()]); // list ['draft']
     obs.attachAll();
     await flushRaf();
 
-    expect(pillFor(container, '#Draft').classList.contains(HIDDEN_CLASS)).toBe(true);
+    expect(pillFor(container, '#draft').classList.contains(HIDDEN_CLASS)).toBe(true);
   });
 
   it('feeds tag metadata to frequency rules', async () => {
@@ -181,6 +184,51 @@ describe('PropertiesObserver basic decoration', () => {
     await flushRaf();
 
     expect(pillFor(container, 'orphan').classList.contains(HIDDEN_CLASS)).toBe(true);
+  });
+});
+
+describe('PropertiesObserver case-sensitivity contract', () => {
+  it('decorates a pill when its case matches the rule list exactly', async () => {
+    // 'AI' in pill, rule list ['AI'] - case matches, pill must be hidden.
+    const container = makePropertiesContainer([{ key: 'tags', tags: ['AI'] }]);
+    document.body.appendChild(container);
+    const obs = new PropertiesObserver(makeApp().app as never, new Plugin());
+    obs.setRules([rule({ match: { type: 'list', list: ['AI'] } })]);
+    obs.attachAll();
+    await flushRaf();
+
+    expect(pillFor(container, 'AI').classList.contains(HIDDEN_CLASS)).toBe(true);
+  });
+
+  it('does NOT decorate a pill when its case differs from the rule list', async () => {
+    // 'AI' in pill, rule list ['ai'] - wrong case, engine is case-sensitive, no match.
+    const container = makePropertiesContainer([{ key: 'tags', tags: ['AI'] }]);
+    document.body.appendChild(container);
+    const obs = new PropertiesObserver(makeApp().app as never, new Plugin());
+    obs.setRules([rule({ match: { type: 'list', list: ['ai'] } })]);
+    obs.attachAll();
+    await flushRaf();
+
+    expect(pillFor(container, 'AI').classList.contains(HIDDEN_CLASS)).toBe(false);
+    expect(pillFor(container, 'AI').hasAttribute(RULE_ATTR)).toBe(false);
+  });
+});
+
+describe('PropertiesObserver override across surfaces', () => {
+  it('always-show override prevents hiding even when a hide rule matches', async () => {
+    // Rule hides 'AI', but override says always show - pill must remain undecorated.
+    const container = makePropertiesContainer([{ key: 'tags', tags: ['AI'] }]);
+    document.body.appendChild(container);
+    const obs = new PropertiesObserver(makeApp().app as never, new Plugin());
+    obs.setRules([rule({ match: { type: 'list', list: ['AI'] } })]);
+    obs.setOverrides({ AI: 'show' });
+    obs.attachAll();
+    await flushRaf();
+
+    const pill = pillFor(container, 'AI');
+    expect(pill.classList.contains(HIDDEN_CLASS)).toBe(false);
+    expect(pill.classList.contains(FLAG_CLASS)).toBe(false);
+    expect(pill.hasAttribute(RULE_ATTR)).toBe(false);
   });
 });
 
