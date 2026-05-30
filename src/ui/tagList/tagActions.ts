@@ -1,14 +1,24 @@
+import { TagOverride } from '../../types';
+
 export type BulkAction = 'hide' | 'unhide' | 'send-to-tag-wrangler';
+
+/** Visibility verbs the action layer accepts. 'clear' removes any pin. */
+export type VisibilityIntent = 'hide' | 'show' | 'clear';
 
 export interface VisibilityResult {
   applied: number;
   deferred: number;
-  reason?: 'b009';
 }
 
 export interface TagActionsHost {
   isPluginEnabled(id: string): boolean;
   executeCommand(id: string): boolean;
+  /**
+   * Persist a per-tag visibility override (D-015): 'hide' / 'show' pins the tag,
+   * null clears the pin. Keys carry no leading '#'. The store resolves these
+   * ahead of rules; see SettingsManager.setOverride / RuleEngine.resolveVisibility.
+   */
+  setOverride(tag: string, value: TagOverride | null): void | Promise<void>;
 }
 
 export class TagActions {
@@ -27,10 +37,14 @@ export class TagActions {
     return dispatched;
   }
 
-  // Per-tag overrides land with B009; until then these report deferral so the
-  // UI can show the "coming in v0.2" notice without the action layer touching DOM.
-  setVisibility(tags: string[], _to: 'hide' | 'unhide'): VisibilityResult {
-    return { applied: 0, deferred: tags.length, reason: 'b009' };
+  // Per-tag overrides are real now (D-015): hide/show pin the tag, clear removes
+  // the pin. The store resolves overrides ahead of rules, so every tag applies.
+  setVisibility(tags: string[], to: VisibilityIntent): VisibilityResult {
+    const value: TagOverride | null = to === 'clear' ? null : to;
+    for (const tag of tags) {
+      this.hostApi.setOverride(tag, value);
+    }
+    return { applied: tags.length, deferred: 0 };
   }
 
   applyBulk(tags: string[], action: BulkAction): number | VisibilityResult {
@@ -40,7 +54,7 @@ export class TagActions {
       case 'hide':
         return this.setVisibility(tags, 'hide');
       case 'unhide':
-        return this.setVisibility(tags, 'unhide');
+        return this.setVisibility(tags, 'show');
     }
   }
 }
