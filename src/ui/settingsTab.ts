@@ -12,14 +12,17 @@ import { PRESETS, resolveActiveRules } from '../engine/presets';
 import { RuleEditor } from './ruleEditor';
 import { StateBanner } from './stateBanner';
 import { Mode } from '../types';
+import { detectNotebookNavigator, MIN_API_VERSION } from '../integrations/notebookNavigator';
 
 type TabId =
   | 'general'
+  | 'scopes'
   | 'workspace'
   | 'presets'
   | 'rules'
   | 'commands'
   | 'advanced'
+  | 'integrations'
   | 'profiles'
   | 'aliases';
 
@@ -106,6 +109,11 @@ export class TagCuratorSettingTab extends PluginSettingTab {
         render: (p) => this.renderGeneral(p),
       },
       {
+        id: 'scopes',
+        label: 'Scopes',
+        render: (p) => this.renderScopes(p),
+      },
+      {
         id: 'workspace',
         label: 'Workspace',
         badge: tagCount.toLocaleString(),
@@ -135,6 +143,11 @@ export class TagCuratorSettingTab extends PluginSettingTab {
         id: 'advanced',
         label: 'Advanced',
         render: (p) => this.renderAdvanced(p),
+      },
+      {
+        id: 'integrations',
+        label: 'Integrations',
+        render: (p) => this.renderIntegrations(p),
       },
       {
         id: 'profiles',
@@ -231,6 +244,80 @@ export class TagCuratorSettingTab extends PluginSettingTab {
     await this.plugin.settingsManager.setEnabled(false);
     new Notice('Tag Curator: panic disable activated. All DOM effects removed.');
     this.display();
+  }
+
+  // -----------------------------------------------------------------
+  // Scopes (D-014) - per-scope kill-switch toggles
+  // -----------------------------------------------------------------
+
+  private renderScopes(panel: HTMLElement): void {
+    panel.createEl('p', {
+      cls: 'tcst-section-sub',
+      text:
+        'Each scope is independently reversible. Toggling a scope on or off takes effect immediately without restarting Obsidian.',
+    });
+
+    // Tag pane - always available.
+    new Setting(panel)
+      .setName('Tag pane')
+      .setDesc('Hide and flag curated tags in Obsidian\'s native tag pane.')
+      .addToggle((t) =>
+        t
+          .setValue(this.plugin.settingsManager.isScopeEnabled('tag-pane'))
+          .onChange(async (v) => {
+            await this.plugin.settingsManager.setScopeEnabled('tag-pane', v);
+          }),
+      );
+
+    // Notebook Navigator - gated on detection result.
+    const nnHandle = detectNotebookNavigator(this.app);
+    let nnDesc = 'Curate tags in the Notebook Navigator tag tree.';
+    let nnDisabled = false;
+    if (nnHandle.status === 'ready') {
+      nnDesc += ' Detected (API ' + nnHandle.apiVersion + ').';
+    } else if (nnHandle.status === 'absent') {
+      nnDesc += ' Notebook Navigator is not installed.';
+      nnDisabled = true;
+    } else {
+      // too-old
+      nnDesc += ' Requires Notebook Navigator ' + MIN_API_VERSION + ' or newer.';
+      nnDisabled = true;
+    }
+    new Setting(panel)
+      .setName('Notebook Navigator')
+      .setDesc(nnDesc)
+      .addToggle((t) => {
+        t
+          .setValue(this.plugin.settingsManager.isScopeEnabled('notebook-navigator'))
+          .setDisabled(nnDisabled)
+          .onChange(async (v) => {
+            await this.plugin.settingsManager.setScopeEnabled('notebook-navigator', v);
+          });
+      });
+
+    // Properties panel.
+    new Setting(panel)
+      .setName('Properties panel')
+      .setDesc('Curate frontmatter tags shown in the Properties panel.')
+      .addToggle((t) =>
+        t
+          .setValue(this.plugin.settingsManager.isScopeEnabled('properties'))
+          .onChange(async (v) => {
+            await this.plugin.settingsManager.setScopeEnabled('properties', v);
+          }),
+      );
+
+    // Autocomplete.
+    new Setting(panel)
+      .setName('Autocomplete')
+      .setDesc('Hide curated tags from the editor tag suggestion list.')
+      .addToggle((t) =>
+        t
+          .setValue(this.plugin.settingsManager.isScopeEnabled('autocomplete'))
+          .onChange(async (v) => {
+            await this.plugin.settingsManager.setScopeEnabled('autocomplete', v);
+          }),
+      );
   }
 
   // -----------------------------------------------------------------
@@ -529,6 +616,74 @@ export class TagCuratorSettingTab extends PluginSettingTab {
     this.plugin.tagPaneObserver.setMetadata(this.plugin.tagMetaManager.all());
     new Notice('Tag Curator: rescan complete');
     this.display();
+  }
+
+  // -----------------------------------------------------------------
+  // Integrations - optional-enhancement status rows (D-016)
+  // -----------------------------------------------------------------
+
+  private renderIntegrations(panel: HTMLElement): void {
+    panel.createEl('p', {
+      cls: 'tcst-section-sub',
+      text:
+        'These integrations are optional. Tag Curator works fully without any of them.',
+    });
+
+    // Style Settings.
+    new Setting(panel)
+      .setName('Style Settings')
+      .setDesc(
+        'Install the Style Settings plugin to customize Tag Curator\'s colors and density through a GUI. Built-in styling works without it.',
+      );
+
+    // Tag Wrangler - detect via app.plugins (standard ecosystem pattern; cast is localized).
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const appPlugins = (this.app as any).plugins as {
+      enabledPlugins?: Set<string>;
+      plugins?: Record<string, unknown>;
+      manifests?: Record<string, unknown>;
+    } | undefined;
+    const enabledPlugins: Set<string> = appPlugins?.enabledPlugins ?? new Set();
+    const allManifests: Record<string, unknown> = appPlugins?.manifests ?? {};
+    const twEnabled = enabledPlugins.has('tag-wrangler');
+    const twInstalled = 'tag-wrangler' in allManifests;
+    let twStatus: string;
+    if (twEnabled) {
+      twStatus = 'Enabled';
+    } else if (twInstalled) {
+      twStatus = 'Installed but disabled';
+    } else {
+      twStatus = 'Not installed';
+    }
+    new Setting(panel)
+      .setName('Tag Wrangler')
+      .setDesc(
+        'Tag Curator delegates tag renaming to Tag Wrangler. Bulk "Send to Tag Wrangler" is available in the Curation Workspace when it is enabled.',
+      )
+      .addText((t) =>
+        t.setValue(twStatus).setDisabled(true),
+      );
+
+    // Notebook Navigator - reuse detectNotebookNavigator.
+    const nnHandle = detectNotebookNavigator(this.app);
+    let nnStatus: string;
+    if (nnHandle.status === 'ready') {
+      nnStatus = 'Detected (API ' + nnHandle.apiVersion + ')';
+    } else if (nnHandle.status === 'absent') {
+      nnStatus = 'Not installed';
+    } else {
+      // too-old
+      const ver = nnHandle.apiVersion ?? 'unknown';
+      nnStatus = 'Too old (found ' + ver + ', requires ' + MIN_API_VERSION + ')';
+    }
+    new Setting(panel)
+      .setName('Notebook Navigator')
+      .setDesc(
+        'Tag Curator decorates the Notebook Navigator tag tree when a compatible version is installed.',
+      )
+      .addText((t) =>
+        t.setValue(nnStatus).setDisabled(true),
+      );
   }
 
   // -----------------------------------------------------------------
