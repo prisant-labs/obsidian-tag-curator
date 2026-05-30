@@ -122,6 +122,13 @@ export class CurationWorkspaceView extends ItemView {
   // -----------------------------------------------------------------
 
   private buildUI(): void {
+    // Destroy any existing table and banner before rebuilding so repeated
+    // open/close cycles do not accumulate DOM nodes or scroll listeners.
+    this.table?.destroy();
+    this.table = null;
+    this.banner?.destroy();
+    this.banner = null;
+
     this.container.empty();
     this.container.addClass('tag-curator-workspace');
 

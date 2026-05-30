@@ -22,6 +22,10 @@ import { TagListDiagnosticsHost } from './tagTableHost';
 export class BulkBar {
   private root: HTMLElement;
   private countEl: HTMLElement;
+  // Stored so update() can reflect the live Tag Wrangler state each call.
+  private twBtn: HTMLButtonElement;
+  // Stored click handlers so destroy() can remove them.
+  private readonly clickHandlers: Array<{ el: HTMLElement; fn: EventListener }> = [];
 
   constructor(
     parent: HTMLElement,
@@ -36,18 +40,11 @@ export class BulkBar {
     this.addButton('Hide', 'eye-off', () => this.runBulk('hide'));
     this.addButton('Unhide', 'eye', () => this.runBulk('unhide'));
 
-    const twEnabled = this.host.isPluginEnabled('tag-wrangler');
-    const twBtn = this.addButton('Send to Tag Wrangler', 'pencil', () =>
+    // Tag Wrangler gate is intentionally NOT evaluated here; update() checks
+    // isPluginEnabled() on every call so the button reflects current state.
+    this.twBtn = this.addButton('Send to Tag Wrangler', 'pencil', () =>
       this.runBulk('send-to-tag-wrangler'),
     );
-    if (!twEnabled) {
-      twBtn.disabled = true;
-      twBtn.setAttribute(
-        'aria-label',
-        'Install Tag Wrangler to enable rename',
-      );
-      twBtn.setAttribute('title', 'Install Tag Wrangler to enable rename');
-    }
 
     this.addButton('Clear', 'x', () => {
       this.model.clearSelection();
@@ -66,7 +63,9 @@ export class BulkBar {
     const ic = btn.createSpan({ cls: 'tct-bulk-btn-ic' });
     setIcon(ic, icon);
     btn.createSpan({ text: label });
-    btn.addEventListener('click', () => void onClick());
+    const fn: EventListener = () => void onClick();
+    btn.addEventListener('click', fn);
+    this.clickHandlers.push({ el: btn, fn });
     return btn;
   }
 
@@ -81,7 +80,7 @@ export class BulkBar {
     this.host.requestRefresh();
   }
 
-  /** Reflect the current selection size; hide the bar when empty. */
+  /** Reflect the current selection size and live plugin state; hide when empty. */
   update(): void {
     const count = this.model.selection.size;
     if (count === 0) {
@@ -90,5 +89,26 @@ export class BulkBar {
     }
     this.root.style.display = '';
     this.countEl.setText(`${count} selected`);
+
+    // Re-evaluate Tag Wrangler availability on every update so the button
+    // reflects the current plugin state if it was toggled while the bar is open.
+    const twEnabled = this.host.isPluginEnabled('tag-wrangler');
+    this.twBtn.disabled = !twEnabled;
+    if (twEnabled) {
+      this.twBtn.removeAttribute('aria-label');
+      this.twBtn.removeAttribute('title');
+    } else {
+      this.twBtn.setAttribute('aria-label', 'Install Tag Wrangler to enable rename');
+      this.twBtn.setAttribute('title', 'Install Tag Wrangler to enable rename');
+    }
+  }
+
+  /** Remove all event listeners and detach the bar from the DOM. */
+  destroy(): void {
+    for (const { el, fn } of this.clickHandlers) {
+      el.removeEventListener('click', fn);
+    }
+    this.clickHandlers.length = 0;
+    this.root.remove();
   }
 }

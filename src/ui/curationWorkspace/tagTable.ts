@@ -67,6 +67,9 @@ export class TagTable {
 
   private searchTimer: number | null = null;
 
+  // Stable reference so the same function pointer can be removed in destroy().
+  private readonly onScroll = (): void => { this.renderWindow(); };
+
   constructor(
     parent: HTMLElement,
     private model: TagListModel,
@@ -151,7 +154,7 @@ export class TagTable {
     this.emptyEl = this.root.createDiv({ cls: 'tct-empty' });
     this.emptyEl.style.display = 'none';
 
-    this.scrollEl.addEventListener('scroll', () => this.renderWindow());
+    this.scrollEl.addEventListener('scroll', this.onScroll);
   }
 
   // -----------------------------------------------------------------
@@ -182,6 +185,13 @@ export class TagTable {
     }
     this.scrollEl.style.display = '';
     this.emptyEl.style.display = 'none';
+
+    // Clamp scrollTop so a shrinking row set never leaves the viewport blank.
+    const maxScroll = Math.max(0, total * ROW_HEIGHT - this.scrollEl.clientHeight);
+    if (this.scrollEl.scrollTop > maxScroll) {
+      this.scrollEl.scrollTop = maxScroll;
+    }
+
     this.renderWindow();
   }
 
@@ -297,6 +307,8 @@ export class TagTable {
 
   destroy(): void {
     if (this.searchTimer !== null) window.clearTimeout(this.searchTimer);
+    this.scrollEl.removeEventListener('scroll', this.onScroll);
+    this.bulkBar.destroy();
     this.root.remove();
   }
 }
