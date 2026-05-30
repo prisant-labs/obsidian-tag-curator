@@ -22,6 +22,8 @@ import { resolveActiveRules } from './engine/presets';
 import { panicCleanup } from './ui/panicDisable';
 import { WelcomeModal } from './ui/welcomeModal';
 
+/** Scope key for the native tag pane surface; matches the Scope union in types.ts. */
+const TAG_PANE_SCOPE = 'tag-pane';
 /** Scope key for the Notebook Navigator surface; matches the Scope union in types.ts. */
 const NN_SCOPE = 'notebook-navigator';
 /** Scope key for the core Properties panel surface; matches the Scope union in types.ts. */
@@ -68,6 +70,9 @@ export default class TagCuratorPlugin extends Plugin {
     this.tagPaneObserver = new TagPaneObserver(this.app, this);
     this.observers.push(this.tagPaneObserver);
     this.seedObserver(this.tagPaneObserver, settings);
+    if (!this.settingsManager.isScopeEnabled(TAG_PANE_SCOPE)) {
+      this.tagPaneObserver.setEnabled(false);
+    }
     this.tagPaneObserver.init();
 
     // Notebook Navigator scope (Phase 5B). Detection-gated: absent = silent
@@ -131,10 +136,9 @@ export default class TagCuratorPlugin extends Plugin {
         obs.setOverrides(next.overrides);
         obs.setPreviewMode(next.previewMode);
       }
-      // The tag-pane observer follows the global enable; the NN and Properties
-      // scopes' effective enabled is the global enable AND their per-scope kill
-      // switch, so toggling a scope off clears its decoration.
-      this.tagPaneObserver.setEnabled(next.enabled);
+      // All scopes' effective enabled is the global enable AND their per-scope
+      // kill switch, so toggling a scope off clears its decoration.
+      this.applyScopeEnabled(TAG_PANE_SCOPE, this.tagPaneObserver, next.enabled);
       this.applyScopeEnabled(NN_SCOPE, this.nnObserver, next.enabled);
       this.applyScopeEnabled(PROPERTIES_SCOPE, this.propertiesObserver, next.enabled);
       this.applyScopeEnabled(AUTOCOMPLETE_SCOPE, this.autocompleteObserver, next.enabled);
@@ -343,7 +347,7 @@ export default class TagCuratorPlugin extends Plugin {
       obs.setOverrides(next.overrides);
       obs.setPreviewMode(next.previewMode);
     }
-    this.tagPaneObserver.setEnabled(next.enabled);
+    this.applyScopeEnabled(TAG_PANE_SCOPE, this.tagPaneObserver, next.enabled);
     this.applyScopeEnabled(NN_SCOPE, this.nnObserver, next.enabled);
     this.applyScopeEnabled(PROPERTIES_SCOPE, this.propertiesObserver, next.enabled);
     this.applyScopeEnabled(AUTOCOMPLETE_SCOPE, this.autocompleteObserver, next.enabled);
