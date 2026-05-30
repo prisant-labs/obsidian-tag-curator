@@ -501,6 +501,15 @@ export default class TagCuratorPlugin extends Plugin {
     );
   }
 
+  /**
+   * Public accessor for the scope-independent engine count, used by the
+   * Settings "Hidden now" stat card (and any future surface that needs the same
+   * number). Always equals the status-bar count.
+   */
+  curatedCount(): number {
+    return this.countCurated(this.settingsManager.get());
+  }
+
   private refreshStatusBar(): void {
     if (!this.statusBarEl) return;
     const settings = this.settingsManager.get();

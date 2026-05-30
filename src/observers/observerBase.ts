@@ -116,9 +116,11 @@ export abstract class ObserverBase {
       const { effective } = this.resolveRow(normalized, meta);
       // An always-show override keeps the row visible (beats every rule); any
       // other effective match hides it, or flags it in preview mode.
-      const hides = effective !== null && effective.overrideReason !== 'always-show';
+      const hides = RuleEngine.isEffectivelyHidden(effective);
       if (hides) {
-        this.applyDecoration(el, effective.ruleId, this.previewMode ? 'flagged' : 'hidden');
+        // isEffectivelyHidden guarantees effective is non-null; the assertion
+        // lets TypeScript know without duplicating the null check inline.
+        this.applyDecoration(el, effective!.ruleId, this.previewMode ? 'flagged' : 'hidden');
       } else {
         this.clearDecoration(el);
       }

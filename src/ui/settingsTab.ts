@@ -177,7 +177,7 @@ export class TagCuratorSettingTab extends PluginSettingTab {
     const s = this.plugin.settingsManager.get();
     const meta = this.plugin.tagMetaManager.all();
     const ruleCount = resolveActiveRules(s).length;
-    const hiddenCount = this.plugin.tagPaneObserver.countHidden();
+    const hiddenCount = this.plugin.curatedCount();
     let orphanCount = 0;
     for (const m of meta.values()) {
       if (m.count <= 1) orphanCount += 1;
