@@ -4,6 +4,7 @@ import { TagMetaManager } from './storage/tagMeta';
 import { ObserverBase } from './observers/observerBase';
 import { TagPaneObserver } from './observers/tagPaneObserver';
 import { NotebookNavigatorObserver } from './observers/notebookNavigatorObserver';
+import { PropertiesObserver } from './observers/propertiesObserver';
 import {
   detectNotebookNavigator,
   subscribeReapply,
@@ -22,6 +23,8 @@ import { WelcomeModal } from './ui/welcomeModal';
 
 /** Scope key for the Notebook Navigator surface; matches the Scope union in types.ts. */
 const NN_SCOPE = 'notebook-navigator';
+/** Scope key for the core Properties panel surface; matches the Scope union in types.ts. */
+const PROPERTIES_SCOPE = 'properties';
 
 export default class TagCuratorPlugin extends Plugin {
   settingsManager!: SettingsManager;
@@ -32,6 +35,11 @@ export default class TagCuratorPlugin extends Plugin {
   // switch is expressed purely via setEnabled (see applyNnScopeEnabled), so a
   // 'ready' observer can flip on/off without re-detecting or reconstructing.
   private nnObserver: NotebookNavigatorObserver | null = null;
+  // The Properties observer needs NO detection - Properties is core Obsidian -
+  // so it is always constructed. Its per-scope kill switch is expressed purely
+  // via setEnabled (see applyScopeEnabled), gating the effective enabled state
+  // on the global enable AND scopeEnabled['properties'].
+  private propertiesObserver!: PropertiesObserver;
   // All live observers, so shared state (rules / metadata / preview / enabled /
   // overrides) fans out to every surface with one pass. The tag-pane observer is
   // also held in its own field because it remains the status-bar count source.
@@ -57,6 +65,18 @@ export default class TagCuratorPlugin extends Plugin {
     // Notebook Navigator scope (Phase 5B). Detection-gated: absent = silent
     // no-op, too-old = one-time notice + skip, ready + scope enabled = wire it.
     this.setupNotebookNavigator(settings);
+
+    // Properties scope (Phase 6). Properties is core Obsidian, so unlike NN this
+    // needs NO detection: always construct, seed, and init. The per-scope kill
+    // switch gates the effective enabled on top of the global enable that
+    // seedObserver applied.
+    this.propertiesObserver = new PropertiesObserver(this.app, this);
+    this.observers.push(this.propertiesObserver);
+    this.seedObserver(this.propertiesObserver, settings);
+    if (!this.settingsManager.isScopeEnabled(PROPERTIES_SCOPE)) {
+      this.propertiesObserver.setEnabled(false);
+    }
+    this.propertiesObserver.init();
 
     // TagListView is superseded by CurationWorkspaceView per D-012 but kept
     // registered for one release so existing commands and saved layouts do not
@@ -90,10 +110,12 @@ export default class TagCuratorPlugin extends Plugin {
         obs.setOverrides(next.overrides);
         obs.setPreviewMode(next.previewMode);
       }
-      // The NN scope's effective enabled state is the global enable AND the
-      // per-scope kill switch; the tag-pane observer follows the global enable.
+      // The tag-pane observer follows the global enable; the NN and Properties
+      // scopes' effective enabled is the global enable AND their per-scope kill
+      // switch, so toggling a scope off clears its decoration.
       this.tagPaneObserver.setEnabled(next.enabled);
-      this.applyNnScopeEnabled(next.enabled);
+      this.applyScopeEnabled(NN_SCOPE, this.nnObserver, next.enabled);
+      this.applyScopeEnabled(PROPERTIES_SCOPE, this.propertiesObserver, next.enabled);
       this.refreshStatusBar();
     });
 
@@ -252,15 +274,21 @@ export default class TagCuratorPlugin extends Plugin {
   }
 
   /**
-   * Apply the NN scope's effective enabled state: live only when the global
-   * enable AND the per-scope kill switch are both on (Phase 5B). Called from the
-   * settings onChange handler so toggling the kill switch off clears tc-nn-*, and
-   * toggling it back on (while ready) re-decorates.
+   * Apply a scope's effective enabled state to its observer: live only when the
+   * global enable AND the per-scope kill switch are both on (Phase 5B,
+   * generalized in Phase 6). Called from the settings onChange /
+   * onExternalSettingsChange handlers so toggling a kill switch off clears that
+   * scope's decoration, and toggling it back on re-decorates. A null observer
+   * (e.g. NN not detected) is a no-op. Phase 7 (autocomplete) reuses this as-is.
    */
-  private applyNnScopeEnabled(globalEnabled: boolean): void {
-    if (!this.nnObserver) return;
-    const scopeOn = this.settingsManager.isScopeEnabled(NN_SCOPE);
-    this.nnObserver.setEnabled(globalEnabled && scopeOn);
+  private applyScopeEnabled(
+    scope: string,
+    observer: ObserverBase | null,
+    globalEnabled: boolean,
+  ): void {
+    if (!observer) return;
+    const scopeOn = this.settingsManager.isScopeEnabled(scope);
+    observer.setEnabled(globalEnabled && scopeOn);
   }
 
   private teardownNnSubscription(): void {
@@ -294,7 +322,8 @@ export default class TagCuratorPlugin extends Plugin {
       obs.setPreviewMode(next.previewMode);
     }
     this.tagPaneObserver.setEnabled(next.enabled);
-    this.applyNnScopeEnabled(next.enabled);
+    this.applyScopeEnabled(NN_SCOPE, this.nnObserver, next.enabled);
+    this.applyScopeEnabled(PROPERTIES_SCOPE, this.propertiesObserver, next.enabled);
     this.refreshStatusBar();
   }
 
