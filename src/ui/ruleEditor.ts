@@ -42,15 +42,24 @@ export class RuleEditor {
   private draft: Rule | null = null;
   private isNew = false;
 
+  // Unsubscribe handle from settingsManager.onChange; released in destroy() so
+  // a mounted-then-unmounted editor (e.g. switching workspace modes) does not
+  // leak a listener that keeps rendering into a detached root.
+  private unsubscribeSettings: (() => void) | null = null;
+
   constructor(container: HTMLElement, private plugin: TagCuratorPlugin) {
     this.root = container.createDiv({ cls: 'tcr-workspace' });
     this.mainEl = this.root.createDiv({ cls: 'tcr-main' });
     this.previewEl = this.root.createDiv({ cls: 'tcr-preview-dock' });
     this.render();
-    this.plugin.settingsManager.onChange(() => this.render());
+    this.unsubscribeSettings = this.plugin.settingsManager.onChange(() =>
+      this.render(),
+    );
   }
 
   destroy(): void {
+    this.unsubscribeSettings?.();
+    this.unsubscribeSettings = null;
     this.root.remove();
   }
 

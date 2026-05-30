@@ -1684,3 +1684,68 @@
 .tct-why-line {
   margin-top: 2px;
 }
+
+/* -----------------------------------------------------------------
+ * Curation Workspace leaf shell (Phase 3B-2).
+ * The leaf is a flex column: banner, header (title + Tags/Rules mode
+ * switch), then a single content host that mounts either the tag table
+ * or the inline rule editor. Colors come from Obsidian theme variables.
+ * ----------------------------------------------------------------- */
+.tag-curator-workspace {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  height: 100%;
+}
+.tag-curator-workspace .tcw-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 8px 16px 4px;
+}
+.tag-curator-workspace .tcw-header h2 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 700;
+}
+
+/* Segmented Tags/Rules switch in the workspace header. */
+.tag-curator-workspace .tcw-modeswitch {
+  display: inline-flex;
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 8px;
+  overflow: hidden;
+  background: var(--background-secondary);
+}
+.tag-curator-workspace .tcw-modeswitch-btn {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  color: var(--text-muted);
+  padding: 4px 14px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  box-shadow: none;
+}
+.tag-curator-workspace .tcw-modeswitch-btn:not(:last-child) {
+  border-right: 1px solid var(--background-modifier-border);
+}
+.tag-curator-workspace .tcw-modeswitch-btn:hover {
+  color: var(--text-normal);
+  background: var(--background-modifier-hover);
+}
+.tag-curator-workspace .tcw-modeswitch-btn.active {
+  color: var(--text-on-accent);
+  background: var(--interactive-accent);
+}
+
+/* Content host that the active component mounts into. */
+.tag-curator-workspace .tcw-content {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+}
