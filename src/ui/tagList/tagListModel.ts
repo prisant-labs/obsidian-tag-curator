@@ -32,13 +32,21 @@ export class TagListModel {
     const activeRules = resolveActiveRules(settings);
     const rows: TagRow[] = [];
     for (const tagMeta of meta.values()) {
-      const attribution = RuleEngine.getRuleAttribution(tagMeta.tag, tagMeta, activeRules);
+      const attribution = RuleEngine.resolveVisibility(
+        tagMeta.tag,
+        tagMeta,
+        activeRules,
+        settings.overrides,
+      );
       const matches = attribution.allMatches.map((m) => ({
         ruleId: m.ruleId,
         ruleName: m.ruleName,
       }));
+      // An effective match hides the tag unless it is an always-show override,
+      // which keeps the tag visible (the safety net beats every rule).
+      const eff = attribution.effective;
       let visibility: TagVisibility = 'shown';
-      if (attribution.effective) {
+      if (eff && eff.overrideReason !== 'always-show') {
         visibility = settings.previewMode ? 'flagged' : 'hidden';
       }
       rows.push({ meta: tagMeta, matches, visibility });

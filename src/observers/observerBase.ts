@@ -1,5 +1,5 @@
 import { App, Plugin } from 'obsidian';
-import { Rule, TagMeta } from '../types';
+import { Rule, TagMeta, TagOverride } from '../types';
 import { RuleEngine } from '../engine/ruleEngine';
 
 /**
@@ -31,6 +31,7 @@ export abstract class ObserverBase {
   private observers = new WeakMap<HTMLElement, MutationObserver>();
   protected rules: Rule[] = [];
   protected metadata = new Map<string, TagMeta>();
+  protected overrides: Record<string, TagOverride> = {};
   protected previewMode = false;
   protected enabled = true;
   private rafQueued = false;
@@ -50,6 +51,11 @@ export abstract class ObserverBase {
 
   setMetadata(metadata: Map<string, TagMeta>): void {
     this.metadata = metadata;
+    this.scheduleApply();
+  }
+
+  setOverrides(overrides: Record<string, TagOverride>): void {
+    this.overrides = overrides;
     this.scheduleApply();
   }
 
@@ -100,11 +106,17 @@ export abstract class ObserverBase {
       if (!tag) continue;
       const normalized = tag.startsWith('#') ? tag.slice(1) : tag;
       const meta = this.metadata.get(normalized);
-      const result = RuleEngine.evaluateTag(normalized, meta, this.rules);
-      if (result && !this.previewMode) {
-        this.applyDecoration(el, result.ruleId, 'hidden');
-      } else if (result && this.previewMode) {
-        this.applyDecoration(el, result.ruleId, 'flagged');
+      const { effective } = RuleEngine.resolveVisibility(
+        normalized,
+        meta,
+        this.rules,
+        this.overrides,
+      );
+      // An always-show override keeps the row visible (beats every rule); any
+      // other effective match hides it, or flags it in preview mode.
+      const hides = effective !== null && effective.overrideReason !== 'always-show';
+      if (hides) {
+        this.applyDecoration(el, effective.ruleId, this.previewMode ? 'flagged' : 'hidden');
       } else {
         this.clearDecoration(el);
       }

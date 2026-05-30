@@ -50,6 +50,30 @@ describe('TagListModel.allRows', () => {
     );
     expect(model.allRows()[0].matches.map((m) => m.ruleName)).toContain('hide drop');
   });
+
+  it('an always-show override un-hides a rule-matched tag', () => {
+    const model = new TagListModel(
+      source([meta('drop')], {
+        customRules: [hideRule('drop')],
+        overrides: { drop: 'show' },
+      }),
+    );
+    expect(model.allRows()[0].visibility).toBe('shown');
+  });
+
+  it('an always-hide override hides an unmatched tag', () => {
+    const model = new TagListModel(
+      source([meta('keep')], { overrides: { keep: 'hide' } }),
+    );
+    expect(model.allRows()[0].visibility).toBe('hidden');
+  });
+
+  it('an always-hide override flags (not hides) an unmatched tag in preview mode', () => {
+    const model = new TagListModel(
+      source([meta('keep')], { overrides: { keep: 'hide' }, previewMode: true }),
+    );
+    expect(model.allRows()[0].visibility).toBe('flagged');
+  });
 });
 
 describe('TagListModel filtering and search', () => {

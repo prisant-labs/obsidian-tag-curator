@@ -26,6 +26,7 @@ export default class TagCuratorPlugin extends Plugin {
     this.tagPaneObserver = new TagPaneObserver(this.app, this);
     this.tagPaneObserver.setRules(resolveActiveRules(settings));
     this.tagPaneObserver.setMetadata(this.tagMetaManager.all());
+    this.tagPaneObserver.setOverrides(settings.overrides);
     this.tagPaneObserver.setPreviewMode(settings.previewMode);
     this.tagPaneObserver.setEnabled(settings.enabled);
     this.tagPaneObserver.init();
@@ -44,6 +45,7 @@ export default class TagCuratorPlugin extends Plugin {
       const next = this.settingsManager.get();
       this.tagMetaManager.setDebounceMs(next.sidecarDebounceMs);
       this.tagPaneObserver.setRules(resolveActiveRules(next));
+      this.tagPaneObserver.setOverrides(next.overrides);
       this.tagPaneObserver.setPreviewMode(next.previewMode);
       this.tagPaneObserver.setEnabled(next.enabled);
       this.refreshStatusBar();
@@ -145,6 +147,7 @@ export default class TagCuratorPlugin extends Plugin {
     await this.settingsManager.reload();
     const next = this.settingsManager.get();
     this.tagPaneObserver.setRules(resolveActiveRules(next));
+    this.tagPaneObserver.setOverrides(next.overrides);
     this.tagPaneObserver.setPreviewMode(next.previewMode);
     this.tagPaneObserver.setEnabled(next.enabled);
     this.refreshStatusBar();
