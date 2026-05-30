@@ -43,3 +43,24 @@ describe('TagActions.sendToTagWrangler', () => {
     ]);
   });
 });
+
+describe('TagActions visibility and bulk', () => {
+  it('setVisibility defers all tags with a b009 reason until the override store ships', () => {
+    const actions = new TagActions(host());
+    expect(actions.setVisibility(['a', 'b'], 'hide')).toEqual({
+      applied: 0,
+      deferred: 2,
+      reason: 'b009',
+    });
+  });
+
+  it('applyBulk routes send-to-tag-wrangler to a dispatch count', () => {
+    const actions = new TagActions(host());
+    expect(actions.applyBulk(['a', 'b'], 'send-to-tag-wrangler')).toBe(2);
+  });
+
+  it('applyBulk routes hide/unhide to a deferred VisibilityResult', () => {
+    const actions = new TagActions(host());
+    expect(actions.applyBulk(['a'], 'hide')).toEqual({ applied: 0, deferred: 1, reason: 'b009' });
+  });
+});

@@ -26,4 +26,21 @@ export class TagActions {
     }
     return dispatched;
   }
+
+  // Per-tag overrides land with B009; until then these report deferral so the
+  // UI can show the "coming in v0.2" notice without the action layer touching DOM.
+  setVisibility(tags: string[], _to: 'hide' | 'unhide'): VisibilityResult {
+    return { applied: 0, deferred: tags.length, reason: 'b009' };
+  }
+
+  applyBulk(tags: string[], action: BulkAction): number | VisibilityResult {
+    switch (action) {
+      case 'send-to-tag-wrangler':
+        return this.sendToTagWrangler(tags);
+      case 'hide':
+        return this.setVisibility(tags, 'hide');
+      case 'unhide':
+        return this.setVisibility(tags, 'unhide');
+    }
+  }
 }
