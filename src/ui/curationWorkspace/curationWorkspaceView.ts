@@ -31,13 +31,14 @@ export class CurationWorkspaceView extends ItemView {
   private banner: StateBanner | null = null;
 
   private model: TagListModel;
+  /** Wired at construction; per-row and bulk actions land in Phase 3. */
   private actions: TagActions;
 
   // DOM hook for the live-refreshing table body.
   private tbodyEl: HTMLElement | null = null;
 
-  // Settings onChange currently has no off(); guard the handler after close.
-  private detached = false;
+  // Unsubscribe handle returned by settingsManager.onChange; called in onClose.
+  private unsubscribeSettings: (() => void) | null = null;
 
   constructor(leaf: WorkspaceLeaf, plugin: TagCuratorPlugin) {
     super(leaf);
@@ -65,7 +66,6 @@ export class CurationWorkspaceView extends ItemView {
       },
     };
     this.actions = new TagActions(host);
-    void this.actions; // wired now; per-row/bulk actions land in Phase 3.
   }
 
   getViewType(): string {
@@ -81,14 +81,15 @@ export class CurationWorkspaceView extends ItemView {
   async onOpen(): Promise<void> {
     this.buildUI();
     this.refresh();
-    this.plugin.settingsManager.onChange(() => this.refresh());
+    this.unsubscribeSettings = this.plugin.settingsManager.onChange(() => this.refresh());
     this.registerEvent(
       this.plugin.tagMetaManager.on('changed', () => this.refresh()),
     );
   }
 
   async onClose(): Promise<void> {
-    this.detached = true;
+    this.unsubscribeSettings?.();
+    this.unsubscribeSettings = null;
     this.banner?.destroy();
     this.banner = null;
   }
@@ -128,7 +129,7 @@ export class CurationWorkspaceView extends ItemView {
   // -----------------------------------------------------------------
 
   private refresh(): void {
-    if (this.detached || !this.tbodyEl) return;
+    if (!this.tbodyEl) return;
     const rows = this.model.rows();
 
     this.tbodyEl.empty();
