@@ -44,6 +44,13 @@ export abstract class ObserverBase {
   /** Discover containers and wire any reattachment triggers. */
   abstract init(): void;
 
+  /**
+   * (Re)discover host panes and (re)observe their containers. Called on init,
+   * on host layout changes, and after a vault rescan so newly opened panes get
+   * decorated. Idempotent via observeContainer's dedupe.
+   */
+  abstract attachAll(): void;
+
   setRules(rules: Rule[]): void {
     this.rules = rules;
     this.scheduleApply();
