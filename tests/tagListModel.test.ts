@@ -199,4 +199,49 @@ describe('TagListModel selection and lookup', () => {
     expect(model.rowFor('a')!.meta.tag).toBe('a');
     expect(model.rowFor('missing')).toBeUndefined();
   });
+
+  it('selectAllMatching selects only the current filtered set, not all rows', () => {
+    const model = new TagListModel(
+      source([meta('keep'), meta('drop')], { customRules: [hideRule('drop')] }),
+    );
+    model.setFilter('hidden');
+    model.selectAllMatching();
+    expect([...model.selection]).toEqual(['drop']);
+  });
+
+  it('selectAllMatching is additive across filter changes', () => {
+    const model = new TagListModel(
+      source([meta('a'), meta('b'), meta('c')]),
+    );
+    model.setSearch('a');
+    model.selectAllMatching();
+    model.setSearch('b');
+    model.selectAllMatching();
+    expect([...model.selection].sort()).toEqual(['a', 'b']);
+  });
+
+  it('deselectAllMatching removes only the current filtered set', () => {
+    const model = new TagListModel(
+      source([meta('keep'), meta('drop')], { customRules: [hideRule('drop')] }),
+    );
+    model.selectAllMatching(); // selects keep + drop (filter is 'all')
+    model.setFilter('hidden');
+    model.deselectAllMatching(); // removes only 'drop'
+    expect([...model.selection]).toEqual(['keep']);
+  });
+
+  it('allMatchingSelected is true only when every filtered row is selected', () => {
+    const model = new TagListModel(source([meta('a'), meta('b')]));
+    expect(model.allMatchingSelected()).toBe(false);
+    model.toggleSelect('a');
+    expect(model.allMatchingSelected()).toBe(false);
+    model.toggleSelect('b');
+    expect(model.allMatchingSelected()).toBe(true);
+  });
+
+  it('allMatchingSelected is false for an empty filtered set', () => {
+    const model = new TagListModel(source([meta('a')]));
+    model.setSearch('zzz');
+    expect(model.allMatchingSelected()).toBe(false);
+  });
 });

@@ -1393,3 +1393,294 @@
     border-top: 1px solid var(--divider-color);
   }
 }
+
+/* -----------------------------------------------------------------
+ * Curation Workspace tag table (Phase 3B-1).
+ * Virtualized rows + sticky header share one CSS grid template so the
+ * columns line up. Colors come from Obsidian theme variables only.
+ * ----------------------------------------------------------------- */
+.tct-root {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  padding: 0 16px 16px;
+}
+
+/* Toolbar: search + filter chips. */
+.tct-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  padding: 8px 0 10px;
+}
+.tct-search {
+  flex: 1;
+  min-width: 180px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--background-modifier-form-field);
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 7px;
+  padding: 6px 10px;
+}
+.tct-search-ic {
+  color: var(--text-faint);
+  display: inline-flex;
+}
+.tct-search input {
+  flex: 1;
+  background: transparent;
+  border: 0;
+  outline: 0;
+  color: var(--text-normal);
+  font-size: 13px;
+}
+.tct-chips {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.tct-chip {
+  font-size: 12px;
+  padding: 5px 11px;
+  border-radius: 999px;
+  border: 1px solid var(--background-modifier-border);
+  background: var(--background-secondary);
+  color: var(--text-muted);
+  cursor: pointer;
+}
+.tct-chip.active {
+  background: var(--background-modifier-active-hover);
+  border-color: var(--interactive-accent);
+  color: var(--text-accent);
+}
+
+/* Bulk-action bar: contextual, hidden when no selection. */
+.tct-bulk-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+  padding: 9px 12px;
+  background: var(--background-secondary);
+  border: 1px solid var(--interactive-accent);
+  border-radius: 9px;
+  font-size: 13px;
+}
+.tct-bulk-count {
+  font-weight: 600;
+  color: var(--text-accent);
+}
+.tct-bulk-spacer {
+  flex: 1;
+}
+.tct-bulk-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font: inherit;
+  font-size: 11.5px;
+  padding: 4px 10px;
+  border-radius: 5px;
+  border: 1px solid var(--background-modifier-border);
+  background: var(--interactive-normal);
+  color: var(--text-normal);
+  cursor: pointer;
+}
+.tct-bulk-btn:hover:not(:disabled) {
+  background: var(--interactive-hover);
+}
+.tct-bulk-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.tct-bulk-btn-ic {
+  display: inline-flex;
+}
+.tct-bulk-btn-ic svg {
+  width: 14px;
+  height: 14px;
+}
+
+/* Shared column grid for the header row and every data row. */
+.tct-head-row,
+.tct-row {
+  display: grid;
+  grid-template-columns: 34px minmax(160px, 2fr) 64px 96px 80px 56px minmax(120px, 1.5fr) 36px;
+  align-items: center;
+  gap: 0;
+}
+.tct-head-row {
+  border-bottom: 1px solid var(--background-modifier-border);
+}
+.tct-cell {
+  padding: 0 8px;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 13px;
+}
+
+/* Sortable header cells. */
+.tct-head-row .tct-cell {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-faint);
+  font-weight: 600;
+  padding-top: 8px;
+  padding-bottom: 8px;
+}
+.tct-head-sortable {
+  cursor: pointer;
+}
+.tct-head-sortable:hover {
+  color: var(--text-muted);
+}
+.tct-head-row .tct-cell.active {
+  color: var(--text-accent);
+}
+.tct-sort-arrow {
+  margin-left: 4px;
+  font-size: 9px;
+}
+
+/* Scroll viewport + spacer for virtualization. */
+.tct-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  position: relative;
+}
+.tct-spacer {
+  position: relative;
+  width: 100%;
+}
+.tct-rows {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  will-change: transform;
+}
+
+/* Data rows: fixed height so virtualization math is exact (see ROW_HEIGHT). */
+.tct-row {
+  height: 40px;
+  border-bottom: 1px solid var(--divider-color);
+}
+.tct-row:hover {
+  background: var(--background-modifier-hover);
+}
+.tct-cell-select input,
+.tct-more-btn {
+  cursor: pointer;
+}
+.tct-tagname {
+  font-weight: 500;
+}
+.tct-row-hidden .tct-tagname {
+  color: var(--text-faint);
+  text-decoration: line-through;
+}
+.tct-row-flagged .tct-tagname {
+  color: var(--text-warning);
+}
+.tct-src {
+  font-size: 10.5px;
+  color: var(--text-faint);
+  border: 1px solid var(--divider-color);
+  border-radius: 4px;
+  padding: 1px 5px;
+}
+.tct-rule-name {
+  color: var(--text-accent);
+  font-size: 12px;
+}
+.tct-rule-none {
+  color: var(--text-faint);
+  font-size: 12px;
+}
+
+/* Visibility dot: shown = success, hidden = accent, flagged = warning. */
+.tct-vis-dot {
+  display: inline-block;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--text-faint);
+}
+.tct-vis-shown {
+  background: var(--text-success);
+}
+.tct-vis-hidden {
+  background: var(--text-accent);
+}
+.tct-vis-flagged {
+  background: var(--text-warning);
+}
+
+.tct-more-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border: 0;
+  border-radius: 5px;
+  background: transparent;
+  color: var(--text-muted);
+}
+.tct-more-btn:hover {
+  background: var(--background-modifier-hover);
+  color: var(--text-normal);
+}
+.tct-more-btn svg {
+  width: 16px;
+  height: 16px;
+}
+
+.tct-empty {
+  text-align: center;
+  color: var(--text-faint);
+  padding: 24px;
+}
+
+/* "Why is this affected?" popover (rowMenu). */
+.tct-why-pop {
+  z-index: var(--layer-popover, 100);
+  max-width: 320px;
+  padding: 10px 12px;
+  background: var(--background-primary);
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 8px;
+  box-shadow: var(--shadow-s);
+  font-size: 12.5px;
+}
+.tct-why-head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 600;
+  color: var(--text-normal);
+  margin-bottom: 6px;
+}
+.tct-why-head-ic {
+  display: inline-flex;
+  color: var(--text-accent);
+}
+.tct-why-head-ic svg {
+  width: 14px;
+  height: 14px;
+}
+.tct-why-body {
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+.tct-why-line {
+  margin-top: 2px;
+}
