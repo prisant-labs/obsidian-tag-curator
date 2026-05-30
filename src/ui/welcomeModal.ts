@@ -28,23 +28,22 @@ const INTEGRATIONS: IntegrationDescriptor[] = [
     id: 'tag-wrangler',
     name: 'Tag Wrangler',
     bullets: [
-      'Right-click renames in the tag pane stay alongside Tag Curator actions.',
-      'The "Send to Tag Wrangler" bulk action in the tag list delegates renaming to Tag Wrangler so files stay safe.',
+      'Per-row "Rename with Tag Wrangler" hands a tag off to Tag Wrangler so renames stay safe.',
+      'The "Send to Tag Wrangler" bulk action in the Curation Workspace delegates renaming to Tag Wrangler.',
     ],
   },
   {
     id: 'notebook-navigator',
     name: 'Notebook Navigator',
     bullets: [
-      'Hidden tags stay hidden in the Notebook Navigator tag tree.',
-      'Cascade-respect: filters set there honor Tag Curator hide rules.',
+      'Hidden and flagged tags are decorated in the Notebook Navigator tag tree when a compatible version (>= 2.0.0) is installed.',
     ],
   },
   {
     id: 'colored-tags-wrangler',
     name: 'Colored Tags Wrangler',
     bullets: [
-      'If you install it, Tag Curator will defer color decisions to it (v0.2).',
+      'Not yet integrated in v1.0. Color delegation is planned for a future release.',
     ],
   },
 ];
