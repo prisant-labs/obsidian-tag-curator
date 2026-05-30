@@ -5,6 +5,7 @@ import { ObserverBase } from './observers/observerBase';
 import { TagPaneObserver } from './observers/tagPaneObserver';
 import { NotebookNavigatorObserver } from './observers/notebookNavigatorObserver';
 import { PropertiesObserver } from './observers/propertiesObserver';
+import { AutocompleteObserver } from './observers/autocompleteObserver';
 import {
   detectNotebookNavigator,
   subscribeReapply,
@@ -25,6 +26,8 @@ import { WelcomeModal } from './ui/welcomeModal';
 const NN_SCOPE = 'notebook-navigator';
 /** Scope key for the core Properties panel surface; matches the Scope union in types.ts. */
 const PROPERTIES_SCOPE = 'properties';
+/** Scope key for the editor tag-autocomplete surface; matches the Scope union in types.ts. */
+const AUTOCOMPLETE_SCOPE = 'autocomplete';
 
 export default class TagCuratorPlugin extends Plugin {
   settingsManager!: SettingsManager;
@@ -40,6 +43,11 @@ export default class TagCuratorPlugin extends Plugin {
   // via setEnabled (see applyScopeEnabled), gating the effective enabled state
   // on the global enable AND scopeEnabled['properties'].
   private propertiesObserver!: PropertiesObserver;
+  // The autocomplete observer needs NO detection - the editor tag-suggest popup
+  // is core Obsidian - so it is always constructed (Phase 7). Its per-scope kill
+  // switch is expressed purely via setEnabled (see applyScopeEnabled), gating the
+  // effective enabled state on the global enable AND scopeEnabled['autocomplete'].
+  private autocompleteObserver!: AutocompleteObserver;
   // All live observers, so shared state (rules / metadata / preview / enabled /
   // overrides) fans out to every surface with one pass. The tag-pane observer is
   // also held in its own field because it remains the status-bar count source.
@@ -77,6 +85,19 @@ export default class TagCuratorPlugin extends Plugin {
       this.propertiesObserver.setEnabled(false);
     }
     this.propertiesObserver.init();
+
+    // Autocomplete scope (Phase 7). The editor tag-suggest popup is core
+    // Obsidian, so like Properties this needs NO detection: always construct,
+    // seed, and init. The per-scope kill switch gates the effective enabled on
+    // top of the global enable that seedObserver applied. The observer watches a
+    // stable root (document.body) for the transient suggestion popup appearing.
+    this.autocompleteObserver = new AutocompleteObserver(this.app, this);
+    this.observers.push(this.autocompleteObserver);
+    this.seedObserver(this.autocompleteObserver, settings);
+    if (!this.settingsManager.isScopeEnabled(AUTOCOMPLETE_SCOPE)) {
+      this.autocompleteObserver.setEnabled(false);
+    }
+    this.autocompleteObserver.init();
 
     // TagListView is superseded by CurationWorkspaceView per D-012 but kept
     // registered for one release so existing commands and saved layouts do not
@@ -116,6 +137,7 @@ export default class TagCuratorPlugin extends Plugin {
       this.tagPaneObserver.setEnabled(next.enabled);
       this.applyScopeEnabled(NN_SCOPE, this.nnObserver, next.enabled);
       this.applyScopeEnabled(PROPERTIES_SCOPE, this.propertiesObserver, next.enabled);
+      this.applyScopeEnabled(AUTOCOMPLETE_SCOPE, this.autocompleteObserver, next.enabled);
       this.refreshStatusBar();
     });
 
@@ -324,6 +346,7 @@ export default class TagCuratorPlugin extends Plugin {
     this.tagPaneObserver.setEnabled(next.enabled);
     this.applyScopeEnabled(NN_SCOPE, this.nnObserver, next.enabled);
     this.applyScopeEnabled(PROPERTIES_SCOPE, this.propertiesObserver, next.enabled);
+    this.applyScopeEnabled(AUTOCOMPLETE_SCOPE, this.autocompleteObserver, next.enabled);
     this.refreshStatusBar();
   }
 
