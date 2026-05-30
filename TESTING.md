@@ -1,6 +1,6 @@
 # Testing Guide
 
-How to verify Tag Curator before tagging a release, walking through the locked v0.1 design (`docs/internal/release-plans/plan_v0.1.0/ui-design_v0.1.0_converged.html`).
+How to verify Tag Curator before tagging a release. The **v1.0 manual smoke matrix** below is the current gate; the detailed v0.1 checklist that follows it remains valid for the surfaces it covers (welcome modal, state banner, Settings tabs, rule editor, schema migrations, file safety) and is folded in by reference.
 
 ## Local Testing Setup
 
@@ -28,6 +28,64 @@ How to verify Tag Curator before tagging a release, walking through the locked v
 1. Install the BRAT plugin in the test vault.
 2. Add this repo as a beta plugin: `https://github.com/jprisant/obsidian-tag-curator`.
 3. Pick the latest tag (the `release.yml` workflow attaches `main.js`, `manifest.json`, `styles.css`, `versions.json` to every tagged release).
+
+## v1.0 manual BRAT smoke matrix
+
+Walk this before tagging v1.0. It is the current gate; the v0.1 checklist further down still applies to the surfaces it covers and is folded in by reference. Run on a real BRAT install (not just a local copy) so the release-asset path is exercised. Several cells need specific companions or content, noted inline.
+
+### A. The Curation Workspace and the live loop
+
+- [ ] **Open the workspace.** Run "Tag Curator: Open Curation Workspace". The leaf opens with the tag table, filter chips, the inline rule editor, and bulk actions. Zero console errors (Ctrl+Shift+I).
+- [ ] **Open beside the tag pane.** Run "Tag Curator: Open Curation Workspace beside the tag pane". The workspace and the native tag pane appear side by side as a split, arranged in one move.
+- [ ] **Live reaction.** With the two panes visible, create or edit a rule in the workspace (for example a regex that matches a hex-code tag). The affected-tags list in the workspace updates as you type, AND the native tag pane reacts live (matched tags hide, or flag in preview mode) without closing or reopening anything.
+- [ ] **Per-row diagnostics.** On an affected row, use "why is this hidden?" and confirm it names the exact preset, rule, or override responsible.
+- [ ] **Bulk actions.** Select several tags and confirm hide / unhide / flag / add description / send to Tag Wrangler operate on the selection.
+
+### B. Each scope hides/flags
+
+Hiding a tag should, by default, hide it consistently across all four scopes. Confirm each surface reacts:
+
+- [ ] **Tag pane.** A hidden tag disappears (or flags in preview mode) in the native tag pane.
+- [ ] **Notebook Navigator.** Requires a real Notebook Navigator vault (>= 2.0.0). A hidden tag is hidden/flagged in NN's tag tree. With NN absent, this scope is a **silent no-op** (no errors, nothing logged at non-debug levels).
+- [ ] **Properties.** Requires a note with frontmatter `tags:`. Open that note's Properties panel and confirm a hidden tag is hidden/flagged there.
+- [ ] **Autocomplete.** In the editor, type `#` and start a hidden tag's name; confirm the hidden tag is not offered as a suggestion.
+
+### C. Per-tag overrides hold across surfaces
+
+- [ ] Pin a tag to **always-show** from its workspace row; confirm it stays visible in the tag pane, NN, Properties, and autocomplete even when a rule would hide it.
+- [ ] Pin a different tag to **always-hide**; confirm it is hidden across the surfaces with no rule authored for it.
+- [ ] Confirm always-show wins over always-hide and over any matching rule.
+
+### D. Per-scope kill switches
+
+- [ ] In **Settings, then Scopes**, toggle each scope off one at a time. Confirm that scope's decorations clear immediately on its surface while the other scopes keep working and the plugin stays enabled.
+- [ ] Toggle the scope back on; decorations re-apply without a reload.
+
+### E. Panic disable clears everything
+
+- [ ] Run "Tag Curator: Panic disable" (or Settings > General > Run panic disable). Confirm display effects clear across **all four scopes** at once, the plugin disables itself, and the "Tag Curator is off" banner appears across surfaces.
+- [ ] Re-enable from the banner; previously-hidden tags hide again across scopes.
+
+### F. Reversibility and honesty
+
+- [ ] **Uninstall restores everything.** Disable, then uninstall the plugin; every tag is visible again across every surface. No `.md` file was modified.
+- [ ] **NN absent is a silent no-op.** In a vault without Notebook Navigator, the NN scope does nothing and logs nothing at non-debug levels; no errors.
+- [ ] **Honest status bar.** The status bar shows a truthful count for the current state (hidden count / `(preview): N flagged` / `off`) and is scope-independent. Click it to open the workspace filtered to hidden.
+
+### G. Environment sweep
+
+Sample cells A-F across these environments before tagging:
+
+| # | Vault size | Platform | Theme | Companion plugins |
+|---|---|---|---|---|
+| 1 | Small (10-20 notes) | Win11 desktop | Default dark | None |
+| 2 | Small (10-20 notes) | Win11 desktop | Default light | Style Settings enabled |
+| 3 | Medium (200+ notes) | macOS or Linux | Default dark | Tag Wrangler + Notebook Navigator (>= 2.0.0) enabled |
+| 4 | Medium (200+ notes) | iOS (Obsidian Mobile) | Default | None (status bar absent on mobile is expected) |
+| 5 | Large (~10k tags synthetic) | Win11 desktop | Default dark | None |
+| 6 | Empty vault (0 notes) | Win11 desktop | Default | None |
+
+If any cell fails, fix and re-run that cell before tagging.
 
 ## What v0.1 ships
 
