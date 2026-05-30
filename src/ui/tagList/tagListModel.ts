@@ -4,7 +4,14 @@ import { resolveActiveRules } from '../../engine/presets';
 
 export type TagVisibility = 'shown' | 'hidden' | 'flagged';
 export type SortKey = 'name' | 'count' | 'firstSeen' | 'lastSeen' | 'source' | 'visible';
-export type FilterChip = 'all' | 'hidden' | 'orphans' | 'frontmatter' | 'unreviewed';
+export type FilterChip =
+  | 'all'
+  | 'hidden'
+  | 'flagged'
+  | 'orphans'
+  | 'frontmatter'
+  | 'inline'
+  | 'unreviewed';
 
 export interface TagRow {
   meta: TagMeta;
@@ -21,6 +28,7 @@ export class TagListModel {
   private sortBy: SortKey = 'count';
   private sortDesc = true;
   private filter: FilterChip = 'all';
+  private ruleFilter: string | null = null;
   private search = '';
   private selected = new Set<string>();
 
@@ -60,21 +68,35 @@ export class TagListModel {
   setSearch(term: string): void {
     this.search = term.toLowerCase();
   }
+  /** Restrict rows to those matched by a specific rule id; null clears it. */
+  setRuleFilter(ruleId: string | null): void {
+    this.ruleFilter = ruleId;
+  }
   get activeFilter(): FilterChip {
     return this.filter;
+  }
+  get activeRuleFilter(): string | null {
+    return this.ruleFilter;
   }
 
   matchesFilter(row: TagRow): boolean {
     if (this.search && !row.meta.tag.toLowerCase().includes(this.search)) return false;
+    if (this.ruleFilter && !row.matches.some((m) => m.ruleId === this.ruleFilter)) {
+      return false;
+    }
     switch (this.filter) {
       case 'all':
         return true;
       case 'hidden':
         return row.visibility !== 'shown';
+      case 'flagged':
+        return row.visibility === 'flagged';
       case 'orphans':
         return row.meta.count <= 1;
       case 'frontmatter':
         return row.meta.sources.length === 1 && row.meta.sources[0] === 'frontmatter';
+      case 'inline':
+        return row.meta.sources.length === 1 && row.meta.sources[0] === 'inline';
       case 'unreviewed':
         return !row.meta.reviewed;
     }

@@ -112,6 +112,41 @@ describe('TagListModel filtering and search', () => {
     expect(model.rows().map((r) => r.meta.tag)).toEqual(['new']);
   });
 
+  it('flagged chip keeps only rows whose visibility is flagged', () => {
+    const model = new TagListModel(
+      source([meta('keep'), meta('drop')], {
+        customRules: [hideRule('drop')],
+        previewMode: true,
+      }),
+    );
+    model.setFilter('flagged');
+    expect(model.rows().map((r) => r.meta.tag)).toEqual(['drop']);
+  });
+
+  it('inline chip keeps only inline-only rows (not frontmatter)', () => {
+    const model = new TagListModel(
+      source([
+        meta('inl', { sources: ['inline'] }),
+        meta('fm', { sources: ['frontmatter'] }),
+        meta('both', { sources: ['frontmatter', 'inline'] }),
+      ]),
+    );
+    model.setFilter('inline');
+    expect(model.rows().map((r) => r.meta.tag)).toEqual(['inl']);
+  });
+
+  it('setRuleFilter keeps only rows matched by that rule id; null clears it', () => {
+    const model = new TagListModel(
+      source([meta('a'), meta('b'), meta('c')], {
+        customRules: [hideRule('a'), hideRule('b')],
+      }),
+    );
+    model.setRuleFilter('h-a');
+    expect(model.rows().map((r) => r.meta.tag)).toEqual(['a']);
+    model.setRuleFilter(null);
+    expect(model.rows().map((r) => r.meta.tag).sort()).toEqual(['a', 'b', 'c']);
+  });
+
   it('search is a case-insensitive substring on the tag name', () => {
     const model = new TagListModel(source([meta('Project'), meta('area')]));
     model.setSearch('PROJ');
