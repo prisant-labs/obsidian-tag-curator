@@ -76,6 +76,22 @@ export class SettingsManager {
         merged.overrides = {};
       }
     }
+    if (inferred < 5) {
+      // Added per-scope enable + the one-time NN-too-old notice (Phase 5B). The
+      // spread above already fills these from DEFAULT_SETTINGS when absent; this
+      // guard only repairs a present-but-malformed value (e.g. an array written by
+      // a hand-edited data.json), defaulting the four v1.0 scopes ON.
+      if (
+        !merged.scopeEnabled ||
+        typeof merged.scopeEnabled !== 'object' ||
+        Array.isArray(merged.scopeEnabled)
+      ) {
+        merged.scopeEnabled = { ...DEFAULT_SETTINGS.scopeEnabled };
+      }
+      if (typeof merged.seenNnTooOldNotice !== 'boolean') {
+        merged.seenNnTooOldNotice = false;
+      }
+    }
     return merged;
   }
 
@@ -132,6 +148,28 @@ export class SettingsManager {
 
   async setSeenWelcomeModal(seen: boolean): Promise<void> {
     this.settings.seenWelcomeModal = seen;
+    await this.persist();
+  }
+
+  async setSeenNnTooOldNotice(seen: boolean): Promise<void> {
+    this.settings.seenNnTooOldNotice = seen;
+    await this.persist();
+  }
+
+  /**
+   * Whether a given scope is globally live (Phase 5B). Reads the per-scope
+   * enable map; a scope absent from the map is treated as enabled, so callers
+   * (and Phases 6-8) get a safe default-on for any scope not yet listed. This is
+   * the global on/off switch for a surface, distinct from `defaultScopes` (which
+   * governs which scopes a rule applies to).
+   */
+  isScopeEnabled(scope: string): boolean {
+    const flag = this.settings.scopeEnabled?.[scope];
+    return flag !== false;
+  }
+
+  async setScopeEnabled(scope: string, enabled: boolean): Promise<void> {
+    this.settings.scopeEnabled = { ...this.settings.scopeEnabled, [scope]: enabled };
     await this.persist();
   }
 
