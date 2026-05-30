@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { RuleEngine } from '../src/engine/ruleEngine';
-import { Rule } from '../src/types';
+import { Rule, TagMeta, TagOverride } from '../src/types';
 
 function rule(overrides: Partial<Rule> = {}): Rule {
   return {
@@ -13,6 +13,16 @@ function rule(overrides: Partial<Rule> = {}): Rule {
     scopes: ['tag-pane'],
     ...overrides,
   };
+}
+
+function meta(tag: string, count = 5): TagMeta {
+  return { tag, firstSeen: 0, lastSeen: 0, count, sources: ['inline'] };
+}
+
+function metaMap(...tags: TagMeta[]): Map<string, TagMeta> {
+  const m = new Map<string, TagMeta>();
+  for (const t of tags) m.set(t.tag, t);
+  return m;
 }
 
 describe('RuleEngine.evaluateTag', () => {
@@ -182,5 +192,45 @@ describe('RuleEngine.getRuleAttribution', () => {
     const before = rules.map((r) => r.id);
     RuleEngine.getRuleAttribution('t', undefined, rules);
     expect(rules.map((r) => r.id)).toEqual(before);
+  });
+});
+
+describe('RuleEngine.countCurated (status-bar count, scope-independent)', () => {
+  it('counts only tags whose effective match would hide them', () => {
+    const rules: Rule[] = [rule({ id: 'h', match: { type: 'list', list: ['hidden'] } })];
+    const map = metaMap(meta('hidden'), meta('shown'));
+    expect(RuleEngine.countCurated(map, rules, {})).toBe(1);
+  });
+
+  it('returns 0 when no tag matches any rule and there are no overrides', () => {
+    const rules: Rule[] = [rule({ id: 'h', match: { type: 'list', list: ['nope'] } })];
+    const map = metaMap(meta('a'), meta('b'), meta('c'));
+    expect(RuleEngine.countCurated(map, rules, {})).toBe(0);
+  });
+
+  it('does NOT count an always-show override even when a rule matches', () => {
+    // always-show is the safety net: the tag stays visible, so it is not curated.
+    const rules: Rule[] = [rule({ id: 'h', match: { type: 'list', list: ['x'] } })];
+    const overrides: Record<string, TagOverride> = { x: 'show' };
+    const map = metaMap(meta('x'));
+    expect(RuleEngine.countCurated(map, rules, overrides)).toBe(0);
+  });
+
+  it('counts an always-hide override even when no rule matches', () => {
+    const overrides: Record<string, TagOverride> = { y: 'hide' };
+    const map = metaMap(meta('y'), meta('z'));
+    expect(RuleEngine.countCurated(map, [], overrides)).toBe(1);
+  });
+
+  it('is preview-mode-independent: the matched SET is the same regardless', () => {
+    // countCurated returns the size of the hidden/flagged set; preview mode only
+    // changes how those tags are decorated, not which tags are counted.
+    const rules: Rule[] = [rule({ id: 'h', match: { type: 'list', list: ['a', 'b'] } })];
+    const map = metaMap(meta('a'), meta('b'), meta('c'));
+    expect(RuleEngine.countCurated(map, rules, {})).toBe(2);
+  });
+
+  it('returns 0 for an empty metadata map', () => {
+    expect(RuleEngine.countCurated(new Map(), [rule()], {})).toBe(0);
   });
 });
