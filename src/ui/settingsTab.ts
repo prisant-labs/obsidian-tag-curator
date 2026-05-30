@@ -6,12 +6,11 @@
  *
  * The persistent state banner (D-007) sits above whichever panel is active.
  */
-import { App, Notice, PluginSettingTab, Setting, WorkspaceLeaf } from 'obsidian';
+import { App, Notice, PluginSettingTab, Setting } from 'obsidian';
 import TagCuratorPlugin from '../main';
 import { PRESETS, resolveActiveRules } from '../engine/presets';
 import { RuleEditor } from './ruleEditor';
 import { StateBanner } from './stateBanner';
-import { TAG_LIST_VIEW_TYPE } from './tagListView';
 import { Mode } from '../types';
 
 type TabId =
@@ -108,7 +107,7 @@ export class TagCuratorSettingTab extends PluginSettingTab {
       },
       {
         id: 'taglist',
-        label: 'Tag list',
+        label: 'Workspace',
         badge: tagCount.toLocaleString(),
         badgeKind: 'count',
         render: (p) => this.renderTagListTab(p),
@@ -140,18 +139,18 @@ export class TagCuratorSettingTab extends PluginSettingTab {
       {
         id: 'profiles',
         label: 'Profiles',
-        badge: 'v0.2',
+        badge: 'v1.1',
         badgeKind: 'soon',
         deferred: true,
-        render: (p) => this.renderDeferred(p, 'Profiles', 'v0.2'),
+        render: (p) => this.renderDeferred(p, 'Profiles', 'v1.1'),
       },
       {
         id: 'aliases',
         label: 'Aliases',
-        badge: 'v0.3',
+        badge: 'v1.2',
         badgeKind: 'soon',
         deferred: true,
-        render: (p) => this.renderDeferred(p, 'Aliases', 'v0.3'),
+        render: (p) => this.renderDeferred(p, 'Aliases', 'v1.2'),
       },
     ];
     void ruleCount;
@@ -235,7 +234,7 @@ export class TagCuratorSettingTab extends PluginSettingTab {
   }
 
   // -----------------------------------------------------------------
-  // Tag list tab (D-011) - hosts the sidebar leaf component
+  // Workspace launcher (D-012) - Settings launches the Curation Workspace
   // -----------------------------------------------------------------
 
   private renderTagListTab(panel: HTMLElement): void {
@@ -245,47 +244,22 @@ export class TagCuratorSettingTab extends PluginSettingTab {
     const body = info.createDiv();
     body.createSpan({
       text:
-        'The Tag list view is the same component as the sidebar leaf and the dedicated tab here (D-011). The richer card-and-table UI from the v0.1 design lands with the Tag list view rewrite in Phase 3 of the implementation. For now, open the leaf to interact with the live tag list.',
+        'The Curation Workspace is where you see, edit, preview, and act on tags. Settings holds set-once config.',
     });
 
     new Setting(panel)
-      .setName('Open tag list view')
+      .setName('Curation Workspace')
       .setDesc(
-        'Opens the Tag list in the right sidebar. Same as the command Tag Curator: Open tag list view.',
+        'Opens the workspace in the right sidebar. Same as the command Tag Curator: Open Curation Workspace.',
       )
       .addButton((b) =>
         b
-          .setButtonText('Open tag list')
+          .setButtonText('Open Curation Workspace')
           .setCta()
-          .onClick(() => this.openTagListLeaf()),
+          .onClick(() => {
+            void this.plugin.openCurationWorkspace();
+          }),
       );
-
-    new Setting(panel)
-      .setName('Open tag list (hidden only)')
-      .setDesc(
-        'Opens the Tag list pre-filtered to tags currently hidden by a rule.',
-      )
-      .addButton((b) =>
-        b.setButtonText('Show hidden').onClick(() => this.openTagListLeaf(true)),
-      );
-  }
-
-  private async openTagListLeaf(hiddenOnly = false): Promise<void> {
-    const { workspace } = this.app;
-    const leaves = workspace.getLeavesOfType(TAG_LIST_VIEW_TYPE);
-    let leaf: WorkspaceLeaf | null = leaves[0] ?? null;
-    if (!leaf) {
-      leaf = workspace.getRightLeaf(false);
-      if (!leaf) return;
-      await leaf.setViewState({ type: TAG_LIST_VIEW_TYPE });
-    }
-    workspace.revealLeaf(leaf);
-    if (hiddenOnly) {
-      const view = leaf.view;
-      if (view && 'setHiddenOnly' in view) {
-        (view as { setHiddenOnly: (v: boolean) => void }).setHiddenOnly(true);
-      }
-    }
   }
 
   // -----------------------------------------------------------------
@@ -451,10 +425,17 @@ export class TagCuratorSettingTab extends PluginSettingTab {
         'Remove all DOM effects now & disable.',
       ],
       ['Toggle preview mode', 'Flip Preview mode.'],
-      ['Open tag list view', 'Open / reveal the tag list in the right sidebar.'],
+      [
+        'Open Curation Workspace',
+        'Open / reveal the Curation Workspace in the right sidebar. Same as clicking the status bar (which opens it pre-filtered to hidden tags) or the ribbon icon.',
+      ],
+      [
+        'Open tag list view',
+        'Open / reveal the legacy tag list leaf. Retained for layout compatibility; slated for removal in v1.1.',
+      ],
       [
         'Open tag list (hidden tags only)',
-        'Pre-filtered to currently-hidden tags. Same as clicking the status bar.',
+        'Legacy tag list pre-filtered to currently-hidden tags.',
       ],
       ['Rescan vault tags', 'Rebuild the tag sidecar across all notes.'],
     ];

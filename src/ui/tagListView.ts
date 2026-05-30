@@ -1,6 +1,11 @@
 /**
  * Tag list view (D-007, D-011, locked design section 2).
  *
+ * DEPRECATED: superseded by CurationWorkspaceView per D-012. Retained for
+ * layout compatibility (existing open-tag-list commands and saved layouts keep
+ * working for one release); the status bar and ribbon now point at the
+ * Curation Workspace. Slated for removal in v1.1.
+ *
  * Row-based, click-sortable table with multi-select + bulk actions, help-icon
  * tooltips on every column header, and the persistent state banner above.
  * Rendered in two host containers (sidebar leaf + Settings tab) per D-011;
