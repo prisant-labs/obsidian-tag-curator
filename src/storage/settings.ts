@@ -4,6 +4,7 @@ import {
   Rule,
   SCHEMA_VERSION,
   TagCuratorSettings,
+  TagOverride,
 } from '../types';
 
 type LegacyV0Settings = Partial<TagCuratorSettings> & {
@@ -68,6 +69,13 @@ export class SettingsManager {
         merged.seenWelcomeModal = false;
       }
     }
+    if (inferred < 4) {
+      // Added per-tag overrides (D-015). Default to an empty map; existing
+      // installs have no pinned tags until the user creates them.
+      if (typeof merged.overrides !== 'object' || merged.overrides === null) {
+        merged.overrides = {};
+      }
+    }
     return merged;
   }
 
@@ -124,6 +132,19 @@ export class SettingsManager {
 
   async setSeenWelcomeModal(seen: boolean): Promise<void> {
     this.settings.seenWelcomeModal = seen;
+    await this.persist();
+  }
+
+  /**
+   * Pin a tag to always-show / always-hide (D-015), or clear the pin when value
+   * is null. Tag keys carry no leading '#'. Resolved ahead of rules by the
+   * engine; see RuleEngine.resolveVisibility.
+   */
+  async setOverride(tag: string, value: TagOverride | null): Promise<void> {
+    const next = { ...this.settings.overrides };
+    if (value === null) delete next[tag];
+    else next[tag] = value;
+    this.settings.overrides = next;
     await this.persist();
   }
 

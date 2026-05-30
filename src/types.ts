@@ -1,4 +1,4 @@
-export const SCHEMA_VERSION = 3;
+export const SCHEMA_VERSION = 4;
 
 export type Mode = 'default' | 'allow-only' | 'inbox';
 
@@ -43,6 +43,14 @@ export interface Rule {
 
 export type TagSource = 'frontmatter' | 'inline';
 
+/**
+ * Per-tag visibility override (D-015). A tag pinned to 'show' is always visible
+ * (the spec's safety net, beats every rule); a tag pinned to 'hide' is always
+ * hidden without authoring a rule (beats every rule except an always-show on the
+ * same tag, which cannot co-occur since the store holds one value per tag).
+ */
+export type TagOverride = 'show' | 'hide';
+
 export interface TagMeta {
   tag: string;
   firstSeen: number;
@@ -61,6 +69,10 @@ export interface TagCuratorSettings {
   defaultScopes: Scope[];
   enabledPresets: string[];
   customRules: Rule[];
+  // Per-tag visibility overrides (D-015), keyed by tag (no leading #). Resolved
+  // ahead of rules: 'show' beats every rule, 'hide' beats every rule except an
+  // always-show on the same tag. Schema v4 added this; v3->v4 defaults it to {}.
+  overrides: Record<string, TagOverride>;
   previewMode: boolean;
   debugLog: boolean;
   sidecarDebounceMs: number;
@@ -77,6 +89,7 @@ export const DEFAULT_SETTINGS: TagCuratorSettings = {
   defaultScopes: ['tag-pane'],
   enabledPresets: ['hide-hex-codes', 'hide-url-anchors'],
   customRules: [],
+  overrides: {},
   previewMode: false,
   seenWelcomeModal: false,
   debugLog: false,
@@ -104,6 +117,11 @@ export interface AttributedMatch {
   priority: number;
   builtin: boolean;
   reason: string;
+  // Set only when this match comes from a per-tag override (D-015) rather than a
+  // rule. Lets RuleEngine.resolveVisibility return the existing RuleAttribution
+  // shape (so TagListModel and ObserverBase consume one type) while flagging that
+  // the effective reason is an always-show / always-hide override, not a rule.
+  overrideReason?: 'always-show' | 'always-hide';
 }
 
 export interface RuleAttribution {
