@@ -176,13 +176,26 @@ export class RuleEngine {
   }
 
   /**
+   * Central predicate: returns true when a tag is effectively curated (hidden
+   * or flagged in preview mode). A tag is curated when its effective
+   * resolveVisibility match is non-null AND is not an always-show override
+   * (which keeps the tag visible as the safety net and beats every rule).
+   *
+   * This is the single source of truth used by countCurated, TagListModel, and
+   * ObserverBase. Centralizing here ensures all three surfaces stay in sync
+   * without duplicating the condition.
+   */
+  static isEffectivelyHidden(effective: AttributedMatch | null): boolean {
+    return effective !== null && effective.overrideReason !== 'always-show';
+  }
+
+  /**
    * Count the tags the engine curates (would hide) over a metadata map, scope-
-   * independent. A tag counts when its effective resolveVisibility match is
-   * non-null AND is not an always-show override - the same "is this hidden"
-   * predicate TagListModel and ObserverBase use. This is the hidden count in
-   * normal mode and the flagged count in preview mode (the matched SET is the
-   * same; preview only changes how those tags are decorated). Pure: no DOM, no
-   * dependence on which surfaces are toggled on.
+   * independent. A tag counts when isEffectivelyHidden returns true for its
+   * resolveVisibility result. This is the hidden count in normal mode and the
+   * flagged count in preview mode (the matched SET is the same; preview only
+   * changes how those tags are decorated). Pure: no DOM, no dependence on
+   * which surfaces are toggled on.
    */
   static countCurated(
     meta: Map<string, TagMeta>,
@@ -197,7 +210,7 @@ export class RuleEngine {
         rules,
         overrides,
       );
-      if (effective !== null && effective.overrideReason !== 'always-show') {
+      if (RuleEngine.isEffectivelyHidden(effective)) {
         count += 1;
       }
     }

@@ -54,7 +54,7 @@ export class TagListModel {
       // which keeps the tag visible (the safety net beats every rule).
       const eff = attribution.effective;
       let visibility: TagVisibility = 'shown';
-      if (eff && eff.overrideReason !== 'always-show') {
+      if (RuleEngine.isEffectivelyHidden(eff)) {
         visibility = settings.previewMode ? 'flagged' : 'hidden';
       }
       rows.push({ meta: tagMeta, matches, visibility });
