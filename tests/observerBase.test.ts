@@ -173,4 +173,43 @@ describe('ObserverBase', () => {
     obs.unload();
     expect((c.querySelector('.row') as HTMLElement).classList.contains(DEC_HIDDEN)).toBe(false);
   });
+
+  it('an always-show override un-hides a rule-matched row', async () => {
+    const c = makeContainer(['t']);
+    document.body.appendChild(c);
+    const obs = newObserver();
+    obs.setRules([rule()]);
+    obs.setOverrides({ t: 'show' });
+    obs.attach(c);
+    await flushRaf();
+
+    expect((c.querySelector('.row') as HTMLElement).classList.contains(DEC_HIDDEN)).toBe(false);
+  });
+
+  it('an always-hide override hides an unmatched row', async () => {
+    const c = makeContainer(['other']);
+    document.body.appendChild(c);
+    const obs = newObserver();
+    obs.setRules([rule()]);
+    obs.setOverrides({ other: 'hide' });
+    obs.attach(c);
+    await flushRaf();
+
+    expect((c.querySelector('.row') as HTMLElement).classList.contains(DEC_HIDDEN)).toBe(true);
+  });
+
+  it('an always-hide override flags (not hides) an unmatched row in preview mode', async () => {
+    const c = makeContainer(['other']);
+    document.body.appendChild(c);
+    const obs = newObserver();
+    obs.setRules([rule()]);
+    obs.setPreviewMode(true);
+    obs.setOverrides({ other: 'hide' });
+    obs.attach(c);
+    await flushRaf();
+
+    const row = c.querySelector('.row') as HTMLElement;
+    expect(row.classList.contains(DEC_FLAG)).toBe(true);
+    expect(row.classList.contains(DEC_HIDDEN)).toBe(false);
+  });
 });
