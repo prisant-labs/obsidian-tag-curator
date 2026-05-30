@@ -1,4 +1,4 @@
-export const SCHEMA_VERSION = 4;
+export const SCHEMA_VERSION = 5;
 
 export type Mode = 'default' | 'allow-only' | 'inbox';
 
@@ -73,6 +73,13 @@ export interface TagCuratorSettings {
   // ahead of rules: 'show' beats every rule, 'hide' beats every rule except an
   // always-show on the same tag. Schema v4 added this; v3->v4 defaults it to {}.
   overrides: Record<string, TagOverride>;
+  // Per-scope global enable, keyed by Scope (e.g. 'tag-pane', 'notebook-navigator').
+  // This is the "is this surface live at all" switch and is deliberately separate
+  // from `defaultScopes` (which controls rule applicability per scope). A scope
+  // absent from the map is treated as enabled (see isScopeEnabled): the four v1.0
+  // scopes default true. Schema v5 added this; v4->v5 defaults it. Phases 6-8
+  // reuse this field for properties / autocomplete / the Settings Scopes section.
+  scopeEnabled: Record<string, boolean>;
   previewMode: boolean;
   debugLog: boolean;
   sidecarDebounceMs: number;
@@ -80,6 +87,10 @@ export interface TagCuratorSettings {
   // Schema v3 added this; migration from v2 defaults it to false (so existing BRAT
   // testers see the modal once on next load - intentional).
   seenWelcomeModal: boolean;
+  // One-time "Notebook Navigator is too old for the NN scope" notice (Phase 5B).
+  // False until the notice has been shown once; flipped true and persisted so the
+  // user is not nagged on every load when NN is below MIN_API_VERSION.
+  seenNnTooOldNotice: boolean;
 }
 
 export const DEFAULT_SETTINGS: TagCuratorSettings = {
@@ -90,8 +101,17 @@ export const DEFAULT_SETTINGS: TagCuratorSettings = {
   enabledPresets: ['hide-hex-codes', 'hide-url-anchors'],
   customRules: [],
   overrides: {},
+  // The four v1.0 scopes ship enabled. Unlisted scopes are treated as enabled by
+  // isScopeEnabled, so adding a scope here is only needed to ship it OFF by default.
+  scopeEnabled: {
+    'tag-pane': true,
+    'notebook-navigator': true,
+    properties: true,
+    autocomplete: true,
+  },
   previewMode: false,
   seenWelcomeModal: false,
+  seenNnTooOldNotice: false,
   debugLog: false,
   sidecarDebounceMs: 5000,
 };

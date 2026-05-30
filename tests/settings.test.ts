@@ -344,3 +344,114 @@ describe('SettingsManager.load - v3 to v4 migration (overrides)', () => {
     expect(onDisk.schemaVersion).toBe(99);
   });
 });
+
+describe('SettingsManager.load - v4 to v5 migration (per-scope enable + NN notice)', () => {
+  // A v4 fixture must NOT carry the v5 fields, so we build it from DEFAULT_SETTINGS
+  // and explicitly strip the fields v5 introduces; otherwise the defaults would
+  // mask the migration we are exercising.
+  function v4Fixture(extra: Record<string, unknown> = {}): unknown {
+    const v4 = { ...DEFAULT_SETTINGS, schemaVersion: 4 } as Record<string, unknown>;
+    // Strip the v5-introduced fields so the migration is what fills them; then
+    // layer any caller-supplied overrides on top (so a test can inject a v4 file
+    // that DID already carry, say, an explicit scopeEnabled value).
+    delete v4.scopeEnabled;
+    delete v4.seenNnTooOldNotice;
+    return { ...v4, ...extra };
+  }
+
+  it('defaults scopeEnabled with all four v1.0 scopes enabled when absent', async () => {
+    const mgr = new SettingsManager(pluginWith(v4Fixture()));
+    await mgr.load();
+    const s = mgr.get();
+    expect(s.schemaVersion).toBe(SCHEMA_VERSION);
+    expect(s.scopeEnabled).toEqual({
+      'tag-pane': true,
+      'notebook-navigator': true,
+      properties: true,
+      autocomplete: true,
+    });
+  });
+
+  it('defaults seenNnTooOldNotice to false when absent', async () => {
+    const mgr = new SettingsManager(pluginWith(v4Fixture()));
+    await mgr.load();
+    expect(mgr.get().seenNnTooOldNotice).toBe(false);
+  });
+
+  it('preserves an explicit per-scope false (kill switch) across migration', async () => {
+    const fixture = v4Fixture({
+      scopeEnabled: { 'notebook-navigator': false },
+    });
+    const mgr = new SettingsManager(pluginWith(fixture));
+    await mgr.load();
+    // The explicit false is preserved verbatim; the spread merge does not
+    // re-add the other scopes, but isScopeEnabled treats unlisted as enabled.
+    expect(mgr.get().scopeEnabled['notebook-navigator']).toBe(false);
+    expect(mgr.isScopeEnabled('notebook-navigator')).toBe(false);
+    expect(mgr.isScopeEnabled('tag-pane')).toBe(true);
+  });
+
+  it('repairs a malformed (array) scopeEnabled to the default map', async () => {
+    const fixture = v4Fixture({ scopeEnabled: [] as unknown });
+    const mgr = new SettingsManager(pluginWith(fixture));
+    await mgr.load();
+    expect(mgr.get().scopeEnabled).toEqual(DEFAULT_SETTINGS.scopeEnabled);
+  });
+
+  it('persists the v5 schemaVersion + new fields to disk', async () => {
+    const plugin = pluginWith(v4Fixture());
+    const mgr = new SettingsManager(plugin);
+    await mgr.load();
+    const onDisk = plugin.data as {
+      schemaVersion: number;
+      scopeEnabled?: Record<string, boolean>;
+      seenNnTooOldNotice?: boolean;
+    };
+    expect(onDisk.schemaVersion).toBe(SCHEMA_VERSION);
+    expect(onDisk.scopeEnabled).toEqual(DEFAULT_SETTINGS.scopeEnabled);
+    expect(onDisk.seenNnTooOldNotice).toBe(false);
+  });
+});
+
+describe('SettingsManager.isScopeEnabled / setScopeEnabled', () => {
+  it('treats an unlisted scope as enabled (safe default-on)', async () => {
+    const mgr = new SettingsManager(pluginWith(null));
+    await mgr.load();
+    expect(mgr.isScopeEnabled('graph')).toBe(true);
+  });
+
+  it('setScopeEnabled toggles a scope off and back on, persisting each time', async () => {
+    const plugin = pluginWith(null);
+    const mgr = new SettingsManager(plugin);
+    await mgr.load();
+    await mgr.setScopeEnabled('notebook-navigator', false);
+    expect(mgr.isScopeEnabled('notebook-navigator')).toBe(false);
+    expect(
+      (plugin.data as { scopeEnabled: Record<string, boolean> }).scopeEnabled[
+        'notebook-navigator'
+      ],
+    ).toBe(false);
+    await mgr.setScopeEnabled('notebook-navigator', true);
+    expect(mgr.isScopeEnabled('notebook-navigator')).toBe(true);
+  });
+
+  it('setScopeEnabled does not clobber other scopes', async () => {
+    const mgr = new SettingsManager(pluginWith(null));
+    await mgr.load();
+    await mgr.setScopeEnabled('notebook-navigator', false);
+    expect(mgr.isScopeEnabled('tag-pane')).toBe(true);
+    expect(mgr.isScopeEnabled('properties')).toBe(true);
+  });
+});
+
+describe('SettingsManager.setSeenNnTooOldNotice', () => {
+  it('persists the one-time notice flag', async () => {
+    const plugin = pluginWith(null);
+    const mgr = new SettingsManager(plugin);
+    await mgr.load();
+    expect(mgr.get().seenNnTooOldNotice).toBe(false);
+    await mgr.setSeenNnTooOldNotice(true);
+    expect(mgr.get().seenNnTooOldNotice).toBe(true);
+    expect((plugin.data as { seenNnTooOldNotice: boolean }).seenNnTooOldNotice).toBe(true);
+  });
+});
