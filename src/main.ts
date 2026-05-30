@@ -31,7 +31,7 @@ export default class TagCuratorPlugin extends Plugin {
   // (Phase 5B); it stays null when NN is absent or too-old. The per-scope kill
   // switch is expressed purely via setEnabled (see applyNnScopeEnabled), so a
   // 'ready' observer can flip on/off without re-detecting or reconstructing.
-  nnObserver: NotebookNavigatorObserver | null = null;
+  private nnObserver: NotebookNavigatorObserver | null = null;
   // All live observers, so shared state (rules / metadata / preview / enabled /
   // overrides) fans out to every surface with one pass. The tag-pane observer is
   // also held in its own field because it remains the status-bar count source.

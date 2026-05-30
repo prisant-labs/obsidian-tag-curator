@@ -27,6 +27,10 @@ class TestObserver extends ObserverBase {
     this.observeContainer(el);
   }
 
+  attachAll(): void {
+    /* tests attach containers explicitly via attach(); nothing to discover */
+  }
+
   protected findRows(root: HTMLElement): ObservedRow[] {
     return Array.from(root.querySelectorAll<HTMLElement>('.row')).map((el) => ({
       el,
