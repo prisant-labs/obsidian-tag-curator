@@ -254,17 +254,21 @@ export class TagListView extends ItemView {
     // Build Row[] then filter + sort.
     const rows: Row[] = [];
     for (const tagMeta of meta.values()) {
-      const attribution = RuleEngine.getRuleAttribution(
+      const attribution = RuleEngine.resolveVisibility(
         tagMeta.tag,
         tagMeta,
         activeRules,
+        settings.overrides,
       );
       const matches = attribution.allMatches.map((m) => ({
         ruleId: m.ruleId,
         ruleName: m.ruleName,
       }));
+      // An effective match hides the tag unless it is an always-show override,
+      // which keeps the tag visible (the safety net beats every rule).
+      const eff = attribution.effective;
       let visible: Row['visible'] = 'shown';
-      if (attribution.effective) {
+      if (eff && eff.overrideReason !== 'always-show') {
         visible = settings.previewMode ? 'flagged' : 'hidden';
       }
       rows.push({ meta: tagMeta, matches, visible });
