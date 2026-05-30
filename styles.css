@@ -1749,3 +1749,27 @@
   flex: 1;
   min-height: 0;
 }
+
+/* -----------------------------------------------------------------
+ * Notebook Navigator tag-tree decoration (NN compat, plan Phase 3.4).
+ * Tag-Curator-owned classes only (tc-nn-*); NN's nn-* base classes are
+ * never styled destructively. Colors come from Obsidian theme variables.
+ * Runtime interop: these target NN's rendered .nn-tag rows from the
+ * outside; no NN source is referenced.
+ * ----------------------------------------------------------------- */
+
+/* Hide: collapse the row to zero height inside NN's virtualizer. */
+.nn-tag.tc-nn-hidden {
+  display: none !important;
+}
+
+/* Flag (preview mode): a Tag-Curator-owned highlight so the user can see
+ * which NN rows a rule would hide, without actually hiding them. */
+.nn-tag.tc-nn-flagged {
+  background: var(--background-modifier-hover);
+  box-shadow: inset 2px 0 0 0 var(--text-warning);
+  border-radius: 4px;
+}
+.nn-tag.tc-nn-flagged .nn-navitem-name {
+  color: var(--text-warning);
+}

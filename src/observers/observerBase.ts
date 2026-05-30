@@ -1,5 +1,5 @@
 import { App, Plugin } from 'obsidian';
-import { Rule, TagMeta, TagOverride } from '../types';
+import { Rule, RuleAttribution, TagMeta, TagOverride } from '../types';
 import { RuleEngine } from '../engine/ruleEngine';
 
 /**
@@ -106,12 +106,7 @@ export abstract class ObserverBase {
       if (!tag) continue;
       const normalized = tag.startsWith('#') ? tag.slice(1) : tag;
       const meta = this.metadata.get(normalized);
-      const { effective } = RuleEngine.resolveVisibility(
-        normalized,
-        meta,
-        this.rules,
-        this.overrides,
-      );
+      const { effective } = this.resolveRow(normalized, meta);
       // An always-show override keeps the row visible (beats every rule); any
       // other effective match hides it, or flags it in preview mode.
       const hides = effective !== null && effective.overrideReason !== 'always-show';
@@ -121,6 +116,21 @@ export abstract class ObserverBase {
         this.clearDecoration(el);
       }
     }
+  }
+
+  /**
+   * Resolve a single row's visibility. The default delegates to the shared
+   * RuleEngine (overrides + rules + preview semantics live in the base apply
+   * loop). Subclasses override ONLY to widen the lookup - e.g. the Notebook
+   * Navigator observer also inherits an ancestor's hide for a descendant tag,
+   * because NN renders nested tags as flat sibling rows. Overrides must still
+   * call RuleEngine.resolveVisibility rather than reimplement it.
+   */
+  protected resolveRow(
+    tag: string,
+    meta: TagMeta | undefined,
+  ): RuleAttribution {
+    return RuleEngine.resolveVisibility(tag, meta, this.rules, this.overrides);
   }
 
   protected clearWithin(root: HTMLElement): void {
