@@ -1,9 +1,17 @@
-// Tag Curator owns two decoration namespaces: the core tag pane
-// (tag-curator-*) and the Notebook Navigator tag tree (tc-nn-*). Panic disable
-// must sweep both, so a stale NN scope cannot leave hidden rows behind after the
-// user hits the panic command (Phase 5B).
-const CLASSES = ['tag-curator-hidden', 'tag-curator-flagged', 'tc-nn-hidden', 'tc-nn-flagged'];
-const ATTRS = ['data-tag-curator-rule', 'data-tc-nn-rule'];
+// Tag Curator owns three decoration namespaces: the core tag pane
+// (tag-curator-*), the Notebook Navigator tag tree (tc-nn-*), and the
+// Properties panel tag pills (tc-prop-*). Panic disable must sweep all of them,
+// so a stale scope cannot leave hidden rows behind after the user hits the
+// panic command (Phase 5B, Phase 6).
+const CLASSES = [
+  'tag-curator-hidden',
+  'tag-curator-flagged',
+  'tc-nn-hidden',
+  'tc-nn-flagged',
+  'tc-prop-hidden',
+  'tc-prop-flagged',
+];
+const ATTRS = ['data-tag-curator-rule', 'data-tc-nn-rule', 'data-tc-prop-rule'];
 
 export function panicCleanup(doc: Document): void {
   for (const cls of CLASSES) {

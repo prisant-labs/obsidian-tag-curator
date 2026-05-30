@@ -1773,3 +1773,30 @@
 .nn-tag.tc-nn-flagged .nn-navitem-name {
   color: var(--text-warning);
 }
+
+/* -----------------------------------------------------------------
+ * Properties panel tag-pill decoration (plan Phase 6).
+ * Tag-Curator-owned classes only (tc-prop-*); core Obsidian's
+ * multi-select-pill base class is never styled destructively. Colors
+ * come from Obsidian theme variables. The selectors target the rendered
+ * pills in the metadata editor's tags property row from the outside.
+ * The Properties DOM is a version-fragile contract (see
+ * propertiesObserver.ts); the independent kill switch lets the user
+ * disable this scope if a future Obsidian release moves the markup.
+ * ----------------------------------------------------------------- */
+
+/* Hide: collapse the matched tag pill out of the property row. */
+.multi-select-pill.tc-prop-hidden {
+  display: none !important;
+}
+
+/* Flag (preview mode): a Tag-Curator-owned highlight so the user can see
+ * which tag pills a rule would hide, without actually hiding them. */
+.multi-select-pill.tc-prop-flagged {
+  background: var(--background-modifier-hover);
+  box-shadow: inset 2px 0 0 0 var(--text-warning);
+  border-radius: 4px;
+}
+.multi-select-pill.tc-prop-flagged .multi-select-pill-content {
+  color: var(--text-warning);
+}
