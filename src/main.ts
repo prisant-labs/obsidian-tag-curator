@@ -1,7 +1,14 @@
 import { Notice, Plugin, TFile, WorkspaceLeaf } from 'obsidian';
 import { SettingsManager } from './storage/settings';
 import { TagMetaManager } from './storage/tagMeta';
+import { ObserverBase } from './observers/observerBase';
 import { TagPaneObserver } from './observers/tagPaneObserver';
+import { NotebookNavigatorObserver } from './observers/notebookNavigatorObserver';
+import {
+  detectNotebookNavigator,
+  subscribeReapply,
+  MIN_API_VERSION,
+} from './integrations/notebookNavigator';
 import { TagCuratorSettingTab } from './ui/settingsTab';
 import { TagListView, TAG_LIST_VIEW_TYPE } from './ui/tagListView';
 import {
@@ -13,10 +20,24 @@ import { resolveActiveRules } from './engine/presets';
 import { panicCleanup } from './ui/panicDisable';
 import { WelcomeModal } from './ui/welcomeModal';
 
+/** Scope key for the Notebook Navigator surface; matches the Scope union in types.ts. */
+const NN_SCOPE = 'notebook-navigator';
+
 export default class TagCuratorPlugin extends Plugin {
   settingsManager!: SettingsManager;
   tagMetaManager!: TagMetaManager;
   tagPaneObserver!: TagPaneObserver;
+  // The NN observer is constructed at load whenever NN is detected 'ready'
+  // (Phase 5B); it stays null when NN is absent or too-old. The per-scope kill
+  // switch is expressed purely via setEnabled (see applyNnScopeEnabled), so a
+  // 'ready' observer can flip on/off without re-detecting or reconstructing.
+  nnObserver: NotebookNavigatorObserver | null = null;
+  // All live observers, so shared state (rules / metadata / preview / enabled /
+  // overrides) fans out to every surface with one pass. The tag-pane observer is
+  // also held in its own field because it remains the status-bar count source.
+  private observers: ObserverBase[] = [];
+  // Disposer for the NN reapply subscription; called on unload / panic / teardown.
+  private nnUnsubscribe: (() => void) | null = null;
   private statusBarEl: HTMLElement | null = null;
 
   async onload(): Promise<void> {
@@ -29,12 +50,13 @@ export default class TagCuratorPlugin extends Plugin {
     await this.tagMetaManager.load();
 
     this.tagPaneObserver = new TagPaneObserver(this.app, this);
-    this.tagPaneObserver.setRules(resolveActiveRules(settings));
-    this.tagPaneObserver.setMetadata(this.tagMetaManager.all());
-    this.tagPaneObserver.setOverrides(settings.overrides);
-    this.tagPaneObserver.setPreviewMode(settings.previewMode);
-    this.tagPaneObserver.setEnabled(settings.enabled);
+    this.observers.push(this.tagPaneObserver);
+    this.seedObserver(this.tagPaneObserver, settings);
     this.tagPaneObserver.init();
+
+    // Notebook Navigator scope (Phase 5B). Detection-gated: absent = silent
+    // no-op, too-old = one-time notice + skip, ready + scope enabled = wire it.
+    this.setupNotebookNavigator(settings);
 
     // TagListView is superseded by CurationWorkspaceView per D-012 but kept
     // registered for one release so existing commands and saved layouts do not
@@ -62,16 +84,22 @@ export default class TagCuratorPlugin extends Plugin {
     this.settingsManager.onChange(() => {
       const next = this.settingsManager.get();
       this.tagMetaManager.setDebounceMs(next.sidecarDebounceMs);
-      this.tagPaneObserver.setRules(resolveActiveRules(next));
-      this.tagPaneObserver.setOverrides(next.overrides);
-      this.tagPaneObserver.setPreviewMode(next.previewMode);
+      const rules = resolveActiveRules(next);
+      for (const obs of this.observers) {
+        obs.setRules(rules);
+        obs.setOverrides(next.overrides);
+        obs.setPreviewMode(next.previewMode);
+      }
+      // The NN scope's effective enabled state is the global enable AND the
+      // per-scope kill switch; the tag-pane observer follows the global enable.
       this.tagPaneObserver.setEnabled(next.enabled);
+      this.applyNnScopeEnabled(next.enabled);
       this.refreshStatusBar();
     });
 
     this.registerEvent(
       this.tagMetaManager.on('changed', () => {
-        this.tagPaneObserver.setMetadata(this.tagMetaManager.all());
+        this.pushMetadata();
         this.refreshStatusBar();
       }),
     );
@@ -81,8 +109,8 @@ export default class TagCuratorPlugin extends Plugin {
     );
     this.registerEvent(
       this.app.metadataCache.on('resolved', () => {
-        this.tagPaneObserver.setMetadata(this.tagMetaManager.all());
-        this.tagPaneObserver.attachAll();
+        this.pushMetadata();
+        for (const obs of this.observers) obs.attachAll();
         this.refreshStatusBar();
       }),
     );
@@ -151,12 +179,93 @@ export default class TagCuratorPlugin extends Plugin {
     });
 
     void this.tagMetaManager.scanAll().then(() => {
-      this.tagPaneObserver.setMetadata(this.tagMetaManager.all());
+      this.pushMetadata();
       this.refreshStatusBar();
       this.maybeShowWelcomeModal();
     });
 
     this.refreshStatusBar();
+  }
+
+  /**
+   * Feed the initial shared state to a newly constructed observer (Phase 5B).
+   * Both the tag-pane observer and the NN observer get the exact same inputs;
+   * keeping this in one place means a future scope (properties, autocomplete)
+   * is wired identically.
+   */
+  private seedObserver(observer: ObserverBase, settings: ReturnType<SettingsManager['get']>): void {
+    observer.setRules(resolveActiveRules(settings));
+    observer.setMetadata(this.tagMetaManager.all());
+    observer.setOverrides(settings.overrides);
+    observer.setPreviewMode(settings.previewMode);
+    observer.setEnabled(settings.enabled);
+  }
+
+  /** Fan the current tag metadata out to every live observer. */
+  private pushMetadata(): void {
+    const meta = this.tagMetaManager.all();
+    for (const obs of this.observers) obs.setMetadata(meta);
+  }
+
+  /**
+   * Detection-gated Notebook Navigator wiring (Phase 5B).
+   *   - absent: silent no-op.
+   *   - too-old: show ONE notice (gated on seenNnTooOldNotice) and skip; the NN
+   *     scope stays off.
+   *   - ready: if the per-scope kill switch is on, construct + seed + wire the
+   *     observer and subscribe its reapply hook so NN's own re-renders (the tree
+   *     is virtualized) re-trigger decoration. If the kill switch is off we still
+   *     construct it but leave it disabled, so flipping the switch on later only
+   *     needs setEnabled (no re-detection).
+   */
+  private setupNotebookNavigator(settings: ReturnType<SettingsManager['get']>): void {
+    const handle = detectNotebookNavigator(this.app);
+    if (handle.status === 'absent') return;
+    if (handle.status === 'too-old') {
+      if (!settings.seenNnTooOldNotice) {
+        new Notice(
+          `Tag Curator: Notebook Navigator integration needs NN ${MIN_API_VERSION} or newer; the NN scope is off.`,
+        );
+        void this.settingsManager.setSeenNnTooOldNotice(true);
+      }
+      return;
+    }
+    // status === 'ready'. handle.api is non-null here.
+    const api = handle.api;
+    if (!api) return;
+    const observer = new NotebookNavigatorObserver(this.app, this);
+    this.nnObserver = observer;
+    this.observers.push(observer);
+    this.seedObserver(observer, settings);
+    // The per-scope kill switch gates the effective enabled state on top of the
+    // global enable that seedObserver already applied.
+    if (!this.settingsManager.isScopeEnabled(NN_SCOPE)) {
+      observer.setEnabled(false);
+    }
+    observer.init();
+    // NN's tree is virtualized: scrolled-out rows lose their DOM node and return
+    // undecorated. Reattach + reapply when NN signals a tree change.
+    this.nnUnsubscribe = subscribeReapply(api, () => {
+      this.nnObserver?.attachAll();
+    });
+    this.register(() => this.teardownNnSubscription());
+  }
+
+  /**
+   * Apply the NN scope's effective enabled state: live only when the global
+   * enable AND the per-scope kill switch are both on (Phase 5B). Called from the
+   * settings onChange handler so toggling the kill switch off clears tc-nn-*, and
+   * toggling it back on (while ready) re-decorates.
+   */
+  private applyNnScopeEnabled(globalEnabled: boolean): void {
+    if (!this.nnObserver) return;
+    const scopeOn = this.settingsManager.isScopeEnabled(NN_SCOPE);
+    this.nnObserver.setEnabled(globalEnabled && scopeOn);
+  }
+
+  private teardownNnSubscription(): void {
+    this.nnUnsubscribe?.();
+    this.nnUnsubscribe = null;
   }
 
   /**
@@ -178,15 +287,20 @@ export default class TagCuratorPlugin extends Plugin {
   async onExternalSettingsChange(): Promise<void> {
     await this.settingsManager.reload();
     const next = this.settingsManager.get();
-    this.tagPaneObserver.setRules(resolveActiveRules(next));
-    this.tagPaneObserver.setOverrides(next.overrides);
-    this.tagPaneObserver.setPreviewMode(next.previewMode);
+    const rules = resolveActiveRules(next);
+    for (const obs of this.observers) {
+      obs.setRules(rules);
+      obs.setOverrides(next.overrides);
+      obs.setPreviewMode(next.previewMode);
+    }
     this.tagPaneObserver.setEnabled(next.enabled);
+    this.applyNnScopeEnabled(next.enabled);
     this.refreshStatusBar();
   }
 
   onunload(): void {
-    this.tagPaneObserver?.unload();
+    this.teardownNnSubscription();
+    for (const obs of this.observers) obs.unload();
     this.tagMetaManager?.unload();
     panicCleanup(document);
   }
@@ -204,7 +318,9 @@ export default class TagCuratorPlugin extends Plugin {
   }
 
   private panicDisable(): void {
-    this.tagPaneObserver.setEnabled(false);
+    // Disable every observer (tag-pane + NN if live) so each clears its own
+    // decoration, then sweep the document for any stragglers in both namespaces.
+    for (const obs of this.observers) obs.setEnabled(false);
     panicCleanup(document);
     void this.settingsManager.setEnabled(false);
     new Notice('Tag Curator: panic disable activated. All DOM effects removed.');
@@ -213,7 +329,7 @@ export default class TagCuratorPlugin extends Plugin {
   private async rescanTags(): Promise<void> {
     new Notice('Tag Curator: rescanning vault tags...');
     await this.tagMetaManager.scanAll();
-    this.tagPaneObserver.setMetadata(this.tagMetaManager.all());
+    this.pushMetadata();
     this.refreshStatusBar();
     new Notice('Tag Curator: rescan complete');
   }
