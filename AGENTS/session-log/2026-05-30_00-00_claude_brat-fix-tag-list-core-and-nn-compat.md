@@ -5,7 +5,7 @@ topic: BRAT stale-release fix, tag-list dual-host shared core, Notebook Navigato
 status: in-progress
 previous-session: AGENTS/session-log/2026-05-28_20-36_claude_v0.1.0-design-lock-ui-build-and-v0.2-proposals.md
 branch: feat/nn-compat-phase1
-commits: 14
+commits: 15
 files-changed: 18
 ---
 
