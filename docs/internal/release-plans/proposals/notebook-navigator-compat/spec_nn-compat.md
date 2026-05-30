@@ -5,7 +5,7 @@
 | Status | **Draft / Unreleased** |
 | Relates to | Scope-expansion issues #1-3, Scope `notebook-navigator` (already declared in `src/types.ts:18`) |
 | GitHub issue | _none yet_ |
-| Target | TBD (see Open decisions, Section 11) |
+| Target | v0.2 scope-expansion track (issues #1-3); hide + flag; requires recent NN (API v2.0.0) |
 | Authors | Tag Curator team |
 | Last updated | 2026-05-29 |
 | Primary source | `findings_nn-integration-seam.md` (this directory) |
@@ -28,7 +28,7 @@ This is the v0.1 contract carried forward: **display-only, file-safe, fully reve
 |---|---|
 | "I hid `#temp` and `#archive` with Tag Curator, but they still clutter Notebook Navigator's tag tree." | Tag Curator's hide rules apply to NN's tag-tree rows at runtime; matching rows collapse to zero height. |
 | "I use NN as my main explorer and want the same curated tag list I see in the native pane." | The same rules drive both surfaces; NN's tree mirrors the native pane's hidden/flagged state. |
-| "I flagged my noisy tags so I notice them, but NN shows them plain." | Where flagging maps to a color, Tag Curator asks NN's own API to color the tag, so NN renders the flag itself (Open decision, Section 11c). |
+| "I flagged my noisy tags so I notice them, but NN shows them plain." | Where flagging maps to a color, Tag Curator asks NN's own API to color the tag, so NN renders the flag itself (opt-in color mirroring, Section 11). |
 | "I scrolled NN's tag tree and my hidden tags flickered back." | The decorator is idempotent and reapplies on NN's virtualization re-renders and typed events, so hidden rows stay hidden. |
 | "I uninstalled or disabled Notebook Navigator." | Tag Curator feature-detects NN and silently no-ops when it is absent; no errors, no orphaned state. |
 
@@ -66,7 +66,7 @@ This feature is runtime display compatibility only. It does NOT:
 - Importing, pasting, or paraphrasing any NN `.ts` implementation file.
 - Depending on NN's private settings schema (for example the `hiddenTags` / `vaultProfiles` shape).
 
-**The one allowed file copy:** NN ships `src/api/public/notebook-navigator.d.ts` specifically so third-party plugins can type the API without importing NN source (`findings` Section 2, "How to obtain it", citing `notebook-navigator.d.ts:28-37`). That published `.d.ts` is an interface contract intended for consumers. Tag Curator may copy or import that single declaration file. Tag Curator must not import any implementation `.ts` file. **Open decision (Section 11d):** confirm with the user / counsel that vendoring the published `.d.ts` is acceptable, or fall back to a hand-written minimal local type for only the API members Tag Curator calls.
+**Types decision (resolved, Section 11):** NN ships `src/api/public/notebook-navigator.d.ts` specifically so third-party plugins can type the API without importing NN source (`findings` Section 2, "How to obtain it", citing `notebook-navigator.d.ts:28-37`). Vendoring that published `.d.ts` would be GPL-safe under the runtime-interop reading, but Tag Curator instead hand-writes a minimal local interface covering only the API members it calls (Section 11, decision 4). Tag Curator must not import any NN implementation `.ts` file, and does not vendor NN's `.d.ts` either.
 
 ---
 
@@ -102,7 +102,7 @@ Where a Tag Curator flag can be expressed as a color, background, or icon, prefe
 - Flag a tag: `nn.metadata.setTagMeta(tag, { color?, backgroundColor?, icon? })` (`notebook-navigator.d.ts:324`, impl `MetadataAPI.ts:646-658`). Pass `null` to clear. This persists into NN's own `tagColors` / `tagBackgroundColors` / `tagIcons` and triggers a re-render. The tag input accepts with or without `#` and is normalized to the canonical path.
 - Optional context menu: `nn.menus.registerTagMenu(callback)` (`notebook-navigator.d.ts:396`) lets Tag Curator add a "Hide / flag this tag in Tag Curator" item to NN's tag context menu. Good UX, not required for v1.
 
-**Co-ownership caveat.** `setTagMeta` writes into NN's user-visible color settings, which NN's own color feature also writes. Tag Curator would be **co-owning** that state. It must (a) record which tag colors it set, (b) avoid clobbering colors the user set in NN, and (c) clear only its own `setTagMeta` values on unload / scope-disable (`findings` Section 5, Approach B tradeoffs, and the unload checklist in `findings` Section 5). This co-ownership cost is the main reason flagging-via-API is an **Open decision** (Section 11a, 11c), not an automatic inclusion.
+**Co-ownership caveat.** `setTagMeta` writes into NN's user-visible color settings, which NN's own color feature also writes. Tag Curator would be **co-owning** that state. It must (a) record which tag colors it set, (b) avoid clobbering colors the user set in NN, and (c) clear only its own `setTagMeta` values on unload / scope-disable (`findings` Section 5, Approach B tradeoffs, and the unload checklist in `findings` Section 5). Because of this co-ownership cost, flag-to-color mirroring is **opt-in** (a setting, default off; Section 11, decision 3), so Tag Curator never touches NN colors unless the user explicitly enables it.
 
 ### 5.3 Rejected: writing NN's native "Hide tags" filter
 
@@ -165,15 +165,17 @@ This is the central engineering risk of the feature and the reason the decorator
 
 The plan therefore refactors a host-agnostic **`ObserverBase`** out of `TagPaneObserver` (lifecycle, scheduling, enable/preview, clear/unload) and implements `NotebookNavigatorObserver` on top of it. See the plan, Phase 1.
 
-**No new persistent storage.** Hiding state is derived live from the rule engine. If flagging-via-API ships (Open decision 11a/11c), Tag Curator needs a small in-memory record of which `setTagMeta` values it set so it can clean them up on unload; whether that record needs to persist across reloads is a sub-decision (it can be reconstructed from rules on load, so persistence is likely unnecessary).
+**No new persistent storage.** Hiding state is derived live from the rule engine. Flagging-via-API ships in v1 (Section 11, decisions 1 and 3), so Tag Curator keeps a small in-memory record of which `setTagMeta` values it set, which it needs to clean them up precisely on unload. That record requires **no persistence**: it is reconstructed from the rules on load, so nothing needs to survive across reloads.
 
 ---
 
 ## 9. Detection, version, and API gating
 
-- **NN present?** Feature-detect `app.plugins.plugins['notebook-navigator']`. If absent, the observer never attaches and the scope is a silent no-op. No errors.
-- **API present and new enough?** Read `app.plugins.plugins['notebook-navigator']?.api` and call `getVersion()`. The findings document API version `2.0.0`. Flagging-via-API requires the API; hiding-via-DOM does not.
-- **Graceful degradation.** If the API is absent or older than the required version, hiding still works through the DOM decorator (which depends only on the very stable `data-tag` / `.nn-tag` contract). Flagging-via-API silently disables. **Open decision 11b:** the minimum NN / API version to require, and exactly how to degrade (hide-only vs warn the user vs disable the scope).
+Tag Curator **requires a recent Notebook Navigator** for this scope (Section 11, decision 2). The gate has three branches, driven by a single constant `MIN_API_VERSION = '2.0.0'` (NN 3.x):
+
+- **NN absent.** Feature-detect `app.plugins.plugins['notebook-navigator']`. If absent, the observer never attaches and the scope is a **silent no-op**: no notice, no errors, no orphaned state.
+- **NN present but older than required (API < `2.0.0`).** Read `app.plugins.plugins['notebook-navigator']?.api` and call `getVersion()`. If the version is below `MIN_API_VERSION`, show a **one-time notice** and **skip the entire scope**: no hide decoration and no flagging. Tag Curator does not attempt a hide-only fallback against an unsupported NN; the whole scope sits out until the user updates NN.
+- **NN present and new enough (API >= `2.0.0`).** Attach the observer and enable both hiding (DOM decorator) and flagging (opt-in color via `setTagMeta`, decision 3). Gate API readiness with `nn.isStorageReady()` / `nn.whenReady()`.
 - **DOM contract drift.** If a future NN version changes `data-tag` or `.nn-tag`, the decorator stops matching rather than misbehaving (it simply finds no rows). The plan includes a cheap runtime self-check (does `.nn-navigation-pane [data-tag]` find rows when NN's tree is visible?) to log a single diagnostic when the contract appears to have changed.
 
 ---
@@ -193,24 +195,24 @@ The plan therefore refactors a host-agnostic **`ObserverBase`** out of `TagPaneO
 
 ---
 
-## 11. Open decisions (FLAGGED for the user)
+## 11. Decisions (resolved 2026-05-29)
 
-These are deliberately **not decided** in this draft. Each blocks or shapes specific plan phases (noted in the plan).
+The five questions previously flagged here are now resolved. They drive the plan phases (noted in the plan).
 
-**(a) v1 scope: hide-only vs hide+flag.**
-The robust, low-risk core is **hide-only** via the DOM decorator (Seam 1). Flagging via `setTagMeta` (Seam 2) adds real value but also adds the co-ownership cost of writing into NN's shared color state, with cleanup and conflict handling (Section 5.2). Recommendation to consider: **ship hide-only in v1, add flagging as a fast-follow** once the decorator and detection are proven. Decision needed: include flagging in v1, or sequence it.
+**1. v1 scope = HIDE + FLAG.**
+Both seams ship in v1. Flagging via `setTagMeta` (Seam 2) is **in scope**, not deferred to a fast-follow. Rationale: the flag path delivers real cross-surface value, and the co-ownership cost is contained by making color mirroring opt-in (decision 3) and by the record-and-restore discipline (Section 5.2).
 
-**(b) Minimum NN version / API v2 requirement and fallback.**
-The findings document NN manifest `3.0.2` and API `2.0.0`. Decision needed: what minimum NN version Tag Curator advertises support for, whether to hard-require API `2.0.0` for the flag path, and the exact graceful-degradation behavior when NN is older or its API is absent (silent hide-only vs a one-time notice vs disabling the scope). Section 9 assumes silent hide-only as the safe default pending this decision.
+**2. Version gating = REQUIRE A RECENT NN.**
+Tag Curator hard-requires NN with API `2.0.0` (NN 3.x), via a constant `MIN_API_VERSION = '2.0.0'`. If NN is **absent**, the scope is a silent no-op. If NN is **present but older than required** (API < `2.0.0`), Tag Curator shows a one-time notice and skips the entire scope (no hide decoration, no flagging). Rationale: requiring a recent NN is simpler and safer than maintaining a hide-only degraded path against an unsupported API, and keeps both seams on one supported contract.
 
-**(c) Should flagging mirror Tag Curator rule actions to NN colors?**
-If flagging ships, should a Tag Curator `flag` (or `delegate-color`) action automatically drive `setTagMeta` color/background, and with what color mapping? This couples Tag Curator's flag semantics to NN's color model and means Tag Curator writes NN's persisted color state. Decision needed: auto-mirror flag/`delegate-color` actions to NN colors, or keep NN flagging an explicit separate opt-in. Tied to (a).
+**3. Flag -> NN color mirroring = YES, but OPT-IN.**
+A Tag Curator flag may mirror to an NN color via `nn.metadata.setTagMeta`, but only when the user **explicitly enables it** (a setting, default off). Tag Curator records the values it set and clears only those on unload, so it never clobbers colors the user already set in NN. Rationale: opt-in default-off protects user-owned NN color state while still offering the integration to those who want it.
 
-**(d) Vendoring NN's published `.d.ts`.**
-NN ships `notebook-navigator.d.ts` for consumers (Section 4). Decision needed: copy/import that single published declaration file, or hand-write a minimal local type covering only the API members Tag Curator calls. Both are GPL-safe under the runtime-interop reading; this is a preference and risk-tolerance call. Only relevant if flagging-via-API (a) is in scope.
+**4. Types = HAND-WRITE A MINIMAL LOCAL interface.**
+Tag Curator hand-writes a minimal local interface covering only the API members it calls (`getVersion`, `isStorageReady` / `whenReady`, `on` / `off`, `metadata.setTagMeta` / `getTagMeta`, `menus.registerTagMenu`). It does **not** vendor NN's `.d.ts`. Rationale: the hand-written surface is small, fully under Tag Curator's control, and avoids carrying any NN-authored file even though vendoring the published `.d.ts` would also be GPL-safe.
 
-**(e) Reused decorator for the aliases feature?**
-The separate aliases proposal notes NN's tag tree will need alias-collapsing too (`aliases-display-merge/plan.md` Phase risk #3). Decision needed: design the NN observer's decorate step so the aliases feature can hook the same pass later, or keep them independent. This is a forward-compatibility call, not a v1 blocker.
+**5. Decorator sharing with aliases = BUILD REUSABLE, do not couple now.**
+The NN decorator is built as a generic "decorate tag-tree rows matching a predicate" pass, so the future aliases feature (`aliases-display-merge/plan.md` Phase risk #3) can reuse it. Tag Curator does **not** couple the decorator to aliases now. Rationale: a reusable shape is cheap to design up front and avoids a later rewrite, without taking on alias-specific scope in this feature.
 
 ---
 
@@ -224,9 +226,9 @@ A release containing this feature must:
 4. With NN absent, the scope is a silent no-op: no errors, no attached observer, no orphaned state.
 5. Disabling the `notebook-navigator` scope, disabling Tag Curator, or unloading the plugin removes every `tc-*` class and `data-tc` marker from NN's DOM and clears any `setTagMeta` value Tag Curator set, restoring NN to its un-decorated state.
 6. The refactor to a shared `ObserverBase` preserves all existing `TagPaneObserver` behavior, proven by the existing tag-pane tests passing unchanged.
-7. No Notebook Navigator source `.ts` file is imported, copied, or paraphrased; the only NN code dependency permitted is the published `notebook-navigator.d.ts` (subject to Open decision 11d).
+7. No Notebook Navigator source `.ts` file is imported, copied, or paraphrased; NN's API is typed by a hand-written minimal local type, and no NN implementation `.ts` is imported.
 8. NN's native `hiddenTags` / `vaultProfiles` settings are never written.
-9. If flagging ships (Open decision 11a): flagged tags are colored via `nn.metadata.setTagMeta`, those values survive NN re-renders, and only Tag-Curator-set values are cleared on unload, without clobbering user-set NN colors.
+9. When color mirroring is enabled (opt-in, decision 3): flagged tags are colored via `nn.metadata.setTagMeta`, those values survive NN re-renders, and only Tag-Curator-set values are cleared on unload, without clobbering user-set NN colors.
 10. Documentation (README scopes list, `scope-and-decisions.md`, this proposal) reflects the shipped behavior and the resolved open decisions.
 
 ---
@@ -239,7 +241,7 @@ A release containing this feature must:
 | Tag Curator's own `setTagMeta` triggers an NN re-render loop | Decorator is idempotent and debounced; record set values and only re-assert on actual change, not on every event. |
 | NN changes its DOM contract (`data-tag` / `.nn-tag`) in a future version | Depend only on the most stable attributes (core to NN drag/drop and selection); decorator finds-no-rows rather than misbehaving; runtime self-check logs one diagnostic (Section 9). |
 | GPL contamination | Runtime interop only; published `.d.ts` is the sole permitted code dependency; never write NN private settings (Section 4, Section 5.3). |
-| Co-owning NN's tag colors via `setTagMeta` | Record Tag-Curator-set values; never clobber user colors; clear only own values on unload (Section 5.2). Or avoid by shipping hide-only (Open decision 11a). |
+| Co-owning NN's tag colors via `setTagMeta` | Color mirroring is opt-in (default off, decision 3). When enabled, record Tag-Curator-set values, never clobber user colors, and clear only own values on unload (Section 5.2). The record-and-restore discipline is the mitigation. |
 | Performance on large tag trees | Reuse `TagPaneObserver`'s `requestAnimationFrame` coalescing; only on-screen rows exist in the DOM (virtualization bounds the work per pass). |
 
 ---

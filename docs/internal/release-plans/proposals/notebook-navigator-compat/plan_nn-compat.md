@@ -5,29 +5,29 @@
 | Status | **Draft / Unreleased** |
 | Relates to | Scope-expansion issues #1-3, Scope `notebook-navigator` (`src/types.ts:18`) |
 | Companion docs | `spec_nn-compat.md`, `findings_nn-integration-seam.md` |
-| Estimated effort | 5 to 8 working days (hide-only); +1.5 to 2 days if flagging is in v1 |
+| Estimated effort | 6.5 to 10 working days (hide + flag both in v1) |
 | Owner | TBD |
 
 ---
 
 ## Goal
 
-Make Tag Curator's hide (and optionally flag) rules apply inside Notebook Navigator's (NN) tag tree at runtime, matching the contract in `spec_nn-compat.md`. Reuse the already-declared `notebook-navigator` scope, refactor a shared observer base out of the existing tag-pane observer, add an NN-specific MutationObserver decorator that is idempotent and survives NN's virtualization, and (pending an open decision) optionally delegate flagging to NN's public API. Runtime interop only; never copy NN source; never write NN's private settings.
+Make Tag Curator's hide and flag rules apply inside Notebook Navigator's (NN) tag tree at runtime, matching the contract in `spec_nn-compat.md`. Reuse the already-declared `notebook-navigator` scope, refactor a shared observer base out of the existing tag-pane observer, add an NN-specific MutationObserver decorator that is idempotent and survives NN's virtualization, and delegate flagging to NN's public API (opt-in color mirroring, default off). Runtime interop only; never copy NN source; never write NN's private settings.
 
 ---
 
 ## Phased build order
 
-| Phase | Title | Files | Tests | Days | Gated on |
+| Phase | Title | Files | Tests | Days | Notes |
 |---|---|---|---|---|---|
 | 1 | Shared `ObserverBase` refactor | `src/observers/observerBase.ts` (new), `src/observers/tagPaneObserver.ts` | existing `tests/tagPaneObserver.test.ts` must pass unchanged | 1.5 | - |
-| 2 | NN detection + version / API gating | `src/integrations/notebookNavigator.ts` (new), `src/types/notebook-navigator.d.ts` (vendored or local) | `tests/nnDetection.test.ts` (new) | 1 | 11b, 11d |
+| 2 | NN detection + version / API gating | `src/integrations/notebookNavigator.ts` (new), `src/types/notebook-navigator.d.ts` (hand-written local) | `tests/nnDetection.test.ts` (new) | 1 | - |
 | 3 | NN tag-tree hide decorator | `src/observers/notebookNavigatorObserver.ts` (new), `styles.css` | `tests/notebookNavigatorObserver.test.ts` (new, happy-dom) | 2 | - |
-| 4 | Optional flagging via NN API | `src/observers/notebookNavigatorObserver.ts` (extend), `src/integrations/notebookNavigator.ts` (extend) | `tests/nnFlagging.test.ts` (new) | 1.5 | **11a, 11c** |
+| 4 | Flagging via NN API (opt-in color) | `src/observers/notebookNavigatorObserver.ts` (extend), `src/integrations/notebookNavigator.ts` (extend) | `tests/nnFlagging.test.ts` (new) | 1.5 | - |
 | 5 | Tests + integration sweep | the test files above; `TESTING.md` | unit green + manual BRAT matrix | 1 | - |
-| 6 | Docs + settings wiring | `src/main.ts`, README, `scope-and-decisions.md`, this plan | none | 0.5 | 11a, 11b |
+| 6 | Docs + settings wiring | `src/main.ts`, README, `scope-and-decisions.md`, this plan | none | 0.5 | - |
 
-"Gated on" references the Open decisions in `spec_nn-compat.md` Section 11. **Phase 4 is fully blocked on decisions 11a and 11c** (whether flagging ships at all). Phases 1 and 3 are unblocked and deliver the load-bearing hide-only feature.
+All five design decisions in `spec_nn-compat.md` Section 11 are resolved (2026-05-29). **All phases are part of v1**, including Phase 4 (flagging): the decisions landed on hide + flag shipping together, with color mirroring opt-in. No phase is blocked on an open decision.
 
 ---
 
@@ -63,7 +63,7 @@ The existing `tests/tagPaneObserver.test.ts` (17 happy-dom cases) is the regress
 
 ## Phase 2: NN detection + version / API gating (~1 day)
 
-**Blocked on:** Open decision 11b (minimum NN / API version, degradation behavior) and 11d (vendored vs local `.d.ts`). The code structure can be built now with the version threshold as a single constant to set once 11b is decided.
+**Decisions resolved:** version gating requires a recent NN via the constant `MIN_API_VERSION = '2.0.0'` (decision 2); types are a hand-written minimal local interface, not a vendored `.d.ts` (decision 4). NN absent is a silent no-op; NN present but below `MIN_API_VERSION` shows a one-time notice and skips the entire scope (no hide, no flag).
 
 ### 2.1 Detection module
 
@@ -86,16 +86,16 @@ export function detectNotebookNavigator(app: App): NnHandle | null {
 }
 ```
 
-- `gateApiVersion` returns the API only if `apiVersion >= MIN_API_VERSION` (the constant set by decision 11b; findings document `2.0.0`). Below threshold, the handle keeps `api: null` so the flag path silently disables while the DOM hide path still runs.
+- `MIN_API_VERSION = '2.0.0'` (decision 2; NN 3.x). If NN is absent, `detectNotebookNavigator` returns `null` (silent no-op). If NN is present but `apiVersion < MIN_API_VERSION`, the caller shows a one-time notice and skips the entire scope: neither the hide decorator nor flagging attaches. Only when `apiVersion >= MIN_API_VERSION` is the full handle returned and both seams enabled.
 - Subscribe to `nn.on('storage-ready', ...)` and `nn.on('tag-changed', ...)` here and expose register/unregister so Phase 3 can ask for a re-decorate on those events (`findings` Section 5, Approach A; Section 7).
 
 ### 2.2 Types
 
-Per decision 11d, either vendor NN's published `src/api/public/notebook-navigator.d.ts` into `src/types/notebook-navigator.d.ts` (the one file the GPL findings permit copying, `findings` Section 2 / Section 4 of the spec) or hand-write a minimal local interface covering only `api.getVersion`, `api.isStorageReady`, `api.whenReady`, `api.on/off`, `api.metadata.setTagMeta/getTagMeta`, and `api.menus.registerTagMenu`. No NN implementation `.ts` is imported either way.
+Per decision 4, hand-write a minimal local interface (in `src/types/notebook-navigator.d.ts`) covering only the API members Tag Curator calls: `api.getVersion`, `api.isStorageReady`, `api.whenReady`, `api.on/off`, `api.metadata.setTagMeta/getTagMeta`, and `api.menus.registerTagMenu`. Do not vendor NN's published `.d.ts`, and do not import any NN implementation `.ts`.
 
 ### 2.3 Tests
 
-`tests/nnDetection.test.ts`: with a faked `app.plugins.plugins`, assert detection returns `null` when NN is absent, returns a handle with `api: null` when the API is missing or below threshold, and returns a full handle when present and new enough.
+`tests/nnDetection.test.ts`: with a faked `app.plugins.plugins`, assert detection returns `null` when NN is absent (silent no-op), signals the skip-with-one-time-notice path when NN is present but the API is missing or below `MIN_API_VERSION` (the whole scope sits out, no hide and no flag), and returns a full handle enabling both seams when NN is present and new enough.
 
 ---
 
@@ -160,15 +160,15 @@ In `src/main.ts`, construct and `init()` the NN observer alongside `TagPaneObser
 
 ---
 
-## Phase 4: Optional flagging via NN API (~1.5 days)
+## Phase 4: Flagging via NN API, opt-in color (~1.5 days)
 
-**Fully blocked on Open decisions 11a (does flagging ship in v1) and 11c (auto-mirror flag/`delegate-color` to NN colors).** Do not start until both are resolved. If the decision is hide-only, this phase is cut and folded into a fast-follow.
+**Decisions resolved:** flagging ships in v1 (decision 1), and flag-to-color mirroring is opt-in via a setting, default off (decision 3). This phase is part of v1, not a fast-follow. When the setting is off, Tag Curator never calls `setTagMeta`; when on, it mirrors flags to NN colors with the record-and-restore discipline below.
 
 ### 4.1 Flag delegation
 
-When a tag matches a `flag` (or `delegate-color`) action and the NN API is available:
+When a tag matches a `flag` (or `delegate-color`) action, the NN API is available, and the opt-in color-mirroring setting is enabled (decision 3):
 
-- Call `nn.metadata.setTagMeta(tag, { color | backgroundColor | icon })` (`notebook-navigator.d.ts:324`, `MetadataAPI.ts:646-658`) with the mapping decided in 11c.
+- Call `nn.metadata.setTagMeta(tag, { color | backgroundColor | icon })` (`notebook-navigator.d.ts:324`, `MetadataAPI.ts:646-658`) with the flag-to-color mapping.
 - **Record** every `(tag -> value)` Tag Curator sets in an in-memory map so cleanup is precise.
 - **Do not clobber** colors the user set in NN: before writing, read `getTagMeta(tag)`; only overwrite values Tag Curator previously owned (`spec_nn-compat.md` Section 5.2 co-ownership caveat).
 
@@ -200,12 +200,12 @@ On scope-disable / plugin unload, clear only Tag-Curator-set values (`setTagMeta
 
 ## Phase 6: Docs + settings wiring (~0.5 day)
 
-**Partly gated on 11a / 11b** (the docs must describe the shipped scope of hide-only vs hide+flag and the NN version requirement).
+The shipped scope is fixed (hide + flag, requires NN API `2.0.0`), so the docs describe that directly.
 
-- Settings: the `notebook-navigator` scope already exists in the scope picker because it is in the `Scope` union (`src/types.ts:18`); confirm it renders and is selectable in the rule editor and `defaultScopes`. Add a short helper line noting it requires Notebook Navigator (and API `2.0.0` for flagging, per 11b).
+- Settings: the `notebook-navigator` scope already exists in the scope picker because it is in the `Scope` union (`src/types.ts:18`); confirm it renders and is selectable in the rule editor and `defaultScopes`. Add a short helper line noting it requires a recent Notebook Navigator (API `2.0.0`). Add the opt-in flag-to-color toggle (default off, decision 3) to settings.
 - README: add `notebook-navigator` to the documented scopes list with a one-line description and the GPL / runtime-interop note.
-- `scope-and-decisions.md`: record the resolved open decisions (hide-only vs hide+flag, min NN version, `.d.ts` vendoring, flag-to-color mirroring) as new D-IDs.
-- Update this plan and `spec_nn-compat.md` status fields once the open decisions are resolved and a target version is set.
+- `scope-and-decisions.md`: record the five resolved decisions (hide + flag in v1, require recent NN / `MIN_API_VERSION = '2.0.0'`, hand-written local types, opt-in flag-to-color mirroring, reusable-but-uncoupled decorator) as new D-IDs. This is the implementation-time task that lands the decisions in the canonical decisions doc.
+- Update this plan and `spec_nn-compat.md` status fields once the target version is confirmed.
 
 ---
 
@@ -214,13 +214,13 @@ On scope-disable / plugin unload, clear only Tag-Curator-set values (`setTagMeta
 1. **Virtualization re-decoration loop.** Reapplying on `tag-changed` while `setTagMeta` itself fires `tag-changed` (`MetadataAPI.ts:336-348, 451`) could loop. Mitigation: the decorator is idempotent and only writes when state actually changes; debounce via the inherited `requestAnimationFrame` coalescing.
 2. **NN leaf view type discovery.** The exact NN leaf `view type` string is needed for `getLeavesOfType`. Confirm it at runtime against an installed NN (or fall back to the `.nn-navigation-pane` DOM query, `findings` Section 5).
 3. **DOM contract drift across NN versions.** Decorator depends only on `data-tag` + `.nn-tag` (most stable, core to NN drag/drop). Finds-no-rows instead of misbehaving on drift; add the Section 9 runtime self-check diagnostic.
-4. **Co-owning NN colors (Phase 4 only).** Avoid entirely if 11a lands hide-only. If flagging ships, the record-and-restore discipline in 4.1 / 4.3 is mandatory.
-5. **Aliases interaction.** The aliases proposal (`aliases-display-merge/plan.md` risk #3) also wants NN tag-tree behavior. Open decision 11e: design the decorate pass so aliases can hook it later, or keep independent.
+4. **Co-owning NN colors (Phase 4).** Flagging ships, so this applies whenever the opt-in color-mirroring setting is on (decision 3). The record-and-restore discipline in 4.1 / 4.3 is mandatory: record Tag-Curator-set values, never clobber user colors, clear only own values on unload. When the setting is off, Tag Curator never writes NN colors at all.
+5. **Aliases interaction.** The aliases proposal (`aliases-display-merge/plan.md` risk #3) also wants NN tag-tree behavior. Per decision 5, build the decorate pass as a generic "decorate rows matching a predicate" step so aliases can reuse it later, without coupling to aliases now.
 
 ---
 
 ## Rollout
 
-- Phases 1-3 alone deliver a shippable hide-only feature (the load-bearing value); they are unblocked by any open decision and can merge first.
-- Phase 4 (flagging) merges only after Open decisions 11a / 11c resolve; if deferred, it becomes a clean fast-follow because the observer and detection seams already exist.
-- Target version is set in Phase 6 once the open decisions are resolved. Merge into the relevant release-train branch alongside the other scope-expansion work (issues #1-3).
+- Flagging is part of v1, not a maybe-fast-follow. All phases (1-6), including Phase 4, ship together in this feature.
+- Phases 1-3 deliver the load-bearing hide path and may merge before Phase 4 for incremental review, but Phase 4 (opt-in color flagging) is still in-scope for the same v1 and is not optional.
+- Target version is set in Phase 6 once confirmed. Merge into the relevant release-train branch alongside the other scope-expansion work (issues #1-3).
