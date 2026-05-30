@@ -122,6 +122,13 @@ export default class TagCuratorPlugin extends Plugin {
       },
     });
     this.addCommand({
+      id: 'open-curation-workspace-beside-tag-pane',
+      name: 'Open Curation Workspace beside the tag pane',
+      callback: () => {
+        void this.openBesideTagPane();
+      },
+    });
+    this.addCommand({
       id: 'open-tag-list',
       name: 'Open tag list view',
       callback: () => {
@@ -227,6 +234,60 @@ export default class TagCuratorPlugin extends Plugin {
         (view as { setHiddenOnly: (v: boolean) => void }).setHiddenOnly(true);
       }
     }
+  }
+
+  /**
+   * Open (or reveal) the Curation Workspace split next to the native tag pane
+   * so editing a rule and watching the tag pane react is one continuous glance.
+   * Implements D-013.
+   *
+   * Strategy:
+   * 1. Locate or create the native tag pane ('tag' view type).
+   * 2. If a Curation Workspace leaf already exists, reveal it; otherwise create
+   *    one via createLeafBySplit on the tag pane leaf so it docks beside it.
+   * 3. Graceful fallback: if the split API cannot produce a leaf (guard against
+   *    null from getLeftLeaf when the sidebar has no room), fall back to the
+   *    plain openCurationWorkspace() and show a Notice.
+   */
+  async openBesideTagPane(): Promise<void> {
+    const { workspace } = this.app;
+
+    // --- Step 1: ensure the native tag pane exists ---
+    let tagLeaves = workspace.getLeavesOfType('tag');
+    let tagLeaf: WorkspaceLeaf | null = tagLeaves[0] ?? null;
+    if (!tagLeaf) {
+      // Open a new tag pane in the left sidebar.
+      tagLeaf = workspace.getLeftLeaf(false);
+      if (tagLeaf) {
+        await tagLeaf.setViewState({ type: 'tag', active: true });
+        workspace.revealLeaf(tagLeaf);
+        // Re-fetch to get the now-populated leaf reference.
+        tagLeaves = workspace.getLeavesOfType('tag');
+        tagLeaf = tagLeaves[0] ?? tagLeaf;
+      }
+    }
+
+    // --- Step 2: reuse an existing workspace leaf if one is already open ---
+    const existingWorkspaceLeaves = workspace.getLeavesOfType(CURATION_VIEW_TYPE);
+    if (existingWorkspaceLeaves.length > 0) {
+      const existing = existingWorkspaceLeaves[0];
+      workspace.revealLeaf(existing);
+      return;
+    }
+
+    // --- Step 3: create a split leaf next to the tag pane ---
+    if (tagLeaf) {
+      // createLeafBySplit returns WorkspaceLeaf (non-null per obsidian.d.ts).
+      // direction 'vertical' places the new leaf to the right of the tag leaf.
+      const splitLeaf = workspace.createLeafBySplit(tagLeaf, 'vertical', false);
+      await splitLeaf.setViewState({ type: CURATION_VIEW_TYPE, active: true });
+      workspace.revealLeaf(splitLeaf);
+      return;
+    }
+
+    // --- Fallback: no tag pane and no split available ---
+    new Notice('Tag Curator: could not open beside the tag pane - opening in sidebar instead.');
+    await this.openCurationWorkspace();
   }
 
   private async openTagList(): Promise<void> {
