@@ -267,3 +267,54 @@ describe('SettingsManager.setSeenWelcomeModal', () => {
     expect(mgr.get().seenWelcomeModal).toBe(true);
   });
 });
+
+describe('SettingsManager.load - v3 to v4 migration (overrides)', () => {
+  it('defaults overrides to {} when reading v3 data', async () => {
+    const v3 = { ...DEFAULT_SETTINGS, schemaVersion: 3 } as unknown;
+    delete (v3 as { overrides?: unknown }).overrides;
+    const mgr = new SettingsManager(pluginWith(v3));
+    await mgr.load();
+    expect(mgr.get().schemaVersion).toBe(SCHEMA_VERSION);
+    expect(mgr.get().overrides).toEqual({});
+  });
+
+  it('preserves an existing overrides map unchanged on v4 data', async () => {
+    const v4 = {
+      ...DEFAULT_SETTINGS,
+      schemaVersion: SCHEMA_VERSION,
+      overrides: { foo: 'show', bar: 'hide' },
+    } as unknown;
+    const mgr = new SettingsManager(pluginWith(v4));
+    await mgr.load();
+    expect(mgr.get().overrides).toEqual({ foo: 'show', bar: 'hide' });
+  });
+
+  it('persists the v4 schemaVersion + overrides field to disk', async () => {
+    const v3 = { ...DEFAULT_SETTINGS, schemaVersion: 3 } as unknown;
+    delete (v3 as { overrides?: unknown }).overrides;
+    const plugin = pluginWith(v3);
+    const mgr = new SettingsManager(plugin);
+    await mgr.load();
+    const onDisk = plugin.data as { overrides?: unknown; schemaVersion: number };
+    expect(onDisk.schemaVersion).toBe(SCHEMA_VERSION);
+    expect(onDisk.overrides).toEqual({});
+  });
+
+  it('does not downgrade or persist when reading a future-version file with overrides', async () => {
+    const future = {
+      ...DEFAULT_SETTINGS,
+      schemaVersion: 99,
+      overrides: { kept: 'hide' },
+      futureField: { kept: true } as unknown,
+    };
+    const plugin = pluginWith(future);
+    const mgr = new SettingsManager(plugin);
+    await mgr.load();
+    const onDisk = plugin.data as {
+      futureField?: { kept: boolean };
+      schemaVersion: number;
+    };
+    expect(onDisk.futureField).toEqual({ kept: true });
+    expect(onDisk.schemaVersion).toBe(99);
+  });
+});
