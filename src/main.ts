@@ -4,6 +4,11 @@ import { TagMetaManager } from './storage/tagMeta';
 import { TagPaneObserver } from './observers/tagPaneObserver';
 import { TagCuratorSettingTab } from './ui/settingsTab';
 import { TagListView, TAG_LIST_VIEW_TYPE } from './ui/tagListView';
+import {
+  CurationWorkspaceView,
+  CURATION_VIEW_TYPE,
+  CurationWorkspaceOptions,
+} from './ui/curationWorkspace/curationWorkspaceView';
 import { resolveActiveRules } from './engine/presets';
 import { panicCleanup } from './ui/panicDisable';
 import { WelcomeModal } from './ui/welcomeModal';
@@ -31,12 +36,25 @@ export default class TagCuratorPlugin extends Plugin {
     this.tagPaneObserver.setEnabled(settings.enabled);
     this.tagPaneObserver.init();
 
+    // TagListView is superseded by CurationWorkspaceView per D-012 but kept
+    // registered for one release so existing commands and saved layouts do not
+    // break. Slated for removal in v1.1.
     this.registerView(TAG_LIST_VIEW_TYPE, (leaf: WorkspaceLeaf) => new TagListView(leaf, this));
+    this.registerView(
+      CURATION_VIEW_TYPE,
+      (leaf: WorkspaceLeaf) => new CurationWorkspaceView(leaf, this),
+    );
+
+    this.addRibbonIcon('tags', 'Open Curation Workspace', () => {
+      void this.openCurationWorkspace();
+    });
 
     this.statusBarEl = this.addStatusBarItem();
     this.statusBarEl.addClass('tag-curator-status');
     this.statusBarEl.addEventListener('click', () => {
-      void this.openTagListWithHiddenFilter();
+      // The workspace replaces the tag-list leaf as the home surface; preserve
+      // the hidden-filter intent of the status-bar click.
+      void this.openCurationWorkspace({ hiddenOnly: true });
     });
 
     this.addSettingTab(new TagCuratorSettingTab(this.app, this));
@@ -94,6 +112,13 @@ export default class TagCuratorPlugin extends Plugin {
       name: 'Toggle preview mode',
       callback: () => {
         void this.togglePreviewMode();
+      },
+    });
+    this.addCommand({
+      id: 'open-curation-workspace',
+      name: 'Open Curation Workspace',
+      callback: () => {
+        void this.openCurationWorkspace();
       },
     });
     this.addCommand({
@@ -184,6 +209,24 @@ export default class TagCuratorPlugin extends Plugin {
     this.tagPaneObserver.setMetadata(this.tagMetaManager.all());
     this.refreshStatusBar();
     new Notice('Tag Curator: rescan complete');
+  }
+
+  async openCurationWorkspace(opts?: CurationWorkspaceOptions): Promise<void> {
+    const { workspace } = this.app;
+    const leaves = workspace.getLeavesOfType(CURATION_VIEW_TYPE);
+    let leaf: WorkspaceLeaf | null = leaves[0] ?? null;
+    if (!leaf) {
+      leaf = workspace.getRightLeaf(false);
+      if (!leaf) return;
+      await leaf.setViewState({ type: CURATION_VIEW_TYPE });
+    }
+    workspace.revealLeaf(leaf);
+    if (opts?.hiddenOnly) {
+      const view = leaf.view;
+      if (view && 'setHiddenOnly' in view) {
+        (view as { setHiddenOnly: (v: boolean) => void }).setHiddenOnly(true);
+      }
+    }
   }
 
   private async openTagList(): Promise<void> {
