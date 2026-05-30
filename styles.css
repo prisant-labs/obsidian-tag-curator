@@ -1800,3 +1800,34 @@
 .multi-select-pill.tc-prop-flagged .multi-select-pill-content {
   color: var(--text-warning);
 }
+
+/* -----------------------------------------------------------------
+ * Editor tag-autocomplete suggestion suppression (plan Phase 7).
+ * Tag-Curator-owned classes only (tc-ac-*); core Obsidian's
+ * suggestion-item base class is never styled destructively. Colors come
+ * from Obsidian theme variables. The selectors target the rendered tag
+ * suggestion items inside the transient .suggestion-container popup from
+ * the outside. The autocomplete DOM is a version-fragile contract (see
+ * autocompleteObserver.ts); the independent kill switch lets the user
+ * disable this scope if a future Obsidian release moves the markup.
+ *
+ * Caveat: hiding a suggestion item with display:none removes it visually,
+ * but Obsidian's suggestion controller may still keep it keyboard-focusable
+ * (accepted for v1.0 - see autocompleteObserver.ts).
+ * ----------------------------------------------------------------- */
+
+/* Hide: collapse the matched tag suggestion out of the dropdown. */
+.suggestion-item.tc-ac-hidden {
+  display: none !important;
+}
+
+/* Flag (preview mode): a Tag-Curator-owned highlight so the user can see
+ * which tag suggestions a rule would hide, without actually hiding them. */
+.suggestion-item.tc-ac-flagged {
+  background: var(--background-modifier-hover);
+  box-shadow: inset 2px 0 0 0 var(--text-warning);
+  border-radius: 4px;
+}
+.suggestion-item.tc-ac-flagged .suggestion-content {
+  color: var(--text-warning);
+}
