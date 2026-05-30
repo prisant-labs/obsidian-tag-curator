@@ -15,7 +15,7 @@ import { Mode } from '../types';
 
 type TabId =
   | 'general'
-  | 'taglist'
+  | 'workspace'
   | 'presets'
   | 'rules'
   | 'commands'
@@ -106,7 +106,7 @@ export class TagCuratorSettingTab extends PluginSettingTab {
         render: (p) => this.renderGeneral(p),
       },
       {
-        id: 'taglist',
+        id: 'workspace',
         label: 'Workspace',
         badge: tagCount.toLocaleString(),
         badgeKind: 'count',

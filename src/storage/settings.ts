@@ -148,8 +148,12 @@ export class SettingsManager {
     await this.persist();
   }
 
-  onChange(cb: () => void): void {
+  onChange(cb: () => void): () => void {
     this.listeners.push(cb);
+    return () => {
+      const idx = this.listeners.indexOf(cb);
+      if (idx !== -1) this.listeners.splice(idx, 1);
+    };
   }
 
   async reload(): Promise<void> {

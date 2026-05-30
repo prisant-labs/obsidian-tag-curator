@@ -174,6 +174,21 @@ describe('SettingsManager mutations', () => {
     expect(callCount).toBe(2);
   });
 
+  it('onChange returns an unsubscribe function that stops the callback from firing', async () => {
+    const mgr = new SettingsManager(pluginWith(null));
+    await mgr.load();
+    let callCount = 0;
+    const off = mgr.onChange(() => {
+      callCount += 1;
+    });
+    await mgr.update({ enabled: false });
+    expect(callCount).toBe(1);
+    off();
+    await mgr.setEnabled(true);
+    await mgr.update({ previewMode: true });
+    expect(callCount).toBe(1); // no further calls after unsubscribe
+  });
+
   it('reload re-reads persisted data', async () => {
     const plugin = pluginWith(null);
     const mgr = new SettingsManager(plugin);
