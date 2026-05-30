@@ -250,7 +250,7 @@ export class TagCuratorSettingTab extends PluginSettingTab {
     new Setting(panel)
       .setName('Curation Workspace')
       .setDesc(
-        'Opens the workspace in the right sidebar. Same as the command Tag Curator: Open Curation Workspace.',
+        'Opens the workspace in the right sidebar. Same as the command Tag Curator: Open Curation Workspace. Use "Open beside the tag pane" to dock it next to the native tag pane for live side-by-side editing.',
       )
       .addButton((b) =>
         b
@@ -258,6 +258,13 @@ export class TagCuratorSettingTab extends PluginSettingTab {
           .setCta()
           .onClick(() => {
             void this.plugin.openCurationWorkspace();
+          }),
+      )
+      .addButton((b) =>
+        b
+          .setButtonText('Open beside the tag pane')
+          .onClick(() => {
+            void this.plugin.openBesideTagPane();
           }),
       );
   }
@@ -428,6 +435,10 @@ export class TagCuratorSettingTab extends PluginSettingTab {
       [
         'Open Curation Workspace',
         'Open / reveal the Curation Workspace in the right sidebar. Same as clicking the status bar (which opens it pre-filtered to hidden tags) or the ribbon icon.',
+      ],
+      [
+        'Open Curation Workspace beside the tag pane',
+        'Open / reveal the Curation Workspace split next to the native tag pane for live side-by-side editing. Also available from the Workspace settings button.',
       ],
       [
         'Open tag list view',
