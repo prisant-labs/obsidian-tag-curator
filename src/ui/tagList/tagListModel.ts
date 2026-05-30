@@ -45,4 +45,34 @@ export class TagListModel {
     }
     return rows;
   }
+
+  setFilter(chip: FilterChip): void {
+    this.filter = chip;
+  }
+  setSearch(term: string): void {
+    this.search = term.toLowerCase();
+  }
+  get activeFilter(): FilterChip {
+    return this.filter;
+  }
+
+  matchesFilter(row: TagRow): boolean {
+    if (this.search && !row.meta.tag.toLowerCase().includes(this.search)) return false;
+    switch (this.filter) {
+      case 'all':
+        return true;
+      case 'hidden':
+        return row.visibility !== 'shown';
+      case 'orphans':
+        return row.meta.count <= 1;
+      case 'frontmatter':
+        return row.meta.sources.length === 1 && row.meta.sources[0] === 'frontmatter';
+      case 'unreviewed':
+        return !row.meta.reviewed;
+    }
+  }
+
+  rows(): TagRow[] {
+    return this.allRows().filter((r) => this.matchesFilter(r));
+  }
 }
