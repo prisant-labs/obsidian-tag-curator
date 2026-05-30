@@ -2,6 +2,63 @@
  * Tag Curator Plugin Styles
  */
 
+/* =========================================================
+ * Themeable variables (Style Settings, D-016, optional).
+ *
+ * Every Tag-Curator-owned themeable value gets a :root default here so the
+ * plugin styles correctly with NO dependency on Style Settings. The settings
+ * block below (a CSS comment whose body starts with the literal at-settings
+ * keyword) is auto-discovered by the Style Settings plugin (if installed) and
+ * renders a GUI that overrides these same variables; absent Style Settings the
+ * defaults stand and the GUI block is just an inert CSS comment.
+ *
+ * Defaults are derived from the prior hardcoded appearance (the flagged
+ * highlight previously used --text-warning directly), so there is no visual
+ * regression when Style Settings is not installed.
+ * ========================================================= */
+:root {
+  /* Flagged tag highlight color (preview mode + flagged rows/pills/suggestions).
+   * Was --text-warning inline; now a Tag-Curator-owned, themeable alias. */
+  --tag-curator-flag-color: var(--text-warning);
+  /* Background wash behind a flagged row / pill / suggestion. */
+  --tag-curator-flag-bg: var(--background-modifier-hover);
+  /* Font weight applied to flagged tag names. The "Bold flagged tag names"
+   * class-toggle swaps this to 700 by adding the tag-curator-flag-bold body
+   * class; the default leaves flagged names at their normal weight. */
+  --tag-curator-flag-weight: inherit;
+}
+
+/* The tag-curator-flag-bold body class is added by Style Settings' class-toggle
+ * (see the @settings block). It is a no-op unless the user enables it. */
+body.tag-curator-flag-bold {
+  --tag-curator-flag-weight: 700;
+}
+
+/* @settings
+
+name: Tag Curator
+id: tag-curator
+settings:
+  - id: tag-curator-flag-color
+    title: Flagged tag color
+    description: Color used to highlight flagged tags in preview mode (tag list, tag tree, property pills, and tag suggestions).
+    type: variable-color
+    format: hex
+    default: '#e0ac00'
+  - id: tag-curator-flag-bg
+    title: Flagged tag background
+    description: Background wash behind a flagged row, pill, or suggestion.
+    type: variable-color
+    format: hex
+    default: '#3a3a3a'
+  - id: tag-curator-flag-bold
+    title: Bold flagged tag names
+    description: Render flagged tag names in bold for extra emphasis in preview mode.
+    type: class-toggle
+    default: false
+
+*/
+
 /* Tag List View */
 .tag-curator-list-header {
   padding: 1rem;
@@ -791,7 +848,8 @@
   text-decoration: line-through;
 }
 .tcl-row-flagged .tcl-tagname {
-  color: var(--text-warning);
+  color: var(--tag-curator-flag-color);
+  font-weight: var(--tag-curator-flag-weight);
 }
 .tcl-src {
   font-size: 10.5px;
@@ -811,7 +869,7 @@
   color: var(--text-accent);
 }
 .tcl-vis-flagged {
-  color: var(--text-warning);
+  color: var(--tag-curator-flag-color);
 }
 .tcl-rule-link {
   color: var(--text-accent);
@@ -1588,7 +1646,8 @@
   text-decoration: line-through;
 }
 .tct-row-flagged .tct-tagname {
-  color: var(--text-warning);
+  color: var(--tag-curator-flag-color);
+  font-weight: var(--tag-curator-flag-weight);
 }
 .tct-src {
   font-size: 10.5px;
@@ -1621,7 +1680,7 @@
   background: var(--text-accent);
 }
 .tct-vis-flagged {
-  background: var(--text-warning);
+  background: var(--tag-curator-flag-color);
 }
 
 .tct-more-btn {
@@ -1766,12 +1825,13 @@
 /* Flag (preview mode): a Tag-Curator-owned highlight so the user can see
  * which NN rows a rule would hide, without actually hiding them. */
 .nn-tag.tc-nn-flagged {
-  background: var(--background-modifier-hover);
-  box-shadow: inset 2px 0 0 0 var(--text-warning);
+  background: var(--tag-curator-flag-bg);
+  box-shadow: inset 2px 0 0 0 var(--tag-curator-flag-color);
   border-radius: 4px;
 }
 .nn-tag.tc-nn-flagged .nn-navitem-name {
-  color: var(--text-warning);
+  color: var(--tag-curator-flag-color);
+  font-weight: var(--tag-curator-flag-weight);
 }
 
 /* -----------------------------------------------------------------
@@ -1793,12 +1853,13 @@
 /* Flag (preview mode): a Tag-Curator-owned highlight so the user can see
  * which tag pills a rule would hide, without actually hiding them. */
 .multi-select-pill.tc-prop-flagged {
-  background: var(--background-modifier-hover);
-  box-shadow: inset 2px 0 0 0 var(--text-warning);
+  background: var(--tag-curator-flag-bg);
+  box-shadow: inset 2px 0 0 0 var(--tag-curator-flag-color);
   border-radius: 4px;
 }
 .multi-select-pill.tc-prop-flagged .multi-select-pill-content {
-  color: var(--text-warning);
+  color: var(--tag-curator-flag-color);
+  font-weight: var(--tag-curator-flag-weight);
 }
 
 /* -----------------------------------------------------------------
@@ -1824,10 +1885,11 @@
 /* Flag (preview mode): a Tag-Curator-owned highlight so the user can see
  * which tag suggestions a rule would hide, without actually hiding them. */
 .suggestion-item.tc-ac-flagged {
-  background: var(--background-modifier-hover);
-  box-shadow: inset 2px 0 0 0 var(--text-warning);
+  background: var(--tag-curator-flag-bg);
+  box-shadow: inset 2px 0 0 0 var(--tag-curator-flag-color);
   border-radius: 4px;
 }
 .suggestion-item.tc-ac-flagged .suggestion-content {
-  color: var(--text-warning);
+  color: var(--tag-curator-flag-color);
+  font-weight: var(--tag-curator-flag-weight);
 }
