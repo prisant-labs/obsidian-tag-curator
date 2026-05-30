@@ -274,7 +274,7 @@ export class TagCuratorSettingTab extends PluginSettingTab {
     let nnDesc = 'Curate tags in the Notebook Navigator tag tree.';
     let nnDisabled = false;
     if (nnHandle.status === 'ready') {
-      nnDesc += ' Detected (API ' + nnHandle.apiVersion + ').';
+      nnDesc += ' Detected (API ' + (nnHandle.apiVersion ?? 'unknown') + ').';
     } else if (nnHandle.status === 'absent') {
       nnDesc += ' Notebook Navigator is not installed.';
       nnDisabled = true;
