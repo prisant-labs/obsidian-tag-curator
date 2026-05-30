@@ -174,4 +174,33 @@ export class RuleEngine {
     }
     return RuleEngine.getRuleAttribution(tag, tagMeta, rules);
   }
+
+  /**
+   * Count the tags the engine curates (would hide) over a metadata map, scope-
+   * independent. A tag counts when its effective resolveVisibility match is
+   * non-null AND is not an always-show override - the same "is this hidden"
+   * predicate TagListModel and ObserverBase use. This is the hidden count in
+   * normal mode and the flagged count in preview mode (the matched SET is the
+   * same; preview only changes how those tags are decorated). Pure: no DOM, no
+   * dependence on which surfaces are toggled on.
+   */
+  static countCurated(
+    meta: Map<string, TagMeta>,
+    rules: Rule[],
+    overrides: Record<string, TagOverride>,
+  ): number {
+    let count = 0;
+    for (const tagMeta of meta.values()) {
+      const { effective } = RuleEngine.resolveVisibility(
+        tagMeta.tag,
+        tagMeta,
+        rules,
+        overrides,
+      );
+      if (effective !== null && effective.overrideReason !== 'always-show') {
+        count += 1;
+      }
+    }
+    return count;
+  }
 }

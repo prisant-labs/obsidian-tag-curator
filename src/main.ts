@@ -19,6 +19,7 @@ import {
   CurationWorkspaceOptions,
 } from './ui/curationWorkspace/curationWorkspaceView';
 import { resolveActiveRules } from './engine/presets';
+import { RuleEngine } from './engine/ruleEngine';
 import { panicCleanup } from './ui/panicDisable';
 import { WelcomeModal } from './ui/welcomeModal';
 
@@ -483,21 +484,39 @@ export default class TagCuratorPlugin extends Plugin {
     }
   }
 
+  /**
+   * Count the tags the engine curates (would hide), independent of any scope's
+   * DOM. Mirrors how TagListModel and ObserverBase decide a tag is hidden: its
+   * effective match is non-null AND is not an always-show override (which keeps
+   * the tag visible as the safety net). The SAME set is the "hidden" count in
+   * normal mode and the "flagged" count in preview mode, so the status bar is
+   * correct whether or not individual scopes (tag-pane, NN, properties,
+   * autocomplete) are toggled. Pure given settings + tag metadata; no DOM.
+   */
+  private countCurated(settings: ReturnType<SettingsManager['get']>): number {
+    return RuleEngine.countCurated(
+      this.tagMetaManager.all(),
+      resolveActiveRules(settings),
+      settings.overrides,
+    );
+  }
+
   private refreshStatusBar(): void {
     if (!this.statusBarEl) return;
-    const hidden = this.tagPaneObserver.countHidden();
-    const flagged = this.tagPaneObserver.countFlagged();
     const settings = this.settingsManager.get();
     if (!settings.enabled) {
       this.statusBarEl.setText('Tag Curator: off');
       return;
     }
+    // Count from the engine over tag metadata, not from one scope's DOM, so
+    // toggling the tag-pane scope off no longer zeroes the count.
+    const curated = this.countCurated(settings);
     if (settings.previewMode) {
-      this.statusBarEl.setText(`Tag Curator (preview): ${flagged} flagged`);
+      this.statusBarEl.setText(`Tag Curator (preview): ${curated} flagged`);
       return;
     }
     this.statusBarEl.setText(
-      hidden === 1 ? 'Tag Curator: 1 tag hidden' : `Tag Curator: ${hidden} tags hidden`,
+      curated === 1 ? 'Tag Curator: 1 tag hidden' : `Tag Curator: ${curated} tags hidden`,
     );
   }
 }
