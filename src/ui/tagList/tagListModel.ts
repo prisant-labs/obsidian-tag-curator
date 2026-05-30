@@ -124,4 +124,19 @@ export class TagListModel {
     filtered.sort((a, b) => this.compare(a, b));
     return filtered;
   }
+
+  toggleSelect(tag: string): void {
+    if (this.selected.has(tag)) this.selected.delete(tag);
+    else this.selected.add(tag);
+  }
+  clearSelection(): void {
+    this.selected.clear();
+  }
+  get selection(): ReadonlySet<string> {
+    return this.selected;
+  }
+
+  rowFor(tag: string): TagRow | undefined {
+    return this.allRows().find((r) => r.meta.tag === tag);
+  }
 }

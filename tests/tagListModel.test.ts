@@ -117,3 +117,27 @@ describe('TagListModel sorting', () => {
     expect(model.rows().map((r) => r.meta.tag)).toEqual(['apple', 'zebra']);
   });
 });
+
+describe('TagListModel selection and lookup', () => {
+  it('toggleSelect adds then removes a tag', () => {
+    const model = new TagListModel(source([meta('a')]));
+    model.toggleSelect('a');
+    expect([...model.selection]).toEqual(['a']);
+    model.toggleSelect('a');
+    expect([...model.selection]).toEqual([]);
+  });
+
+  it('clearSelection empties the set', () => {
+    const model = new TagListModel(source([meta('a'), meta('b')]));
+    model.toggleSelect('a');
+    model.toggleSelect('b');
+    model.clearSelection();
+    expect(model.selection.size).toBe(0);
+  });
+
+  it('rowFor returns the row for a tag or undefined', () => {
+    const model = new TagListModel(source([meta('a')]));
+    expect(model.rowFor('a')!.meta.tag).toBe('a');
+    expect(model.rowFor('missing')).toBeUndefined();
+  });
+});
