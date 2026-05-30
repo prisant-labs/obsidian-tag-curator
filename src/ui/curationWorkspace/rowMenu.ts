@@ -52,6 +52,22 @@ export function openRowMenu(
   overrideItem('Always hide', 'eye-off', 'hide');
   overrideItem('Clear override', 'rotate-ccw', 'clear');
 
+  // Tag Wrangler delegation (D-016, optional): only offered when Tag Wrangler
+  // is enabled. Reuses the tested TagActions.sendToTagWrangler dispatch (which
+  // executes 'tag-wrangler:rename-tag'); no rename logic lives here. When Tag
+  // Wrangler is absent the item is simply not shown.
+  if (host.isPluginEnabled('tag-wrangler')) {
+    menu.addSeparator();
+    menu.addItem((item) =>
+      item
+        .setTitle('Rename with Tag Wrangler')
+        .setIcon('pencil')
+        .onClick(() => {
+          actions.sendToTagWrangler([tag]);
+        }),
+    );
+  }
+
   menu.addSeparator();
   menu.addItem((item) =>
     item
