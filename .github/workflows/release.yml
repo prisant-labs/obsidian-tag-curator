@@ -55,5 +55,8 @@ jobs:
             styles.css
             versions.json
           generate_release_notes: true
+          # A tag with a pre-release suffix (e.g. 1.0.0-rc.1) is published as a
+          # GitHub pre-release; a plain semver tag (1.0.0) is a full release.
+          prerelease: ${{ contains(github.ref_name, '-') }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
