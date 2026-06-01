@@ -106,7 +106,7 @@ export class CurationWorkspaceView extends ItemView {
     return CURATION_VIEW_TYPE;
   }
   getDisplayText(): string {
-    return 'Curation Workspace';
+    return 'Tag Curator';
   }
   getIcon(): string {
     return 'tags';
@@ -163,7 +163,7 @@ export class CurationWorkspaceView extends ItemView {
     this.banner = new StateBanner(this.container, this.plugin);
 
     const header = this.container.createDiv({ cls: 'tcw-header' });
-    header.createEl('h2', { text: 'Curation Workspace' });
+    header.createEl('h2', { text: 'Tag Curator' });
 
     // Segmented control: switch the content area between the tag table and the
     // inline rule editor without leaving the leaf (D-010 + D-012).

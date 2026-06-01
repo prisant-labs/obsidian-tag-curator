@@ -29,7 +29,7 @@ const INTEGRATIONS: IntegrationDescriptor[] = [
     name: 'Tag Wrangler',
     bullets: [
       'Per-row "Rename with Tag Wrangler" hands a tag off to Tag Wrangler so renames stay safe.',
-      'The "Send to Tag Wrangler" bulk action in the Curation Workspace delegates renaming to Tag Wrangler.',
+      'The "Send to Tag Wrangler" bulk action in the Tag Curator panel delegates renaming to Tag Wrangler.',
     ],
   },
   {
