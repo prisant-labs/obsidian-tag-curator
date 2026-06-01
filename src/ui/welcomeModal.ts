@@ -63,27 +63,29 @@ export class WelcomeModal extends Modal {
     const c = this.contentEl;
     c.empty();
 
-    // Header
+    // Header: lead with the plugin name + a featured how-it-works intro.
     const head = c.createDiv({ cls: 'tcw-head' });
-    head.createDiv({ cls: 'tcw-eyebrow', text: 'Tag Curator is now enabled' });
-    head.createEl('h3', { cls: 'tcw-title', text: 'Choose how to start' });
-    head.createDiv({
-      cls: 'tcw-subhead',
-      text: 'Before any tag is curated, here is what you can expect.',
-    });
+    head.createEl('h3', { cls: 'tcw-title', text: 'Tag Curator' });
+    head.createDiv({ cls: 'tcw-status', text: 'Now enabled' });
+    const intro = head.createDiv({ cls: 'tcw-intro' });
+    intro.appendText('Tag Curator ');
+    intro.createEl('strong', { text: 'hides or flags' });
+    intro.appendText(
+      ' noisy tags from view using presets and your own rules. It is display-only, so your notes are never changed and turning it off restores every tag.',
+    );
 
-    // Safety promises
-    c.createDiv({ cls: 'tcw-section-label', text: 'Our safety promise' });
+    // Safety promises (no heading; they sit directly under the intro).
     const promises = c.createDiv({ cls: 'tcw-promises' });
     this.renderPromise(promises, 'Display-only.', 'It never edits your notes.');
     this.renderPromise(promises, 'File-safe.', 'No content is written to markdown.');
     this.renderPromise(promises, 'Fully reversible.', 'Disable Tag Curator and everything returns.');
 
-    // Default presets (with live toggles)
-    c.createDiv({
-      cls: 'tcw-section-label',
-      text: 'Tag Curator will start by hiding these noisy tags',
-    });
+    // Default presets (with live toggles). Caption sits directly under the heading.
+    c.createDiv({ cls: 'tcw-section-label', text: 'Two presets, on by default' });
+    const presetCaption = c.createDiv({ cls: 'tcw-section-caption' });
+    presetCaption.setText(
+      'These two are suggested and enabled by default - toggle either off to skip it, or change both later in Settings > Presets.',
+    );
     this.renderPresetCard(
       c,
       'hide-hex-codes',
@@ -95,10 +97,6 @@ export class WelcomeModal extends Modal {
       'hide-url-anchors',
       'Hide URL anchor fragments',
       'Filters tags like #section-3 or #top from URL fragments in clippings.',
-    );
-    const presetCaption = c.createDiv({ cls: 'tcw-section-caption' });
-    presetCaption.setText(
-      "Toggle off any preset you don't want to enable now. Change these any time in Settings > Presets.",
     );
 
     // Integrations
@@ -165,12 +163,16 @@ export class WelcomeModal extends Modal {
     integ: IntegrationDescriptor,
   ): void {
     const state = this.detectPluginState(integ.id);
-    const card = parent.createDiv({ cls: 'tcw-integ' });
-    if (state === 'missing') card.addClass('tcw-integ-muted');
+    const planned = integ.id === 'colored-tags-wrangler';
+    const card = parent.createDiv({ cls: 'tcw-integ tcw-integ-collapsed' });
+    if (state === 'missing' && !planned) card.addClass('tcw-integ-muted');
     const head = card.createDiv({ cls: 'tcw-integ-head' });
     head.createDiv({ cls: 'tcw-integ-name', text: integ.name });
     const pill = head.createSpan({ cls: 'tcw-integ-pill' });
-    if (state === 'enabled') {
+    if (planned) {
+      pill.addClass('tcw-integ-pill-installed');
+      pill.setText('Planned');
+    } else if (state === 'enabled') {
       pill.addClass('tcw-integ-pill-enabled');
       pill.setText('Enabled');
     } else if (state === 'installed') {
@@ -180,10 +182,18 @@ export class WelcomeModal extends Modal {
       pill.addClass('tcw-integ-pill-missing');
       pill.setText('Not installed');
     }
-    const list = card.createEl('ul');
+    const chev = head.createSpan({ cls: 'tcw-integ-chev', text: '›' });
+    const list = card.createEl('ul', { cls: 'tcw-integ-bullets' });
     for (const bullet of integ.bullets) {
       list.createEl('li', { text: bullet });
     }
+    // Collapsed by default; click the header to expand the bullet detail.
+    head.addEventListener('click', () => {
+      const open = card.hasClass('tcw-integ-open');
+      card.toggleClass('tcw-integ-open', !open);
+      card.toggleClass('tcw-integ-collapsed', open);
+      chev.setText(open ? '›' : '⌄');
+    });
   }
 
   private detectPluginState(pluginId: string): 'enabled' | 'installed' | 'missing' {

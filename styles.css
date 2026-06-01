@@ -279,6 +279,29 @@ settings:
   font-size: 13px;
   color: var(--text-muted);
 }
+.tcw-status {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-weight: 600;
+  color: var(--text-success);
+}
+.tcw-intro {
+  font-size: 13.5px;
+  color: var(--text-normal);
+  line-height: 1.55;
+  margin-top: 12px;
+}
+.tcw-integ-head {
+  cursor: pointer;
+}
+.tcw-integ-chev {
+  color: var(--text-faint);
+  margin-left: 2px;
+}
+.tcw-integ-collapsed ul.tcw-integ-bullets {
+  display: none;
+}
 .tcw-section-label {
   font-size: 11px;
   text-transform: uppercase;
@@ -295,11 +318,8 @@ settings:
 
 /* Safety promises strip */
 .tcw-promises {
-  background: rgba(103, 211, 145, 0.06);
-  border: 1px solid rgba(103, 211, 145, 0.25);
-  border-radius: 10px;
-  padding: 12px 14px;
-  margin: 14px 0 4px;
+  padding: 8px 0 4px;
+  margin: 10px 0 4px;
 }
 .tcw-promise-row {
   display: flex;
