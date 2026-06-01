@@ -484,11 +484,11 @@ export class TagCuratorSettingTab extends PluginSettingTab {
       ],
       ['Toggle preview mode', 'Flip Preview mode.'],
       [
-        'Open Curation Workspace',
+        'Open the panel',
         'Open / reveal the panel in the right sidebar. Same as clicking the status bar (which opens it pre-filtered to hidden tags) or the ribbon icon.',
       ],
       [
-        'Open Curation Workspace beside the tag pane',
+        'Open beside the tag pane',
         'Open / reveal the panel split next to the native tag pane for live side-by-side editing. Also available from the General settings button.',
       ],
       ['Rescan vault tags', 'Rebuild the tag sidecar across all notes.'],

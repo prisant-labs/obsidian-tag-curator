@@ -114,7 +114,7 @@ export default class TagCuratorPlugin extends Plugin {
       (leaf: WorkspaceLeaf) => new CurationWorkspaceView(leaf, this),
     );
 
-    this.addRibbonIcon('tags', 'Open Curation Workspace', () => {
+    this.addRibbonIcon('tags', 'Open Tag Curator', () => {
       void this.openCurationWorkspace();
     });
 
@@ -193,14 +193,14 @@ export default class TagCuratorPlugin extends Plugin {
     });
     this.addCommand({
       id: 'open-curation-workspace',
-      name: 'Open Curation Workspace',
+      name: 'Open the panel',
       callback: () => {
         void this.openCurationWorkspace();
       },
     });
     this.addCommand({
       id: 'open-curation-workspace-beside-tag-pane',
-      name: 'Open Curation Workspace beside the tag pane',
+      name: 'Open beside the tag pane',
       callback: () => {
         void this.openBesideTagPane();
       },
