@@ -154,6 +154,45 @@ hide) is the graceful degrade.
 
 ## 4. Scope architecture
 
+### 4.0 Scope decoration flow (visual)
+
+One engine verdict fans out to four scope observers. Each observer owns only its
+host DOM and its own `tc-*` class namespace. Hiding removes the element
+(`display:none`); flagging (preview mode) leaves it visible with a warning
+highlight. Every effect is display-only and reversible.
+
+```mermaid
+flowchart TD
+  meta["TagMetaManager - tags.json (count, sources)"] --> engine
+  rules["Active rules + presets, priority-sorted"] --> engine
+  overrides["Per-tag overrides: always-show, always-hide"] --> engine
+  engine["RuleEngine.resolveVisibility - overrides win over rules"] --> base
+  base["ObserverBase - rAF-coalesced apply loop; verdict per tag: show, hide, or flag"] --> tp
+  base --> nn
+  base --> pr
+  base --> ac
+  tp["TagPaneObserver (.tag-pane-tag)"] --> out
+  nn["NotebookNavigatorObserver (.nn-tag)"] --> out
+  pr["PropertiesObserver (.multi-select-pill)"] --> out
+  ac["AutocompleteObserver (.suggestion-item)"] --> out
+  out["hidden = display:none; flagged = preview highlight; fully reversible, file-safe"]
+```
+
+Per-surface approximation (what each scope decorates, and how hide vs flag render):
+
+| Scope | Host element (selector) | Hidden | Flagged (preview) |
+|---|---|---|---|
+| Tag pane | `.tag-pane-tag` | row `display:none` | warning-colored name + 2px left bar |
+| Notebook Navigator | `.nn-tag[data-tag]` | row `display:none` | same flag recipe (`tc-nn-flagged`) |
+| Properties | `.multi-select-pill` in the tags property | pill `display:none` | same (`tc-prop-flagged`) |
+| Autocomplete | `.suggestion-item` (tag suggestions only) | item `display:none` | same (`tc-ac-flagged`) |
+
+Each scope is independently kill-switchable (D-014); panic disable strips every
+`tc-*` class and `data-tc-*` attribute across all four surfaces at once. The
+distinction that matters in Settings: the status pill reflects the companion
+plugin's own state, while the per-scope toggle controls whether Tag Curator
+curates that surface - the two are independent.
+
 ### 4.1 ObserverBase contract; one observer per scope
 
 `ObserverBase` (`src/observers/observerBase.ts`) owns the generic machinery:
@@ -347,11 +386,19 @@ The architecture meets it as follows:
 
 All integrations are optional enhancements, never dependencies (D-016).
 
-- **Style Settings.** Ship a `/* @settings */` comment block in `styles.css`
-  exposing Tag Curator's CSS variables and classes. No JavaScript: the variables
-  carry built-in defaults, so nothing breaks if Style Settings is absent. Themes
-  and power users restyle the hidden/flagged treatment without touching code
-  (cutline item 9, ~80 lines of CSS comments).
+- **Style Settings.** Tag Curator ships a `/* @settings */` block in `styles.css`
+  that registers three controls under a "Tag Curator" heading: the flag color
+  (`--tag-curator-flag-color`, default `var(--text-warning)`), the flag background
+  (`--tag-curator-flag-bg`, default `var(--background-modifier-hover)`), and a bold
+  toggle (the `tag-curator-flag-bold` body class, default off). If the Style
+  Settings plugin is installed, the user gets GUI pickers for these in its panel and
+  can restyle the hidden/flagged treatment with no CSS. If Style Settings is absent,
+  the built-in variable defaults apply and nothing breaks - it is a pure
+  enhancement: no JavaScript, no dependency (cutline item 9). The same three
+  variables drive the flagged decoration on every scope (tag pane, Notebook
+  Navigator, Properties, autocomplete), so one restyle applies everywhere. There is
+  no integration with the `hide` (`display:none`) treatment - hidden tags are simply
+  gone; only the flagged/preview treatment is themeable.
 - **Tag Wrangler.** Detect via `app.plugins.enabledPlugins.has('tag-wrangler')`
   (the existing `TagActions.tagWranglerInstalled` path). When present, compose
   items into Tag Wrangler's tag context menu and enable the bulk "Send to Tag

@@ -1,0 +1,936 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Tag Curator 1.0.0-rc.1 - UI Review Board</title>
+<style>
+/* =========================================================================
+   Tag Curator 1.0.0-rc.1 - UI Review Board (for /crit)
+   Self-contained. Obsidian-dark visual language reconstructed from the rc1
+   source (styles.css + observers + stateBanner/panicDisable/main.ts) and the
+   approved v1-vision mockups. Decoration classes are verbatim from styles.css
+   so flagged/hidden examples render exactly as the plugin does.
+   ========================================================================= */
+
+/* ---- 1. Obsidian-dark tokens (from ui_curation-workspace.html) ---- */
+:root {
+  --background-primary: #1e1e1e;
+  --background-primary-alt: #1a1a1a;
+  --background-secondary: #252525;
+  --background-secondary-alt: #2a2a2a;
+  --background-tertiary: #151515;
+  --background-modifier-hover: #2f2f2f;
+  --background-modifier-border: #333;
+  --background-modifier-border-hover: #444;
+  --background-modifier-error: #5b2828;
+  --background-modifier-success: #25522a;
+  --background-modifier-form-field: #1a1a1a;
+  --text-normal: #dcddde;
+  --text-muted: #999;
+  --text-faint: #6e6e6e;
+  --text-on-accent: #ffffff;
+  --text-accent: #a78bfa;
+  --text-error: #ff7878;
+  --text-success: #67d391;
+  --text-warning: #f5c97c;
+  --interactive-accent: #7c3aed;
+  --interactive-accent-hover: #8b5cf6;
+  --interactive-normal: #2a2a2a;
+  --interactive-hover: #353535;
+  --divider-color: #2a2a2a;
+  --shadow-s: 0 1px 2px rgba(0,0,0,0.4);
+  --shadow-m: 0 4px 12px rgba(0,0,0,0.4);
+  --shadow-l: 0 12px 28px rgba(0,0,0,0.5);
+  --code-bg: #161616;
+  /* Style Settings flag variables (verbatim from styles.css :root) */
+  --tag-curator-flag-color: var(--text-warning);
+  --tag-curator-flag-bg: var(--background-modifier-hover);
+  --tag-curator-flag-weight: inherit;
+}
+body.tag-curator-flag-bold { --tag-curator-flag-weight: 700; }
+
+/* ---- 2. Plugin decoration classes (VERBATIM from styles.css) ---- */
+.nn-tag.tc-nn-flagged,
+.multi-select-pill.tc-prop-flagged,
+.suggestion-item.tc-ac-flagged {
+  background: var(--tag-curator-flag-bg);
+  box-shadow: inset 2px 0 0 0 var(--tag-curator-flag-color);
+  border-radius: 4px;
+}
+.nn-tag.tc-nn-flagged .nn-navitem-name,
+.multi-select-pill.tc-prop-flagged .multi-select-pill-content,
+.suggestion-item.tc-ac-flagged .suggestion-content {
+  color: var(--tag-curator-flag-color);
+  font-weight: var(--tag-curator-flag-weight);
+}
+.tcl-row-hidden .tcl-tagname,
+.tct-row-hidden .tct-tagname { color: var(--text-faint); text-decoration: line-through; }
+.tcl-row-flagged .tcl-tagname,
+.tct-row-flagged .tct-tagname { color: var(--tag-curator-flag-color); font-weight: var(--tag-curator-flag-weight); }
+
+/* ---- 3. Page chrome ---- */
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body {
+  background: var(--background-tertiary);
+  color: var(--text-normal);
+  font-family: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+code, .mono { font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace; }
+.wrap { max-width: 1180px; margin: 0 auto; padding: 32px 24px 120px; }
+
+.page-head { border-bottom: 1px solid var(--divider-color); padding-bottom: 22px; margin-bottom: 8px; }
+.page-head .eyebrow { font-size: 11.5px; text-transform: uppercase; letter-spacing: 0.09em; color: var(--text-accent); font-weight: 600; }
+.page-head h1 { font-size: 27px; margin: 8px 0 8px; letter-spacing: -0.01em; }
+.page-head p { color: var(--text-muted); margin: 0 0 12px; max-width: 760px; }
+.crit-note { background: rgba(124,58,237,0.08); border: 1px solid rgba(124,58,237,0.25); border-radius: 9px; padding: 11px 14px; font-size: 12.5px; color: var(--text-muted); }
+.crit-note strong { color: var(--text-normal); }
+
+.legend { display: flex; gap: 18px; flex-wrap: wrap; margin: 16px 0 6px; font-size: 12px; color: var(--text-muted); }
+.legend .lg { display: inline-flex; align-items: center; gap: 7px; }
+.dot { width: 9px; height: 9px; border-radius: 50%; display: inline-block; }
+.dot.shown { background: var(--text-success); }
+.dot.hidden { background: var(--text-accent); }
+.dot.flagged { background: var(--text-warning); }
+
+.toc { display: flex; flex-wrap: wrap; gap: 8px; margin: 18px 0 6px; }
+.toc a { font-size: 12px; padding: 5px 11px; border-radius: 999px; border: 1px solid var(--background-modifier-border); background: var(--background-secondary); color: var(--text-muted); text-decoration: none; }
+.toc a:hover { color: var(--text-accent); border-color: rgba(124,58,237,0.4); }
+
+/* Review section + caption */
+.review-section { margin-top: 46px; scroll-margin-top: 16px; }
+.rs-head { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
+.rs-num { width: 26px; height: 26px; border-radius: 7px; background: var(--interactive-accent); color: var(--text-on-accent); display: grid; place-items: center; font-size: 13px; font-weight: 700; flex-shrink: 0; }
+.rs-head h2 { font-size: 19px; margin: 0; }
+.caption { border-left: 3px solid var(--interactive-accent); background: var(--background-secondary); border-radius: 0 9px 9px 0; padding: 11px 16px; margin-bottom: 18px; font-size: 13px; }
+.caption p { margin: 0 0 6px; color: var(--text-muted); }
+.caption p:last-child { margin-bottom: 0; }
+.caption strong { color: var(--text-normal); }
+.caption .fragile { color: var(--text-warning); }
+
+/* App window frame */
+.mockup { border: 1px solid var(--background-modifier-border); border-radius: 12px; overflow: hidden; box-shadow: var(--shadow-m); background: var(--background-primary); }
+.titlebar { display: flex; align-items: center; gap: 10px; padding: 9px 14px; background: var(--background-secondary-alt); border-bottom: 1px solid var(--background-modifier-border); font-size: 12px; color: var(--text-muted); }
+.lights { display: flex; gap: 7px; }
+.lights i { width: 11px; height: 11px; border-radius: 50%; display: inline-block; }
+.lights i:nth-child(1) { background: #ff5f57; } .lights i:nth-child(2) { background: #febc2e; } .lights i:nth-child(3) { background: #28c840; }
+.titlebar .tb-title { flex: 1; text-align: center; }
+.titlebar .tb-chip { color: var(--text-faint); }
+
+/* Buttons + toggles */
+.btn { font: inherit; font-size: 12.5px; padding: 6px 12px; border-radius: 6px; border: 1px solid var(--background-modifier-border); background: var(--interactive-normal); color: var(--text-normal); cursor: default; white-space: nowrap; }
+.btn.small { font-size: 12px; padding: 5px 10px; }
+.btn.accent { background: var(--interactive-accent); border-color: var(--interactive-accent); color: var(--text-on-accent); }
+.btn.ghost { background: transparent; }
+.btn.tw { border-color: rgba(124,58,237,0.5); color: var(--text-accent); }
+.btn.warning { background: var(--background-modifier-error); border-color: var(--background-modifier-error); color: var(--text-error); }
+.btn.big { font-size: 13.5px; padding: 9px 16px; }
+.toggle { width: 38px; height: 22px; border-radius: 999px; background: var(--background-modifier-border); position: relative; flex-shrink: 0; }
+.toggle::after { content: ""; position: absolute; width: 16px; height: 16px; border-radius: 50%; background: #fff; top: 3px; left: 3px; box-shadow: var(--shadow-s); }
+.toggle.on { background: var(--interactive-accent); }
+.toggle.on::after { left: 19px; }
+.toggle.disabled { opacity: 0.4; }
+
+/* Pills / chips */
+.pill { font-size: 11px; padding: 2px 8px; border-radius: 999px; border: 1px solid var(--background-modifier-border); color: var(--text-muted); }
+.tag-hash { color: var(--text-faint); }
+
+/* ---- Workspace split ---- */
+.split { display: grid; grid-template-columns: 1fr 322px; min-height: 640px; }
+@media (max-width: 1100px) { .split { grid-template-columns: 1fr; } }
+.leaf { display: flex; flex-direction: column; border-right: 2px solid var(--background-modifier-border); min-width: 0; }
+.native-pane { background: var(--background-secondary); display: flex; flex-direction: column; min-width: 0; }
+
+.leaf-tabbar { display: flex; align-items: center; gap: 8px; padding: 7px 12px; border-bottom: 1px solid var(--divider-color); font-size: 12.5px; }
+.leaf-tab { display: inline-flex; align-items: center; gap: 7px; font-weight: 600; }
+.leaf-tab .ico { color: var(--text-accent); }
+.spacer { flex: 1; }
+.icobtn { color: var(--text-faint); padding: 2px 6px; border-radius: 5px; }
+
+.leaf-state { display: flex; align-items: center; gap: 16px; padding: 12px 14px; border-bottom: 1px solid var(--divider-color); flex-wrap: wrap; }
+.leaf-state .ls-title { font-weight: 600; }
+.leaf-state .ls-sub { font-size: 11.5px; color: var(--text-faint); }
+.stats { display: flex; gap: 18px; margin-left: auto; }
+.stat .v { font-size: 17px; font-weight: 700; }
+.stat .v.accent { color: var(--text-accent); }
+.stat .l { font-size: 10px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-faint); }
+
+.toolbar { display: flex; align-items: center; gap: 7px; padding: 11px 14px; flex-wrap: wrap; }
+.chip { font-size: 12px; padding: 5px 11px; border-radius: 999px; border: 1px solid var(--background-modifier-border); background: var(--background-secondary); color: var(--text-muted); white-space: nowrap; }
+.chip.active { background: rgba(124,58,237,0.16); border-color: rgba(124,58,237,0.4); color: var(--text-accent); }
+.search { flex: 1; min-width: 130px; display: flex; align-items: center; gap: 7px; padding: 5px 10px; border-radius: 7px; border: 1px solid var(--background-modifier-border); background: var(--background-modifier-form-field); color: var(--text-faint); font-size: 12.5px; }
+
+.bulk-bar { display: flex; align-items: center; gap: 9px; padding: 9px 14px; margin: 0 14px 4px; background: rgba(124,58,237,0.1); border: 1px solid rgba(124,58,237,0.3); border-radius: 9px; font-size: 13px; flex-wrap: wrap; }
+.bulk-bar .count { font-weight: 600; color: var(--text-accent); }
+.bulk-bar .of { color: var(--text-muted); }
+
+.table-wrap { padding: 6px 14px 14px; overflow: visible; position: relative; }
+table.tags { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+table.tags th { text-align: left; font-weight: 600; color: var(--text-faint); font-size: 11px; text-transform: uppercase; letter-spacing: 0.03em; padding: 7px 8px; border-bottom: 1px solid var(--divider-color); position: sticky; top: 0; background: var(--background-primary); }
+table.tags td { padding: 8px; border-bottom: 1px solid var(--divider-color); vertical-align: middle; }
+table.tags tr.sel td { background: rgba(124,58,237,0.09); }
+.tagname { font-weight: 500; }
+tr.is-hidden .tagname { color: var(--text-faint); text-decoration: line-through; }
+tr.is-flagged .tagname { color: var(--text-warning); }
+.vsentinel td { text-align: center; color: var(--text-faint); font-size: 11px; font-style: italic; padding: 6px; }
+.vis { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; }
+.vis.shown { color: var(--text-success); } .vis.hidden { color: var(--text-accent); } .vis.flagged { color: var(--text-warning); }
+.rulelink { color: var(--text-accent); }
+.rulelink.none { color: var(--text-faint); }
+.ovr { font-size: 10px; padding: 1px 7px; border-radius: 999px; margin-left: 6px; }
+.ovr.show { background: rgba(103,211,145,0.15); color: var(--text-success); border: 1px solid rgba(103,211,145,0.35); }
+.ovr.hide { background: rgba(124,58,237,0.15); color: var(--text-accent); border: 1px solid rgba(124,58,237,0.35); }
+.row-more { color: var(--text-faint); cursor: default; }
+
+/* Why-is-this-hidden popover */
+.why-pop { margin: 12px 14px 0; max-width: 360px; background: var(--background-secondary); border: 1px solid var(--background-modifier-border); border-radius: 10px; box-shadow: var(--shadow-l); padding: 14px 15px; }
+.why-pop .wp-eye { font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.07em; color: var(--text-faint); }
+.why-pop .wp-title { font-weight: 700; margin: 3px 0 8px; }
+.why-pop .wp-chain { font-size: 12.5px; }
+.why-pop .win { color: var(--text-accent); font-weight: 600; }
+.why-pop .lose { color: var(--text-faint); text-decoration: line-through; }
+.why-pop hr { border: none; border-top: 1px solid var(--divider-color); margin: 11px 0; }
+.why-pop .wp-ovr-label { font-size: 11.5px; color: var(--text-muted); margin-bottom: 8px; }
+.why-pop .wp-ovr-btns { display: flex; gap: 8px; }
+
+/* Inline rule editor */
+.editor-head { display: flex; align-items: center; gap: 10px; padding: 12px 14px 8px; border-top: 1px solid var(--divider-color); }
+.editor-head .eh-label { font-weight: 600; }
+.editor-head .eh-badge { font-size: 10.5px; padding: 2px 8px; border-radius: 999px; background: rgba(124,58,237,0.14); color: var(--text-accent); }
+.editor-frame { display: grid; grid-template-columns: 1fr 286px; border: 1px solid var(--divider-color); border-radius: 11px; overflow: hidden; margin: 0 14px 16px; }
+@media (max-width: 1100px) { .editor-frame { grid-template-columns: 1fr; } }
+.editor-main { padding: 12px; display: flex; flex-direction: column; gap: 9px; min-width: 0; }
+.rule-card { border: 1px solid var(--divider-color); border-radius: 9px; background: var(--background-secondary); padding: 10px 12px; display: grid; grid-template-columns: auto 1fr auto auto; gap: 10px; align-items: center; }
+.rule-card.off { opacity: 0.5; }
+.rule-card .rc-name { font-weight: 600; font-size: 13px; }
+.rule-card .rc-meta { font-size: 11.5px; color: var(--text-muted); }
+.rule-card .rc-aff { font-size: 11.5px; color: var(--text-faint); }
+.rule-card.editing { display: block; padding: 0; border-color: var(--interactive-accent); box-shadow: 0 0 0 1px var(--interactive-accent) inset; }
+.edit-head { display: flex; align-items: center; gap: 10px; padding: 11px 13px; border-bottom: 1px solid var(--divider-color); }
+.edit-head .eh-name { font-weight: 700; }
+.edit-head .eh-state { margin-left: auto; font-size: 11.5px; color: var(--text-faint); font-style: italic; }
+.edit-body { padding: 12px 13px; display: flex; flex-direction: column; gap: 13px; }
+.edit-sec .sec-label { font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-faint); margin-bottom: 6px; }
+.field { display: inline-flex; align-items: center; gap: 7px; flex-wrap: wrap; font-size: 12.5px; }
+.sel, .inp { background: var(--background-modifier-form-field); border: 1px solid var(--background-modifier-border); border-radius: 6px; padding: 4px 9px; color: var(--text-normal); font: inherit; font-size: 12.5px; }
+.hint { font-size: 11.5px; color: var(--text-faint); }
+.edit-foot { display: flex; align-items: center; gap: 10px; padding: 11px 13px; border-top: 1px solid var(--divider-color); }
+.edit-foot .ef-note { font-size: 11px; color: var(--text-faint); flex: 1; }
+.new-card { border: 1px dashed var(--background-modifier-border-hover); border-radius: 9px; padding: 12px; text-align: center; color: var(--text-muted); }
+.new-card .nc-title { font-weight: 600; color: var(--text-accent); }
+.new-card .nc-sub { font-size: 11.5px; color: var(--text-faint); margin-top: 2px; }
+
+.preview-dock { border-left: 1px solid var(--divider-color); background: var(--background-primary-alt); padding: 13px; min-width: 0; }
+.preview-dock .pd-eye { font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-faint); }
+.preview-dock .pd-title { display: flex; align-items: center; gap: 7px; font-weight: 600; margin: 4px 0 10px; }
+.livedot { width: 7px; height: 7px; border-radius: 50%; background: var(--text-success); }
+.pd-tiles { display: flex; gap: 8px; margin-bottom: 10px; }
+.pd-tile { flex: 1; background: var(--background-secondary); border: 1px solid var(--divider-color); border-radius: 8px; padding: 7px; text-align: center; }
+.pd-tile .v { font-size: 15px; font-weight: 700; }
+.pd-tile .l { font-size: 9.5px; text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-faint); }
+.pd-sub { font-size: 11px; color: var(--text-faint); margin-bottom: 9px; }
+.pd-row { display: flex; justify-content: space-between; font-size: 12.5px; padding: 4px 2px; border-bottom: 1px solid var(--divider-color); }
+.pd-row .pd-tag.new { color: var(--text-warning); }
+.pd-row .pd-tag.new::before { content: "+ "; font-weight: 700; }
+.pd-row .pd-c { color: var(--text-faint); }
+
+/* Native tag pane */
+.np-tabbar { padding: 8px 12px; border-bottom: 1px solid var(--divider-color); font-size: 12.5px; font-weight: 600; }
+.np-search { margin: 10px 12px; display: flex; align-items: center; gap: 7px; padding: 5px 9px; border-radius: 6px; border: 1px solid var(--background-modifier-border); background: var(--background-modifier-form-field); color: var(--text-faint); font-size: 12px; }
+.np-tie { margin: 0 12px 10px; padding: 8px 10px; font-size: 11px; border-radius: 7px; background: rgba(103,211,145,0.08); border: 1px solid rgba(103,211,145,0.25); color: var(--text-muted); }
+.np-listhead { display: flex; justify-content: space-between; padding: 4px 14px; font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-faint); }
+.np-item { display: flex; align-items: center; gap: 8px; padding: 5px 14px; font-size: 13px; }
+.np-item.child { padding-left: 30px; }
+.np-item .np-name { flex: 1; }
+.np-item .np-count { font-size: 11px; color: var(--text-faint); background: var(--background-modifier-hover); border-radius: 999px; padding: 1px 7px; }
+.np-item.struck .np-name { color: var(--text-faint); text-decoration: line-through; }
+.np-item.flagged .np-name { color: var(--text-warning); }
+.np-item.fade { opacity: 0.5; }
+
+/* ---- Settings + scopes ---- */
+.settings-pane { padding: 18px 20px; }
+.settings-h { font-size: 16px; font-weight: 700; margin: 0 0 4px; }
+.settings-sub { color: var(--text-muted); font-size: 12.5px; margin-bottom: 16px; }
+.launch-bar { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; padding: 16px 18px; background: rgba(124,58,237,0.08); border: 1px solid rgba(124,58,237,0.25); border-radius: 11px; margin-bottom: 22px; }
+.launch-bar .lb-text { flex: 1; min-width: 200px; }
+.launch-bar .lb-text strong { display: block; }
+.launch-bar .lb-text span { font-size: 12px; color: var(--text-muted); }
+.sec-heading { font-size: 11px; text-transform: uppercase; letter-spacing: 0.07em; color: var(--text-faint); font-weight: 600; margin: 22px 0 4px; }
+.scope-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 24px; padding: 15px 0; border-bottom: 1px solid var(--divider-color); }
+.scope-name { font-size: 14px; font-weight: 600; display: flex; align-items: center; gap: 9px; flex-wrap: wrap; }
+.scope-desc { font-size: 12px; color: var(--text-muted); margin-top: 4px; max-width: 560px; }
+.scope-note { font-size: 11.5px; color: var(--text-faint); margin-top: 6px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.scope-control { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; flex-shrink: 0; }
+.scope-control .kill-label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-faint); }
+.state-pill { font-size: 10.5px; padding: 2px 9px; border-radius: 999px; font-weight: 600; letter-spacing: 0.03em; display: inline-flex; align-items: center; gap: 5px; }
+.state-pill .dot2 { width: 6px; height: 6px; border-radius: 50%; }
+.state-pill.detected { background: rgba(103,211,145,0.15); color: var(--text-success); border: 1px solid rgba(103,211,145,0.3); }
+.state-pill.detected .dot2 { background: var(--text-success); }
+.state-pill.not-detected { background: var(--background-modifier-border); color: var(--text-faint); border: 1px solid var(--background-modifier-border); }
+.state-pill.not-detected .dot2 { background: var(--text-faint); }
+
+/* ---- Scope decoration grid ---- */
+.scope-grid { display: grid; grid-template-columns: 150px 1fr 1fr 1fr; gap: 1px; background: var(--divider-color); border: 1px solid var(--divider-color); border-radius: 10px; overflow: hidden; }
+@media (max-width: 820px) { .scope-grid { grid-template-columns: 1fr; } }
+.scope-grid > div { background: var(--background-primary); padding: 12px 13px; }
+.scope-grid .sg-corner, .scope-grid .sg-colhead { font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-faint); font-weight: 600; background: var(--background-secondary); }
+.scope-grid .sg-rowhead { font-weight: 600; font-size: 12.5px; background: var(--background-secondary); }
+.scope-grid .sg-rowhead small { display: block; font-weight: 400; color: var(--text-faint); font-family: "SFMono-Regular", Consolas, monospace; font-size: 10.5px; margin-top: 3px; }
+.ghost { color: var(--text-faint); font-style: italic; font-size: 12px; opacity: 0.7; }
+/* host-surface sample chrome */
+.tag-pane-tag { display: flex; align-items: center; gap: 8px; padding: 4px 8px; border-radius: 5px; font-size: 13px; }
+.tag-pane-tag.tag-curator-flagged { background: var(--tag-curator-flag-bg); box-shadow: inset 2px 0 0 0 var(--tag-curator-flag-color); }
+.tag-pane-tag.tag-curator-flagged .tag-pane-tag-text { color: var(--tag-curator-flag-color); font-weight: var(--tag-curator-flag-weight); }
+.tag-pane-tag .tpc { margin-left: auto; font-size: 11px; color: var(--text-faint); }
+.nn-tag { display: flex; align-items: center; gap: 8px; padding: 4px 8px; font-size: 13px; }
+.nn-tag.child { padding-left: 22px; }
+.multi-select-pill { display: inline-flex; align-items: center; padding: 3px 9px; border-radius: 6px; background: var(--background-modifier-hover); font-size: 12.5px; margin: 2px; }
+.suggestion-item { display: flex; align-items: center; padding: 6px 10px; font-size: 13px; }
+
+/* ---- State banner ---- */
+.tag-curator-state-banner { display: flex; align-items: center; gap: 12px; padding: 9px 16px; font-size: 12.5px; border-bottom: 1px solid var(--divider-color); }
+.tag-curator-state-banner[data-variant="preview"] { background: rgba(245, 201, 124, 0.1); }
+.tag-curator-state-banner[data-variant="preview"] .sb-ic { background: var(--text-warning); color: var(--background-primary); }
+.tag-curator-state-banner[data-variant="preview"] .sb-msg { color: var(--text-warning); }
+.tag-curator-state-banner[data-variant="off"] { background: var(--background-secondary); }
+.tag-curator-state-banner[data-variant="off"] .sb-ic { background: var(--text-faint); color: var(--background-primary); }
+.tag-curator-state-banner[data-variant="off"] .sb-msg { color: var(--text-muted); }
+.tag-curator-state-banner .sb-ic { width: 18px; height: 18px; border-radius: 50%; display: grid; place-items: center; font-size: 11px; font-weight: 700; flex-shrink: 0; }
+.tag-curator-state-banner .sb-msg { flex: 1; line-height: 1.4; }
+.tag-curator-state-banner .sb-msg strong { color: var(--text-normal); }
+.tag-curator-state-banner .sb-action { background: transparent; border: 1px solid currentColor; color: inherit; font: inherit; font-size: 11.5px; padding: 4px 10px; border-radius: 5px; opacity: 0.85; }
+.banner-stack > * { margin-bottom: 10px; }
+.banner-label { font-size: 11px; color: var(--text-faint); margin: 0 0 4px; }
+.none-banner { border: 1px dashed var(--background-modifier-border); border-radius: 7px; padding: 9px 14px; font-size: 12px; color: var(--text-faint); }
+
+/* ---- Status bar ---- */
+.statusbar { display: inline-flex; align-items: center; gap: 8px; background: var(--background-secondary-alt); border: 1px solid var(--background-modifier-border); border-radius: 7px; padding: 5px 12px; font-size: 12px; color: var(--text-muted); margin-right: 10px; margin-bottom: 8px; }
+.statusbar .sb-ico { color: var(--text-faint); }
+.sb-strings { display: flex; flex-wrap: wrap; gap: 4px; }
+.sb-when { font-size: 11px; color: var(--text-faint); display: block; margin-top: 4px; }
+
+.notice { display: inline-flex; align-items: center; gap: 9px; background: #2c2c2c; border: 1px solid var(--background-modifier-border); border-radius: 8px; padding: 10px 14px; box-shadow: var(--shadow-m); font-size: 12.5px; }
+.notice .n-ico { color: var(--text-warning); }
+
+.subnote { font-size: 11.5px; color: var(--text-faint); margin-top: 10px; }
+
+/* ---- revised-settings blocks (considerations 1-8) ---- */
+.subblock { margin: 24px 0; }
+.sb-label { font-size: 12px; font-weight: 600; color: var(--text-accent); background: rgba(124,58,237,0.1); border: 1px solid rgba(124,58,237,0.25); border-radius: 7px; padding: 6px 11px; display: inline-block; margin-bottom: 10px; }
+.rset-tabs { display: flex; flex-wrap: wrap; gap: 2px; border-bottom: 1px solid var(--divider-color); }
+.rset-tab { font-size: 12.5px; padding: 8px 13px; border-bottom: 2px solid transparent; color: var(--text-muted); white-space: nowrap; }
+.rset-tab.active { color: var(--text-normal); border-bottom-color: var(--interactive-accent); font-weight: 600; }
+.rset-badge { font-size: 10px; padding: 1px 6px; border-radius: 999px; background: var(--background-modifier-border); color: var(--text-faint); margin-left: 5px; }
+.cmp { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+@media (max-width: 760px) { .cmp { grid-template-columns: 1fr; } }
+.cmp-box { border: 1px solid var(--divider-color); border-radius: 9px; padding: 12px; background: var(--background-secondary); }
+.cmp-lbl { font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 9px; }
+.cmp-lbl.bad { color: var(--text-error); } .cmp-lbl.good { color: var(--text-success); }
+.before-tabs { display: flex; flex-wrap: wrap; gap: 6px; }
+.before-tabs span { font-size: 12px; padding: 5px 9px; border: 1px solid var(--background-modifier-border); border-radius: 6px; color: var(--text-muted); white-space: nowrap; }
+.before-tabs span.soon { opacity: 0.45; }
+.rset-launch { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; padding: 14px 16px; background: rgba(124,58,237,0.08); border: 1px solid rgba(124,58,237,0.25); border-radius: 10px; }
+.rset-launch .rl-txt { flex: 1; min-width: 200px; }
+.rset-launch .rl-sub { display: block; font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+.linkish { color: var(--text-accent); }
+.state-pill.warn { background: rgba(245,201,124,0.14); color: var(--text-warning); border: 1px solid rgba(245,201,124,0.32); }
+.state-pill.warn .dot2 { background: var(--text-warning); }
+.state-pill.info { background: rgba(124,58,237,0.14); color: var(--text-accent); border: 1px solid rgba(124,58,237,0.3); }
+.state-pill.info .dot2 { background: var(--text-accent); }
+.rset-preset { display: flex; align-items: flex-start; gap: 12px; padding: 12px 14px; border: 1px solid var(--divider-color); border-radius: 9px; background: var(--background-secondary); margin-bottom: 8px; }
+.rset-preset.off { opacity: 0.6; }
+.rset-preset .rp-body { flex: 1; min-width: 0; }
+.rset-preset .rp-head { display: flex; align-items: center; gap: 8px; }
+.rset-preset .rp-nm { font-weight: 600; font-size: 13.5px; }
+.rset-preset .rp-dsc { font-size: 12px; color: var(--text-muted); margin-top: 3px; }
+.rset-preset .rp-meta { display: flex; align-items: center; gap: 14px; margin-top: 8px; font-size: 12px; }
+.rset-preset .rp-aff { color: var(--text-accent); }
+.rset-preset .rp-aff.calc { color: var(--text-faint); font-style: italic; }
+.rset-preset .rp-aff.would { color: var(--text-normal); font-weight: 500; }
+.rset-preset .rp-more { color: var(--text-faint); }
+.rrule-card { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 12px; padding: 11px 14px; border: 1px solid var(--divider-color); border-radius: 9px; background: var(--background-secondary); }
+.rrule-card .rc-nm { font-weight: 600; font-size: 13.5px; }
+.rrule-card .rc-sub { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+.rrule-card .rc-sub .rc-type { color: var(--text-faint); }
+.rrule-card .rc-aff { color: var(--text-accent); font-size: 12.5px; white-space: nowrap; }
+.rules-head { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+.rules-head .rh-title { font-weight: 600; }
+.rname-input { font-size: 18px; font-weight: 700; background: transparent; border: none; border-bottom: 1px dashed var(--background-modifier-border-hover); color: var(--text-normal); padding: 2px 2px 4px; min-width: 220px; }
+.seg { display: inline-flex; border: 1px solid var(--background-modifier-border); border-radius: 7px; overflow: hidden; }
+.seg span { padding: 5px 12px; font-size: 12.5px; color: var(--text-muted); border-right: 1px solid var(--background-modifier-border); }
+.seg span:last-child { border-right: none; }
+.seg span.on { background: rgba(124,58,237,0.16); color: var(--text-accent); }
+.rpd { border: 1px solid var(--divider-color); border-radius: 9px; overflow: hidden; }
+.rpd-row { display: grid; grid-template-columns: 1fr 52px 30px; align-items: center; gap: 8px; padding: 6px 12px; border-bottom: 1px solid var(--divider-color); font-size: 12.5px; }
+.rpd-row:last-child { border-bottom: none; }
+.rpd-row.head { background: var(--background-secondary); color: var(--text-faint); font-size: 10px; text-transform: uppercase; letter-spacing: 0.04em; }
+.rpd-row .rpd-c { text-align: right; color: var(--text-faint); font-variant-numeric: tabular-nums; }
+.rpd-row .rpd-rule { text-align: right; color: var(--text-accent); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rpd-row.head .rpd-rule { color: var(--text-faint); }
+.two-col { display: grid; grid-template-columns: 1fr 320px; gap: 14px; align-items: start; }
+@media (max-width: 900px) { .two-col { grid-template-columns: 1fr; } }
+.rpd-info { text-align: right; color: var(--text-faint); cursor: default; }
+.type-cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+@media (max-width: 620px) { .type-cards { grid-template-columns: 1fr; } }
+.type-card { border: 1px solid var(--background-modifier-border); border-radius: 8px; padding: 9px 11px; cursor: default; }
+.type-card.on { border-color: var(--interactive-accent); background: rgba(124,58,237,0.1); }
+.type-card .tc-title { font-weight: 600; font-size: 12.5px; }
+.type-card .tc-sub { font-size: 11px; color: var(--text-muted); margin-top: 3px; line-height: 1.4; }
+.rpd-row.expanded { background: rgba(124,58,237,0.06); }
+.rpd-info.open { color: var(--text-accent); }
+.rpd-detail { font-size: 11.5px; color: var(--text-muted); padding: 6px 12px 9px; line-height: 1.55; border-bottom: 1px solid var(--divider-color); background: rgba(124,58,237,0.04); }
+.rpd-detail strong { color: var(--text-normal); }
+.integ-compact { display: flex; align-items: center; gap: 10px; padding: 10px 13px; border: 1px solid var(--divider-color); border-radius: 9px; background: var(--background-secondary); margin-bottom: 7px; }
+.integ-compact .icx-name { font-weight: 600; font-size: 13px; white-space: nowrap; }
+.integ-compact .icx-sum { flex: 1; font-size: 12px; color: var(--text-muted); min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.integ-compact .icx-chev { color: var(--text-faint); margin-left: auto; }
+.integ-detail { font-size: 12px; color: var(--text-muted); line-height: 1.5; border: 1px solid var(--divider-color); border-top: none; border-radius: 0 0 9px 9px; padding: 9px 13px; margin: -7px 0 7px; background: var(--background-primary-alt); }
+.rset-subnav { display: flex; flex-wrap: wrap; gap: 4px; padding: 8px 0 6px; border-bottom: 1px solid var(--divider-color); margin-bottom: 12px; }
+.rset-anchor { font-size: 12px; padding: 4px 10px; border-radius: 6px; color: var(--text-muted); }
+.rset-anchor.active { color: var(--text-accent); background: rgba(124,58,237,0.1); }
+.rset-anchor .anc { color: var(--text-faint); }
+.rpd-detail-head { font-weight: 600; margin-bottom: 6px; display: flex; align-items: center; gap: 8px; }
+.rpd-kv { display: grid; grid-template-columns: max-content 1fr; gap: 3px 12px; font-size: 11.5px; margin: 0 0 8px; }
+.rpd-kv dt { color: var(--text-faint); }
+.rpd-kv dd { color: var(--text-normal); margin: 0; }
+.rpd-dim { color: var(--text-faint); }
+.rpd-actions { display: flex; gap: 8px; }
+.rset-scroll { max-height: 300px; overflow-y: auto; }
+.rset-scroll .rset-tabs { position: sticky; top: 0; background: var(--background-primary); z-index: 3; }
+.rset-scroll .rset-subnav { position: sticky; top: 37px; background: var(--background-primary); z-index: 2; }
+.scope-link { font-size: 11.5px; margin-left: 8px; white-space: nowrap; }
+.tabmap { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; }
+@media (max-width: 900px) { .tabmap { grid-template-columns: repeat(2, 1fr); } }
+.tabmap-col { border: 1px solid var(--divider-color); border-radius: 9px; background: var(--background-secondary); padding: 10px 12px; }
+.tabmap-h { font-weight: 600; font-size: 13px; margin-bottom: 6px; display: flex; align-items: center; gap: 6px; }
+.tabmap-col ul { margin: 0; padding-left: 16px; font-size: 11.5px; color: var(--text-muted); line-height: 1.5; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="page-head">
+    <div class="eyebrow">Tag Curator v1.0 &middot; 1.0.0-rc.1 &middot; UI review board</div>
+    <h1>Every major screen, in one place, for crit</h1>
+    <p>A static, faithful reconstruction of the rc1 UI, built from the shipping source (styles.css, the four observers, stateBanner / panicDisable / main.ts) and the approved v1-vision mockups. The flagged and table decorations use the plugin's verbatim CSS classes, so highlights render exactly as they do in Obsidian.</p>
+    <div class="crit-note"><strong>How to use:</strong> run <code>/crit</code> on this file and leave inline comments on any screen or element. Each section has a caption stating what it is and what to scrutinize. Pair it with the live BRAT smoke test: comment here on look-and-feel and copy; log functional bugs in the smoke-test sheet.</div>
+    <div class="legend">
+      <span class="lg"><span class="dot shown"></span> visible</span>
+      <span class="lg"><span class="dot hidden"></span> hidden (a rule or override hides it)</span>
+      <span class="lg"><span class="dot flagged"></span> flagged (preview would hide it)</span>
+    </div>
+    <nav class="toc">
+      <a href="#s1">1 &middot; Curation Workspace</a>
+      <a href="#s2">2 &middot; Welcome modal</a>
+      <a href="#s3">3 &middot; Settings (revised)</a>
+      <a href="#s4">4 &middot; Scope decorations</a>
+      <a href="#s5">5 &middot; State banner</a>
+      <a href="#s6">6 &middot; Status bar</a>
+      <a href="#s7">7 &middot; Panic disable</a>
+    </nav>
+  </header>
+
+  <!-- =================== 1. CURATION WORKSPACE =================== -->
+  <section class="review-section" id="s1">
+    <div class="rs-head"><span class="rs-num">1</span><h2>Curation Workspace, docked beside the tag pane</h2></div>
+    <div class="caption">
+      <p><strong>What this is.</strong> The hero of v1.0 (D-012/D-013). Why a leaf instead of Settings? A full-screen Settings modal covers the very tag pane you are curating, so you can never watch your edits land. The curation loop instead lives in a workspace leaf docked beside the native tag pane: edit a rule on the left, watch tags hide / flag / return on the right in the same glance. Contains the stats toolbar, filter chips, bulk-action bar, the virtualized tag table, the "why is this hidden?" diagnostic, per-tag override pins (D-015), and the inline card rule editor with a right-docked live preview (D-010).</p>
+      <p><strong>What to check.</strong> Is the split the right default? Are the bulk-bar verbs and filter chips the right set and order? Does "why is this hidden?" read clearly? Are the override badges (always show / always hide) legible against the rows?</p>
+    </div>
+    <div class="mockup">
+      <div class="titlebar"><span class="lights"><i></i><i></i><i></i></span><span class="tb-title">curation vault - Obsidian</span><span class="tb-chip">Open Curation Workspace beside the tag pane</span></div>
+      <div class="split">
+        <!-- LEFT: workspace leaf -->
+        <section class="leaf">
+          <div class="leaf-tabbar">
+            <span class="leaf-tab"><span class="ico">&#9670;</span> Curation Workspace</span>
+            <span class="spacer"></span>
+            <span class="icobtn" title="Open beside the tag pane">&#9707;</span>
+            <span class="icobtn" title="More options">&#8943;</span>
+          </div>
+          <div class="leaf-state">
+            <div><div class="ls-title">Curation Workspace</div><div class="ls-sub">curation vault &middot; indexed 2 min ago</div></div>
+            <div class="stats">
+              <div class="stat"><div class="v">1,542</div><div class="l">Tags</div></div>
+              <div class="stat"><div class="v accent">318</div><div class="l">Hidden</div></div>
+              <div class="stat"><div class="v">5</div><div class="l">Rules</div></div>
+              <div class="stat"><div class="v">204</div><div class="l">Orphans</div></div>
+            </div>
+          </div>
+          <div class="toolbar">
+            <span class="chip active">Hidden</span>
+            <span class="chip">Flagged</span>
+            <span class="chip">Orphans</span>
+            <span class="chip">Frontmatter</span>
+            <span class="chip">Inline</span>
+            <span class="chip">Unreviewed</span>
+            <span class="chip">By rule</span>
+            <span class="search">&#128269; Filter tags...</span>
+          </div>
+          <div class="bulk-bar">
+            <span class="count">3 selected</span><span class="of">of 318 hidden</span>
+            <span class="spacer"></span>
+            <span class="btn small">Hide</span>
+            <span class="btn small">Unhide</span>
+            <span class="btn small">Flag</span>
+            <span class="btn small">Alias</span>
+            <span class="btn small">Add description</span>
+            <span class="btn small tw">Send to Tag Wrangler</span>
+            <span class="btn small ghost">Clear</span>
+          </div>
+          <div class="table-wrap">
+            <table class="tags">
+              <thead><tr>
+                <th style="width:30px">&#9745;</th><th>Tag &darr;</th><th style="width:56px">Count</th><th style="width:92px">Last used</th><th style="width:78px">Source</th><th style="width:90px">Visible?</th><th>Rule</th><th style="width:34px"></th>
+              </tr></thead>
+              <tbody>
+                <tr class="vsentinel"><td colspan="8">12 rows scrolled above &middot; virtualized window</td></tr>
+                <tr class="is-hidden sel">
+                  <td>&#9745;</td><td><span class="tag-hash">#</span><span class="tagname">FFAA00</span></td><td>3</td><td>Apr 18</td><td><span class="pill">inline</span></td><td><span class="vis hidden"><span class="dot hidden"></span>hidden</span></td><td><span class="rulelink">Hide hex color codes</span></td><td><span class="row-more" title="Why is this hidden?">&#8943;</span></td>
+                </tr>
+                <tr class="is-hidden sel">
+                  <td>&#9745;</td><td><span class="tag-hash">#</span><span class="tagname">section-3</span></td><td>1</td><td>May 01</td><td><span class="pill">inline</span></td><td><span class="vis hidden"><span class="dot hidden"></span>hidden</span></td><td><span class="rulelink">Hide URL anchors</span></td><td><span class="row-more">&#8943;</span></td>
+                </tr>
+                <tr class="is-hidden sel">
+                  <td>&#9745;</td><td><span class="tag-hash">#</span><span class="tagname">x</span></td><td>1</td><td>May 20</td><td><span class="pill">inline</span></td><td><span class="vis hidden"><span class="dot hidden"></span>hidden</span></td><td><span class="rulelink">Hide single-character tags</span></td><td><span class="row-more">&#8943;</span></td>
+                </tr>
+                <tr class="is-hidden">
+                  <td>&#9744;</td><td><span class="tag-hash">#</span><span class="tagname">archive-2021</span><span class="ovr hide">always hide</span></td><td>47</td><td>2021</td><td><span class="pill">frontmatter</span></td><td><span class="vis hidden"><span class="dot hidden"></span>hidden</span></td><td><span class="rulelink none">override</span></td><td><span class="row-more">&#8943;</span></td>
+                </tr>
+                <tr class="is-flagged">
+                  <td>&#9744;</td><td><span class="tag-hash">#</span><span class="tagname">AI</span></td><td>9</td><td>2 days ago</td><td><span class="pill">both</span></td><td><span class="vis flagged"><span class="dot flagged"></span>flagged</span></td><td><span class="rulelink">Flag capitalization variants</span></td><td><span class="row-more">&#8943;</span></td>
+                </tr>
+                <tr>
+                  <td>&#9744;</td><td><span class="tag-hash">#</span><span class="tagname">ai</span><span class="ovr show">always show</span></td><td>214</td><td>today</td><td><span class="pill">both</span></td><td><span class="vis shown"><span class="dot shown"></span>shown</span></td><td><span class="rulelink none">override</span></td><td><span class="row-more">&#8943;</span></td>
+                </tr>
+                <tr>
+                  <td>&#9744;</td><td><span class="tag-hash">#</span><span class="tagname">project/active</span></td><td>142</td><td>today</td><td><span class="pill">both</span></td><td><span class="vis shown"><span class="dot shown"></span>shown</span></td><td><span class="rulelink none">none</span></td><td><span class="row-more">&#8943;</span></td>
+                </tr>
+                <tr>
+                  <td>&#9744;</td><td><span class="tag-hash">#</span><span class="tagname">meeting-notes</span></td><td>63</td><td>yesterday</td><td><span class="pill">frontmatter</span></td><td><span class="vis shown"><span class="dot shown"></span>shown</span></td><td><span class="rulelink none">none</span></td><td><span class="row-more">&#8943;</span></td>
+                </tr>
+                <tr class="vsentinel"><td colspan="8">1,526 more rows below &middot; rendered on scroll</td></tr>
+              </tbody>
+            </table>
+            <div class="why-pop">
+              <div class="wp-eye">Why is this hidden?</div>
+              <div class="wp-title"><span class="tag-hash">#</span>FFAA00</div>
+              <div class="wp-chain">
+                Resolved by highest priority (Q-005):<br>
+                <span class="win">&check; Hide hex color codes</span> <span class="hint">(regex, priority 60)</span><br>
+                <span class="lose">Hide orphans</span> <span class="hint">(frequency, priority 40)</span>
+              </div>
+              <hr>
+              <div class="wp-ovr-label">Override for this one tag (beats every rule):</div>
+              <div class="wp-ovr-btns"><span class="btn small">Always show</span><span class="btn small accent">Always hide</span></div>
+            </div>
+          </div>
+          <div class="editor-head">
+            <span class="eh-label">Rules</span><span class="eh-badge">D-010 inline editor</span>
+            <span class="spacer"></span>
+            <span class="btn small ghost">Filter: All &darr;</span>
+            <span class="btn small ghost">Sort: Priority &darr;</span>
+          </div>
+          <div class="editor-frame">
+            <div class="editor-main">
+              <div class="rule-card editing">
+                <div class="edit-head"><span class="toggle on"></span><span class="eh-name">Hide URL anchors</span><span class="eh-state">editing</span><span class="icobtn" title="Collapse to card">&#9650;</span></div>
+                <div class="edit-body">
+                  <div class="edit-sec"><div class="sec-label">Type</div><span class="field">Match by <span class="sel">regex &darr;</span> <span class="hint">pattern match on the tag name</span></span></div>
+                  <div class="edit-sec"><div class="sec-label">Match</div><span class="field">When a tag's name <span class="sel">matches the regex &darr;</span> <span class="inp mono">^section-\d+$</span></span></div>
+                  <div class="edit-sec"><div class="sec-label">Then</div><span class="field">Action <span class="sel">hide &darr;</span> &nbsp; Scope <span class="sel">all scopes &darr;</span></span></div>
+                </div>
+                <div class="edit-foot"><span class="ef-note">Saving applies live across every enabled scope (D-014). Priority hidden in v1 (D-009).</span><span class="btn small ghost">Delete</span><span class="btn small accent">Save rule</span></div>
+              </div>
+              <div class="rule-card">
+                <span class="toggle on"></span>
+                <div><div class="rc-name">Hide hex color codes</div><div class="rc-meta"><span class="pill">regex</span> matches <code>^[0-9a-f]{6}$</code></div></div>
+                <div class="rc-aff">42 tags</div><span class="icobtn">&#9660;</span>
+              </div>
+              <div class="rule-card">
+                <span class="toggle on"></span>
+                <div><div class="rc-name">Flag capitalization variants</div><div class="rc-meta"><span class="pill">list</span> flags <code>#AI</code>, <code>#Ai</code> beside <code>#ai</code></div></div>
+                <div class="rc-aff">9 tags</div><span class="icobtn">&#9660;</span>
+              </div>
+              <div class="rule-card off">
+                <span class="toggle"></span>
+                <div><div class="rc-name">Hide rare tags</div><div class="rc-meta"><span class="pill">frequency</span> when <code>count &lt;= 2</code></div></div>
+                <div class="rc-aff">off</div><span class="icobtn">&#9660;</span>
+              </div>
+              <div class="new-card"><div class="nc-title">+ New rule</div><div class="nc-sub">Opens this editor with defaults. No separate wizard (D-002).</div></div>
+            </div>
+            <aside class="preview-dock">
+              <div class="pd-eye">Live preview &middot; filtered to</div>
+              <div class="pd-title"><span class="livedot"></span> Hide URL anchors</div>
+              <div class="pd-tiles">
+                <div class="pd-tile"><div class="v">6</div><div class="l">Unique</div></div>
+                <div class="pd-tile"><div class="v">11</div><div class="l">Instances</div></div>
+                <div class="pd-tile"><div class="v">9</div><div class="l">Notes</div></div>
+              </div>
+              <div class="pd-sub">Updates as you type the regex. The native tag pane on the right reacts at the same instant.</div>
+              <div class="pd-row"><span class="pd-tag">section-3</span><span class="pd-c">1</span></div>
+              <div class="pd-row"><span class="pd-tag">section-12</span><span class="pd-c">3</span></div>
+              <div class="pd-row"><span class="pd-tag new">section-1</span><span class="pd-c">2</span></div>
+              <div class="pd-row"><span class="pd-tag new">section-2</span><span class="pd-c">2</span></div>
+              <div class="pd-row"><span class="pd-tag">section-4</span><span class="pd-c">2</span></div>
+              <div class="pd-row"><span class="pd-tag">section-7</span><span class="pd-c">1</span></div>
+            </aside>
+          </div>
+        </section>
+        <!-- RIGHT: native tag pane -->
+        <aside class="native-pane">
+          <div class="np-tabbar"># Tags</div>
+          <div class="np-search">&#128269; Filter...</div>
+          <div class="np-tie">&#8635; The rule you are editing on the left updates this <strong>native</strong> tag pane live. <code>#section-3</code> just struck through.</div>
+          <div class="np-listhead"><span>tags</span><span>1,224 shown</span></div>
+          <div class="np-item"><span class="np-name">ai</span><span class="np-count">214</span></div>
+          <div class="np-item flagged"><span class="np-name">AI</span><span class="np-count">9</span></div>
+          <div class="np-item"><span class="np-name">project</span><span class="np-count">312</span></div>
+          <div class="np-item child"><span class="np-name">project/active</span><span class="np-count">142</span></div>
+          <div class="np-item"><span class="np-name">meeting-notes</span><span class="np-count">63</span></div>
+          <div class="np-item"><span class="np-name">reading</span><span class="np-count">67</span></div>
+          <div class="np-item struck" title="Hidden by 'Hide hex color codes'"><span class="np-name">FFAA00</span><span class="np-count">3</span></div>
+          <div class="np-item struck" title="Hidden by 'Hide URL anchors' (the rule being edited)"><span class="np-name">section-3</span><span class="np-count">1</span></div>
+          <div class="np-item struck fade" title="Hidden by 'Hide URL anchors'"><span class="np-name">section-12</span><span class="np-count">3</span></div>
+          <div class="np-item struck fade" title="Hidden by 'Hide single-character tags'"><span class="np-name">x</span><span class="np-count">1</span></div>
+          <div class="np-item"><span class="np-name">writing</span><span class="np-count">88</span></div>
+          <div class="np-item"><span class="np-name">inbox</span><span class="np-count">12</span></div>
+        </aside>
+      </div>
+    </div>
+    <p class="subnote">Seam payoff (D-013): edit a rule on the left, and <code>#FFAA00</code> / <code>#section-3</code> strike through in the real tag pane on the right, live. Display-only and file-safe; striking a tag changes only what the pane renders, never note content.</p>
+  </section>
+
+  <!-- =================== 2. WELCOME MODAL =================== -->
+  <section class="review-section" id="s2">
+    <div class="rs-head"><span class="rs-num">2</span><h2>Welcome modal (first-run onboarding)</h2></div>
+    <div class="caption">
+      <p><strong>What this is.</strong> Fires once on first enable (D-008). The trust contract: state-aware header, three safety promises, two toggleable presets, honest per-integration cards (de-overclaimed for v1.0 per D-016), and a binary start footer.</p>
+      <p><strong>What to check.</strong> Do the integration cards claim only what rc1 actually delivers? Is "Start curating" vs "Start in preview mode" a clear enough first choice? Are the safety promises reassuring without overpromising?</p>
+    </div>
+    <div class="mockup">
+      <div class="titlebar"><span class="lights"><i></i><i></i><i></i></span><span class="tb-title">Obsidian</span></div>
+      <div style="background:rgba(0,0,0,0.55);padding:34px;display:grid;place-items:center;">
+        <div style="width:100%;max-width:600px;background:var(--background-primary);border:1px solid var(--background-modifier-border);border-radius:14px;box-shadow:var(--shadow-l);overflow:hidden;">
+          <div style="padding:22px 26px 6px;">
+            <h3 style="margin:0 0 2px;font-size:23px;letter-spacing:-0.01em;">Tag Curator</h3>
+            <div style="font-size:11px;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-success);font-weight:600;">Now enabled</div>
+            <div style="font-size:13.5px;color:var(--text-normal);margin-top:12px;line-height:1.55;">Tag Curator <strong>hides or flags</strong> noisy tags from view using presets and your own rules. It is display-only, so your notes are never changed and turning it off restores every tag.</div>
+          </div>
+          <div style="padding:14px 26px 22px;">
+            <div style="padding:6px 0 2px;">
+              <div style="display:flex;gap:10px;padding:4px 0;font-size:13px;"><span style="color:var(--text-success);font-weight:700;">&check;</span><span><strong>Display-only.</strong> <span style="color:var(--text-muted)">It changes how tags look, never what your notes say.</span></span></div>
+              <div style="display:flex;gap:10px;padding:4px 0;font-size:13px;"><span style="color:var(--text-success);font-weight:700;">&check;</span><span><strong>File-safe.</strong> <span style="color:var(--text-muted)">No content is ever written to your markdown.</span></span></div>
+              <div style="display:flex;gap:10px;padding:4px 0;font-size:13px;"><span style="color:var(--text-success);font-weight:700;">&check;</span><span><strong>Fully reversible.</strong> <span style="color:var(--text-muted)">Turn Tag Curator off and every tag returns at once.</span></span></div>
+            </div>
+            <div class="sec-heading">Two presets, on by default</div>
+            <div style="font-size:12px;color:var(--text-muted);background:rgba(124,58,237,0.07);border:1px solid rgba(124,58,237,0.2);border-radius:7px;padding:8px 11px;margin:6px 0 10px;">These two are <strong>suggested and enabled by default</strong> - toggle either off to skip it, or change both later in Settings &#8250; Presets.</div>
+            <div style="display:flex;align-items:center;gap:12px;padding:11px 13px;border:1px solid var(--divider-color);border-radius:9px;background:var(--background-secondary);margin-bottom:8px;">
+              <span class="toggle on"></span><div><div style="font-weight:600;font-size:13.5px;">Hide hex color codes</div><div style="font-size:12px;color:var(--text-muted);">Filters tags that are really CSS colors left over from web clippings.</div><div class="mono" style="font-size:11px;color:var(--text-faint);margin-top:4px;">Pattern: ^#?[0-9a-fA-F]{6}$ &middot; example: <code>#FFAA00</code></div></div>
+            </div>
+            <div style="display:flex;align-items:center;gap:12px;padding:11px 13px;border:1px solid var(--divider-color);border-radius:9px;background:var(--background-secondary);margin-bottom:8px;">
+              <span class="toggle on"></span><div><div style="font-weight:600;font-size:13.5px;">Hide URL anchor fragments</div><div style="font-size:12px;color:var(--text-muted);">Filters anchor fragments left behind when a clipped URL becomes a tag.</div><div class="mono" style="font-size:11px;color:var(--text-faint);margin-top:4px;">Pattern: ^#?(section|top|fn|ref)-?\d* &middot; example: <code>#section-3</code></div></div>
+            </div>
+            <div class="sec-heading">Works with what you have</div>
+            <div class="integ-compact"><span class="icx-name">Tag Wrangler</span><span class="state-pill detected"><span class="dot2"></span>Enabled</span><span class="icx-chev">&#9662;</span></div>
+            <div class="integ-detail">Detected, so you can send tags to it for renaming straight from the curation workspace. Its right-click rename stays available on tags Tag Curator hides or flags.</div>
+            <div class="integ-compact"><span class="icx-name">Notebook Navigator</span><span class="state-pill detected"><span class="dot2"></span>Enabled</span><span class="icx-chev">&#8250;</span></div>
+            <div class="integ-compact"><span class="icx-name">Style Settings</span><span class="state-pill info"><span class="dot2"></span>Installed</span><span class="icx-chev">&#8250;</span></div>
+            <div class="integ-compact" style="opacity:0.7;"><span class="icx-name">Colored Tags Wrangler</span><span class="state-pill not-detected"><span class="dot2"></span>Not installed</span><span class="icx-chev">&#8250;</span></div>
+            <div style="font-size:11.5px;color:var(--text-faint);margin-top:2px;">Collapsed by default to keep this short - click a card to expand its details (Tag Wrangler shown expanded).</div>
+          </div>
+          <div style="display:flex;gap:10px;justify-content:flex-end;align-items:center;padding:14px 26px 20px;border-top:1px solid var(--divider-color);background:var(--background-primary-alt);">
+            <div style="flex:1;font-size:11.5px;color:var(--text-muted);max-width:320px;"><strong>Preview mode</strong> flags matched tags instead of hiding them, so you see exactly what a rule would catch before anything disappears.</div>
+            <span class="btn ghost">Start in preview mode</span>
+            <span class="btn accent">Start curating</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- =================== 3. SETTINGS (REVISED, considerations 1-8) =================== -->
+  <section class="review-section" id="s3">
+    <div class="rs-head"><span class="rs-num">3</span><h2>Settings, revised (your 8 considerations)</h2></div>
+    <div class="caption">
+      <p><strong>What this is.</strong> The real Settings tab reworked per your feedback: tabs pruned 10 &rarr; 5 (no wrap), the Workspace launcher folded into General with the leaf renamed "Tag Curator", Scopes + Integrations merged with one consistent status-pill vocabulary and the full compatible-plugin list, Presets cleaned up (no "off", live count, click-through), and the rule editor made name-first with an anchored New-rule button and a column-aligned preview. Labels are verbatim from the real settingsTab.ts / ruleEditor.ts.</p>
+      <p><strong>What to check.</strong> Each block is tagged with the consideration(s) it answers - comment on any of them.</p>
+    </div>
+
+    <div class="subblock">
+      <div class="sb-label">1 &middot; Tabs: 10 wrapping &rarr; 5 in one row</div>
+      <div class="cmp">
+        <div class="cmp-box"><div class="cmp-lbl bad">Before (wraps to two rows)</div>
+          <div class="before-tabs"><span>General</span><span>Scopes</span><span>Workspace 247</span><span>Presets 5</span><span>Custom rules 1</span><span>Commands</span><span>Advanced</span><span>Integrations</span><span class="soon">Profiles v1.1</span><span class="soon">Aliases v1.2</span></div>
+        </div>
+        <div class="cmp-box"><div class="cmp-lbl good">After (one row)</div>
+          <div class="before-tabs"><span>General</span><span>Scopes &amp; integrations</span><span>Rules</span><span>Advanced</span><span>Help</span></div>
+          <p class="subnote">Dropped the v1.1 / v1.2 placeholders, folded Workspace into General, merged Integrations into Scopes, merged Presets + Custom rules into Rules, and folded Commands into a new Help tab.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="subblock">
+      <div class="sb-label">6b &middot; What's in each tab (content map)</div>
+      <div class="caption"><p>Per your idea, Commands folds into a new <strong>Help</strong> tab (Commands reference + FAQ + About/links). Five tabs, each holding these sections:</p></div>
+      <div class="tabmap">
+        <div class="tabmap-col"><div class="tabmap-h">General</div><ul><li>Open Tag Curator (launcher)</li><li>Stats: tags / hidden / rules / orphans</li><li>Enable + Preview mode</li><li>Panic disable</li></ul></div>
+        <div class="tabmap-col"><div class="tabmap-h">Scopes &amp; integrations</div><ul><li>Obsidian surfaces (tag pane, Properties, autocomplete)</li><li>Plugin integrations (NN, Tag Wrangler, Style Settings, Colored Tags Wrangler)</li><li>Compatible apps (Dataview / Tasks / Bases)</li></ul></div>
+        <div class="tabmap-col"><div class="tabmap-h">Rules</div><ul><li>Presets (built-in, toggleable)</li><li>Custom rules + inline editor</li><li>Live preview</li></ul></div>
+        <div class="tabmap-col"><div class="tabmap-h">Advanced</div><ul><li>Index maintenance (reindex)</li><li>Performance (sidecar debounce)</li><li>Troubleshooting (debug log)</li><li>Mode</li></ul></div>
+        <div class="tabmap-col"><div class="tabmap-h">Help <span class="rset-badge">new</span></div><ul><li>Commands reference</li><li>FAQ</li><li>About: version + links (GitHub, report an issue, sponsor, docs)</li></ul></div>
+      </div>
+    </div>
+
+    <div class="subblock">
+      <div class="sb-label">6 &middot; Secondary navigation: section anchors vs sub-tabs (your NN example)</div>
+      <div class="caption">
+        <p><strong>What this is.</strong> Reacting to the Notebook Navigator pattern you shared (a primary tab row plus a lighter secondary row). There are two ways to build that second row, and which to use depends on how heavy the section is.</p>
+        <p><strong>Anchors (recommended for light sections):</strong> the secondary row is jump-to-section links that scroll one page of <code>setHeading</code> sections - closest to Obsidian's native convention, everything stays discoverable by scrolling, and it scales by simply listing each section. <strong>Sub-tab views</strong> (separate panels) only earn their keep when a section is a heavy interactive surface you would not want loaded or scrolled inline - for us that is Custom rules, which opens the full editor + live preview.</p>
+      </div>
+      <div class="mockup">
+        <div class="titlebar"><span class="lights"><i></i><i></i><i></i></span><span class="tb-title">Settings &middot; Tag Curator</span><span class="tb-chip">scroll me &middot; tabs + anchors stay pinned</span></div>
+        <div class="settings-pane rset-scroll">
+          <div class="rset-tabs"><span class="rset-tab">General</span><span class="rset-tab active">Scopes &amp; integrations</span><span class="rset-tab">Rules <span class="rset-badge">6</span></span><span class="rset-tab">Advanced</span><span class="rset-tab">Help</span></div>
+          <div class="rset-subnav"><span class="rset-anchor active"><span class="anc">#</span> Obsidian surfaces</span><span class="rset-anchor"><span class="anc">#</span> Plugin integrations</span><span class="rset-anchor"><span class="anc">#</span> Compatible apps</span></div>
+          <div class="sec-heading" style="margin-top:8px;">Obsidian surfaces</div>
+          <div class="scope-row" style="padding:9px 0;"><div><div class="scope-name">Tag pane</div><div class="scope-desc">Obsidian's native tag pane.</div></div><div class="scope-control"><span class="toggle on"></span></div></div>
+          <div class="scope-row" style="padding:9px 0;"><div><div class="scope-name">Properties panel</div><div class="scope-desc">Frontmatter tag pills in a note's Properties.</div></div><div class="scope-control"><span class="toggle on"></span></div></div>
+          <div class="scope-row" style="padding:9px 0;"><div><div class="scope-name">Autocomplete</div><div class="scope-desc">The editor's tag suggestion popup.</div></div><div class="scope-control"><span class="toggle on"></span></div></div>
+          <div class="sec-heading">Plugin integrations</div>
+          <div class="scope-row" style="padding:9px 0;"><div><div class="scope-name">Notebook Navigator <span class="state-pill warn"><span class="dot2"></span>Update needed</span> <a class="linkish scope-link" href="#">Update plugin &#8250;</a></div><div class="scope-desc">Curate NN's tag tree (runtime-interop only).</div></div><div class="scope-control"><span class="toggle disabled"></span></div></div>
+          <div class="scope-row" style="padding:9px 0;"><div><div class="scope-name">Tag Wrangler <span class="state-pill warn"><span class="dot2"></span>Disabled</span> <a class="linkish scope-link" href="#">Enable plugin &#8250;</a></div><div class="scope-desc">Send tags to it for renaming.</div></div><div class="scope-control"></div></div>
+          <div class="scope-row" style="padding:9px 0;"><div><div class="scope-name">Style Settings <span class="state-pill detected"><span class="dot2"></span>Active</span> <a class="linkish scope-link" href="#">Open settings &#8250;</a></div><div class="scope-desc">Restyle the flag treatment, no CSS.</div></div><div class="scope-control"></div></div>
+          <div class="sec-heading">Compatible apps</div>
+          <div class="scope-row" style="padding:9px 0;border-bottom:none;"><div><div class="scope-name">Dataview, Tasks, Bases</div><div class="scope-desc">See your real tags, unaffected - no setup needed.</div></div><div class="scope-control"></div></div>
+        </div>
+      </div>
+      <p class="subnote">Scaling rule: use <strong>anchors</strong> for light, scroll-friendly sections (Scopes, Integrations, General); use a <strong>real sub-tab</strong> only where a section is a standalone heavy surface - for Tag Curator that is Rules, where "Presets" and "Custom rules" each deserve their own panel because Custom rules opens the editor. On NN dropping its two-level tabs: most likely the upkeep and cross-version-consistency cost of fully custom nav, which is part of why Obsidian steers plugins toward scrollable <code>setHeading</code> sections. The anchor bar gives you NN's wayfinding without that maintenance cost. Primary tabs can still carry lucide icons (via setIcon), NN-style, if you want the visual. Built out above: the tab bar and anchor row are <strong>sticky</strong> - scroll the panel and they stay pinned; in the real plugin the active anchor would highlight as you pass each section (scroll-spy).</p>
+    </div>
+
+    <div class="subblock">
+      <div class="sb-label">3 &middot; General: launcher folded in, leaf renamed "Tag Curator"</div>
+      <div class="mockup">
+        <div class="titlebar"><span class="lights"><i></i><i></i><i></i></span><span class="tb-title">Settings &middot; Tag Curator</span></div>
+        <div class="settings-pane">
+          <div class="rset-tabs"><span class="rset-tab active">General</span><span class="rset-tab">Scopes &amp; integrations</span><span class="rset-tab">Rules <span class="rset-badge">6</span></span><span class="rset-tab">Advanced</span><span class="rset-tab">Help</span></div>
+          <div style="padding-top:16px;">
+            <div class="rset-launch">
+              <div class="rl-txt"><strong>Tag Curator</strong><span class="rl-sub">See, edit, preview, and act on tags in a dockable panel. Settings just holds set-once config.</span></div>
+              <span class="btn accent big">Open Tag Curator</span>
+            </div>
+            <div class="subnote" style="margin:7px 0 18px;"><span class="linkish">or open beside the tag pane</span> for the live side-by-side preview</div>
+            <div class="stats" style="margin:0 0 18px;">
+              <div class="stat"><div class="v">1,542</div><div class="l">Total tags</div></div>
+              <div class="stat"><div class="v accent">318</div><div class="l">Hidden now</div></div>
+              <div class="stat"><div class="v">6</div><div class="l">Active rules</div></div>
+              <div class="stat"><div class="v">204</div><div class="l">Orphans</div></div>
+            </div>
+            <div class="scope-row"><div><div class="scope-name">Enable Tag Curator</div><div class="scope-desc">Master switch. When off, every tag shows normally and no DOM is touched.</div></div><div class="scope-control"><span class="toggle on"></span></div></div>
+            <div class="scope-row"><div><div class="scope-name">Preview mode</div><div class="scope-desc">Instead of hiding matched tags, flag them so you can see exactly what a rule would hide before committing.</div></div><div class="scope-control"><span class="toggle"></span></div></div>
+            <div class="sec-heading">If something looks wrong</div>
+            <div class="scope-row" style="border-bottom:none;"><div><div class="scope-name">Run panic disable</div><div class="scope-desc">Instantly removes every DOM effect, turns the plugin off, and runs cleanup. Fully reversible; nothing in your notes is touched.</div></div><div class="scope-control"><span class="btn warning small">Run panic disable</span></div></div>
+          </div>
+        </div>
+      </div>
+      <p class="subnote">The old "Workspace" tab (which only held these launch buttons, oddly badged "247") is gone. One primary "Open Tag Curator" plus a secondary "beside the tag pane" link, instead of two equal-weight buttons.</p>
+    </div>
+
+    <div class="subblock">
+      <div class="sb-label">2 + 8 &middot; Scopes &amp; integrations: native vs plugin, one status vocabulary, all compatible plugins</div>
+      <div class="mockup">
+        <div class="titlebar"><span class="lights"><i></i><i></i><i></i></span><span class="tb-title">Settings &middot; Tag Curator</span></div>
+        <div class="settings-pane">
+          <div class="rset-tabs"><span class="rset-tab">General</span><span class="rset-tab active">Scopes &amp; integrations</span><span class="rset-tab">Rules <span class="rset-badge">6</span></span><span class="rset-tab">Advanced</span><span class="rset-tab">Help</span></div>
+          <div style="padding-top:14px;">
+            <p class="settings-sub" style="margin:0 0 6px;font-size:13px;color:var(--text-normal);">A <strong>scope</strong> is a place in Obsidian where your tags appear - the tag pane, a note's Properties, the autocomplete popup, or a plugin's tag tree. Tag Curator can hide or flag tags in each:</p>
+            <ul style="margin:0 0 14px;padding-left:18px;font-size:12.5px;color:var(--text-muted);line-height:1.65;">
+              <li>Each scope is its own on/off switch.</li>
+              <li>Toggling one takes effect immediately - no restart.</li>
+              <li>Turning it off restores those tags; your notes never change.</li>
+            </ul>
+            <div class="sec-heading">Obsidian surfaces &middot; curation is applied here</div>
+            <div class="scope-row"><div><div class="scope-name">Tag pane</div><div class="scope-desc">Hide and flag curated tags in Obsidian's native tag pane.</div></div><div class="scope-control"><span class="toggle on"></span></div></div>
+            <div class="scope-row"><div><div class="scope-name">Properties panel</div><div class="scope-desc">Curate frontmatter tags shown in the Properties panel.</div></div><div class="scope-control"><span class="toggle on"></span></div></div>
+            <div class="scope-row"><div><div class="scope-name">Autocomplete</div><div class="scope-desc">Hide curated tags from the editor tag suggestion list.</div></div><div class="scope-control"><span class="toggle on"></span></div></div>
+            <div class="sec-heading">Plugin integrations &middot; detected at runtime</div>
+            <div class="scope-row"><div><div class="scope-name">Notebook Navigator <span class="state-pill warn"><span class="dot2"></span>Update needed</span> <a class="linkish scope-link" href="#">Update plugin &#8250;</a></div><div class="scope-desc">Curate tags in the Notebook Navigator tag tree. Requires Notebook Navigator 2.0.0 or newer (found 1.8.2).</div></div><div class="scope-control"><span class="toggle disabled"></span></div></div>
+            <div class="scope-row"><div><div class="scope-name">Tag Wrangler <span class="state-pill warn"><span class="dot2"></span>Disabled</span> <a class="linkish scope-link" href="#">Enable plugin &#8250;</a></div><div class="scope-desc">Delegate tag renaming; "Send to Tag Wrangler" appears in the workspace. Turn it on in Community plugins to use this.</div></div><div class="scope-control"></div></div>
+            <div class="scope-row"><div><div class="scope-name">Style Settings <span class="state-pill detected"><span class="dot2"></span>Active</span> <a class="linkish scope-link" href="#">Open settings &#8250;</a></div><div class="scope-desc">Restyle the flag color, background, and bold weight from a GUI - no CSS. Built-in defaults apply if Style Settings is absent.</div></div><div class="scope-control"></div></div>
+            <div class="scope-row" style="border-bottom:none;"><div><div class="scope-name">Colored Tags Wrangler <span class="state-pill not-detected"><span class="dot2"></span>Not installed</span> <a class="linkish scope-link" href="#">Find in Community plugins &#8250;</a></div><div class="scope-desc">Defer tag colors to it when present. Install it to enable this. (Planned integration; would read "Planned" until wired.)</div></div><div class="scope-control"></div></div>
+            <p class="subnote">Works alongside, no setup: Dataview, Tasks, and Bases always see your real tags - Tag Curator's display-only changes never touch them.</p>
+          </div>
+        </div>
+      </div>
+      <p class="subnote">Status pills now share one vocabulary, on every card (Style Settings had none before): <span class="state-pill detected"><span class="dot2"></span>Active</span> <span class="state-pill warn"><span class="dot2"></span>Disabled</span> <span class="state-pill warn"><span class="dot2"></span>Update needed</span> <span class="state-pill not-detected"><span class="dot2"></span>Not installed</span>.</p>
+    </div>
+
+    <div class="subblock">
+      <div class="sb-label">4 &middot; Presets: no "off", live count, click-through to affected tags</div>
+      <div class="mockup">
+        <div class="titlebar"><span class="lights"><i></i><i></i><i></i></span><span class="tb-title">Settings &middot; Tag Curator &middot; Rules</span></div>
+        <div class="settings-pane">
+          <p class="settings-sub" style="margin:0 0 12px;">Built-in presets are toggleable but not editable - to change one, copy it into a custom rule.</p>
+          <div class="rset-preset"><span class="toggle on"></span><div class="rp-body"><div class="rp-head"><span class="rp-nm">Hide hex color codes</span><span class="pill">built-in</span></div><div class="rp-dsc">Hide tags that look like hex color codes (e.g. FFAA00, abcdef).</div><div class="rp-meta"><span class="rp-aff">75 tags affected &#8250;</span><span class="rp-more">More details</span></div></div></div>
+          <div class="rset-preset"><span class="toggle on"></span><div class="rp-body"><div class="rp-head"><span class="rp-nm">Hide URL anchor fragments</span><span class="pill">built-in</span></div><div class="rp-dsc">Hide tags that look like URL fragments (e.g. section-3, top, content).</div><div class="rp-meta"><span class="rp-aff calc">calculating&#8230;</span><span class="rp-more">More details</span></div></div></div>
+          <div class="rset-preset off"><span class="toggle"></span><div class="rp-body"><div class="rp-head"><span class="rp-nm">Hide single-character tags</span><span class="pill">built-in</span></div><div class="rp-dsc">Hide tags of one ASCII letter (e.g. #a, #x).</div><div class="rp-meta"><span class="rp-aff would">would hide 3 tags</span><span class="rp-more">More details</span></div></div></div>
+          <div class="rset-preset off"><span class="toggle"></span><div class="rp-body"><div class="rp-head"><span class="rp-nm">Hide purely numeric tags</span><span class="pill">built-in</span></div><div class="rp-dsc">Hide tags that contain only digits (edge case; Obsidian usually strips these).</div><div class="rp-meta"><span class="rp-aff would">would hide 0 tags</span><span class="rp-more">More details</span></div></div></div>
+          <div class="rset-preset off"><span class="toggle"></span><div class="rp-body"><div class="rp-head"><span class="rp-nm">Hide orphan tags (count &le; 1)</span><span class="pill">built-in</span></div><div class="rp-dsc">Hide tags that appear in one or fewer notes.</div><div class="rp-meta"><span class="rp-aff would">would hide 204 tags</span><span class="rp-more">More details</span></div></div></div>
+        </div>
+      </div>
+      <p class="subnote">Disabled presets drop the redundant "off" (the toggle already says so) and show a faint <em>would hide N</em>. Enabled ones show a live count that reads <em>calculating&#8230;</em> while the engine recounts. The count is a link (&#8250;) that opens Tag Curator filtered to that preset's tags.</p>
+    </div>
+
+    <div class="subblock">
+      <div class="sb-label">5 + 6 + 7 &middot; Rules: elegant cards, anchored New rule, name-first editor, aligned preview</div>
+      <div class="mockup">
+        <div class="titlebar"><span class="lights"><i></i><i></i><i></i></span><span class="tb-title">Settings &middot; Tag Curator &middot; Rules</span></div>
+        <div class="settings-pane">
+          <div class="rules-head"><span class="rh-title">Custom rules &middot; 1</span><span class="spacer"></span><span class="btn accent small">+ New rule</span></div>
+          <div class="rrule-card" style="margin-bottom:16px;"><span class="toggle on"></span><div><div class="rc-nm">3 or fewer</div><div class="rc-sub"><span class="rc-type">frequency</span> &middot; count &le; 3</div></div><span class="rc-aff">100 tags &#8250;</span></div>
+          <div class="two-col">
+            <div class="rule-card editing" style="margin:0;">
+              <div style="padding:11px 13px;border-bottom:1px solid var(--divider-color);font-size:12px;color:var(--text-faint);"><span class="linkish">&larr; Back to rules</span> / Custom rules / Edit rule</div>
+              <div class="edit-head"><span class="toggle on"></span><input class="rname-input" value="3 or fewer" /><span class="eh-state">name edits here, no separate field</span></div>
+              <div class="edit-body">
+                <div class="edit-sec"><div class="sec-label">Match by</div><div class="type-cards"><div class="type-card"><div class="tc-title">Pattern match</div><div class="tc-sub">A regex against the tag name</div></div><div class="type-card on"><div class="tc-title">Count threshold</div><div class="tc-sub">Compare the tag's note-count</div></div><div class="type-card"><div class="tc-title">Specific tags</div><div class="tc-sub">An explicit list of tags</div></div></div></div>
+                <div class="edit-sec"><div class="sec-label">Match</div><span class="field">When a tag's name has a count that <span class="sel">&le; &darr;</span> <span class="inp" style="width:46px">3</span></span></div>
+                <div class="edit-sec"><div class="sec-label">Then</div><span class="field">Action <span class="sel">hide &darr;</span> &nbsp; Scope <span class="sel">tag-pane &darr;</span></span></div>
+              </div>
+              <div class="edit-foot"><span class="ef-note">Saving applies live across every enabled scope.</span><span class="btn small warning">Delete rule</span><span class="btn small ghost">Cancel</span><span class="btn small accent">Save</span></div>
+            </div>
+            <aside class="preview-dock" style="border:1px solid var(--divider-color);border-radius:9px;">
+              <div class="pd-eye">Preview &middot; vault-wide</div>
+              <div class="pd-title">Every tag any rule is affecting</div>
+              <div class="pd-tiles"><div class="pd-tile"><div class="v">169</div><div class="l">Unique</div></div><div class="pd-tile"><div class="v">725</div><div class="l">Instances</div></div></div>
+              <div class="rpd">
+                <div class="rpd-row head"><span class="rpd-tag">Tag</span><span class="rpd-c">Count</span><span class="rpd-info"></span></div>
+                <div class="rpd-row expanded"><span class="rpd-tag">x</span><span class="rpd-c">27</span><span class="rpd-info open" title="Collapse details">&#9432;</span></div>
+                <div class="rpd-detail">
+                  <div class="rpd-detail-head"><strong>#x</strong> <span class="vis hidden"><span class="dot hidden"></span>hidden</span></div>
+                  <dl class="rpd-kv"><dt>Rule</dt><dd>Hide single-character tags <span class="rpd-dim">(regex ^[A-Za-z]$, priority 90)</span></dd><dt>Count</dt><dd>27 notes</dd><dt>First seen</dt><dd>Apr 2024</dd><dt>Last used</dt><dd>2 days ago</dd><dt>Override</dt><dd>none</dd></dl>
+                  <div class="rpd-actions"><span class="btn small">Always show</span><span class="btn small">Always hide</span></div>
+                </div>
+                <div class="rpd-row"><span class="rpd-tag">a</span><span class="rpd-c">26</span><span class="rpd-info" title="Tag details">&#9432;</span></div>
+                <div class="rpd-row"><span class="rpd-tag">y</span><span class="rpd-c">25</span><span class="rpd-info" title="Tag details">&#9432;</span></div>
+                <div class="rpd-row"><span class="rpd-tag">c</span><span class="rpd-c">25</span><span class="rpd-info" title="Tag details">&#9432;</span></div>
+                <div class="rpd-row"><span class="rpd-tag">FFAA00</span><span class="rpd-c">3</span><span class="rpd-info" title="Tag details">&#9432;</span></div>
+              </div>
+              <div class="pd-sub" style="margin-top:8px;">Counts are tabular and right-aligned in a fixed column. The rule-name column is gone; clicking a row's info icon (&#9432;) <strong>expands it inline</strong> to show details (which rule or override affects it, counts, first / last seen), and you can keep several rows open at once. In edit mode the list filters to the open rule.</div>
+            </aside>
+          </div>
+        </div>
+      </div>
+      <p class="subnote">Card (#6): name + one muted "type &middot; summary" line + right-aligned count link, instead of the boxed pill and two stacked lines. New rule (#7a): a real button pinned in the pane header, not a floating dashed card. Editor (#5): the name is the first, inline-editable thing in the title and the duplicate Identity/Name field is gone; Type becomes a compact segmented control. Preview (#7b): a real grid with tabular counts; per your notes the rule-name column is replaced by an info icon (&#9432;) that expands the row inline into a per-tag details panel (multiple rows can stay open).</p>
+    </div>
+  </section>
+
+  <!-- =================== 4. SCOPE DECORATIONS =================== -->
+  <section class="review-section" id="s4">
+    <div class="rs-head"><span class="rs-num">4</span><h2>Scope decorations: how hide / flag looks on each surface</h2></div>
+    <div class="caption">
+      <p><strong>What this is.</strong> The same engine verdict, four host surfaces. Hidden means the element is removed (<code>display:none</code>) on the three external surfaces; flagged (preview) keeps it visible with a warning-colored name, a 2px left bar, and a faint wash. Only the host class and the <code>tc-*</code> namespace differ per surface.</p>
+      <p><span class="fragile">Watch closely (version-fragile):</span> the Notebook Navigator, Properties, and Autocomplete selectors target third-party / non-core DOM and were only tested against synthetic markup. The "matched" tag in every row below is <code>#zz-inbox</code>.</p>
+    </div>
+    <div class="scope-grid">
+      <div class="sg-corner">Surface</div><div class="sg-colhead">Normal (untouched)</div><div class="sg-colhead">Hidden (committed)</div><div class="sg-colhead">Flagged (preview)</div>
+
+      <div class="sg-rowhead">Core tag pane<small>.tag-pane-tag</small></div>
+      <div><div class="tag-pane-tag"><span class="tag-pane-tag-text">zz-inbox</span><span class="tpc">4</span></div></div>
+      <div><span class="ghost">(row removed: + tag-curator-hidden, aria-hidden)</span></div>
+      <div><div class="tag-pane-tag tag-curator-flagged"><span class="tag-pane-tag-text">zz-inbox</span><span class="tpc">4</span></div></div>
+
+      <div class="sg-rowhead">Notebook Navigator<small>.nn-tag[data-tag]</small></div>
+      <div><div class="nn-tag"><span class="nn-navitem-name">zz-inbox</span></div><div class="nn-tag child"><span class="nn-navitem-name">zz-inbox/today</span></div></div>
+      <div><span class="ghost">(rows removed: + tc-nn-hidden. Flat-nesting hides the child zz-inbox/today too.)</span></div>
+      <div><div class="nn-tag tc-nn-flagged"><span class="nn-navitem-name">zz-inbox</span></div><div class="nn-tag child tc-nn-flagged"><span class="nn-navitem-name">zz-inbox/today</span></div></div>
+
+      <div class="sg-rowhead">Properties pills<small>.multi-select-pill</small></div>
+      <div><span class="multi-select-pill"><span class="multi-select-pill-content">project</span></span><span class="multi-select-pill"><span class="multi-select-pill-content">zz-inbox</span></span></div>
+      <div><span class="multi-select-pill"><span class="multi-select-pill-content">project</span></span> <span class="ghost">(zz-inbox pill removed: + tc-prop-hidden)</span></div>
+      <div><span class="multi-select-pill"><span class="multi-select-pill-content">project</span></span><span class="multi-select-pill tc-prop-flagged"><span class="multi-select-pill-content">zz-inbox</span></span></div>
+
+      <div class="sg-rowhead">Autocomplete<small>.suggestion-item</small></div>
+      <div><div class="suggestion-item"><span class="suggestion-content">#meeting</span></div><div class="suggestion-item"><span class="suggestion-content">#zz-inbox</span></div></div>
+      <div><div class="suggestion-item"><span class="suggestion-content">#meeting</span></div><span class="ghost">(#zz-inbox suggestion removed: + tc-ac-hidden; may stay keyboard-focusable, accepted for v1.0)</span></div>
+      <div><div class="suggestion-item"><span class="suggestion-content">#meeting</span></div><div class="suggestion-item tc-ac-flagged"><span class="suggestion-content">#zz-inbox</span></div></div>
+    </div>
+  </section>
+
+  <!-- =================== 5. STATE BANNER =================== -->
+  <section class="review-section" id="s5">
+    <div class="rs-head"><span class="rs-num">5</span><h2>State banner (D-007): preview, off, and none</h2></div>
+    <div class="caption">
+      <p><strong>What this is.</strong> A persistent banner above every Tag Curator surface for any non-default state. Two variants below, plus the default "no banner" case. Copy is verbatim from <code>stateBanner.ts</code>.</p>
+      <p><strong>What to check.</strong> Is the amber preview banner reassuring rather than alarming? Is the off-state copy clear that nothing in notes changed? Right call to show no banner in the normal enabled state?</p>
+    </div>
+    <div class="banner-stack">
+      <div><div class="banner-label">Preview mode on (amber)</div>
+        <div class="tag-curator-state-banner" data-variant="preview"><span class="sb-ic">!</span><span class="sb-msg"><strong>Preview mode is on. </strong>Matched tags are flagged in place, not hidden. The same banner appears above the tag list and rule editor whenever this state is active.</span><span class="sb-action">Turn off preview</span></div>
+      </div>
+      <div><div class="banner-label">Plugin disabled (muted)</div>
+        <div class="tag-curator-state-banner" data-variant="off"><span class="sb-ic">!</span><span class="sb-msg"><strong>Tag Curator is off. </strong>No tags are being curated. Re-enable to apply your rules again. Nothing in your notes is ever changed.</span><span class="sb-action">Turn on</span></div>
+      </div>
+      <div><div class="banner-label">Default state (enabled, preview off)</div>
+        <div class="none-banner">No banner is shown. The surfaces render with no state banner at all.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- =================== 6. STATUS BAR =================== -->
+  <section class="review-section" id="s6">
+    <div class="rs-head"><span class="rs-num">6</span><h2>Status bar: three states</h2></div>
+    <div class="caption">
+      <p><strong>What this is.</strong> A clickable status-bar item (clicking opens the workspace filtered to hidden). The count comes from the engine over tag metadata, so it stays the same even if you toggle an individual scope off. Strings are verbatim from <code>refreshStatusBar</code>. (Obsidian shows no status bar on mobile, which is expected.)</p>
+      <p><strong>What to check.</strong> Are these strings clear at a glance? Is "tags hidden" vs "(preview): N flagged" vs "off" an unambiguous trio?</p>
+    </div>
+    <div>
+      <div class="statusbar"><span class="sb-ico">&#9670;</span> Tag Curator: 12 tags hidden</div>
+      <span class="sb-when">enabled, normal (N != 1)</span>
+    </div>
+    <div style="margin-top:8px;">
+      <div class="statusbar"><span class="sb-ico">&#9670;</span> Tag Curator: 1 tag hidden</div>
+      <span class="sb-when">enabled, normal (N == 1, singular)</span>
+    </div>
+    <div style="margin-top:8px;">
+      <div class="statusbar"><span class="sb-ico">&#9670;</span> Tag Curator (preview): 12 flagged</div>
+      <span class="sb-when">preview mode on</span>
+    </div>
+    <div style="margin-top:8px;">
+      <div class="statusbar"><span class="sb-ico">&#9670;</span> Tag Curator: off</div>
+      <span class="sb-when">plugin disabled (checked first, wins over preview)</span>
+    </div>
+  </section>
+
+  <!-- =================== 7. PANIC DISABLE =================== -->
+  <section class="review-section" id="s7">
+    <div class="rs-head"><span class="rs-num">7</span><h2>Panic disable: everything off, everything back</h2></div>
+    <div class="caption">
+      <p><strong>What this is.</strong> The safety hatch (command "Panic disable"). It disables every observer, sweeps all four <code>tc-*</code> namespaces off the whole document, persists <code>enabled = false</code>, and shows a Notice. Every previously hidden row / pill / suggestion returns; the banner flips to Off and the status bar reads <code>Tag Curator: off</code>. Fully reversible; nothing in notes ever changed.</p>
+      <p><strong>What to check.</strong> Is the Notice copy reassuring? After panic, are all four surfaces truly back to normal (the live smoke test is where you confirm this)?</p>
+    </div>
+    <div class="notice"><span class="n-ico">&#9888;</span> Tag Curator: panic disable activated. All DOM effects removed.</div>
+    <div style="margin-top:14px;" class="tag-curator-state-banner" data-variant="off"><span class="sb-ic">!</span><span class="sb-msg"><strong>Tag Curator is off. </strong>No tags are being curated. Re-enable to apply your rules again. Nothing in your notes is ever changed.</span><span class="sb-action">Turn on</span></div>
+    <div style="margin-top:14px;">
+      <div class="statusbar"><span class="sb-ico">&#9670;</span> Tag Curator: off</div>
+    </div>
+    <div class="scope-grid" style="margin-top:16px;">
+      <div class="sg-corner">Surface</div><div class="sg-colhead" style="grid-column: span 3;">After panic: back to normal (no tc-* classes, no data-tc-* attrs, no aria-hidden)</div>
+      <div class="sg-rowhead">Tag pane</div><div style="grid-column: span 3;"><div class="tag-pane-tag"><span class="tag-pane-tag-text">zz-inbox</span><span class="tpc">4</span></div></div>
+      <div class="sg-rowhead">Notebook Navigator</div><div style="grid-column: span 3;"><div class="nn-tag"><span class="nn-navitem-name">zz-inbox</span></div><div class="nn-tag child"><span class="nn-navitem-name">zz-inbox/today</span></div></div>
+      <div class="sg-rowhead">Properties</div><div style="grid-column: span 3;"><span class="multi-select-pill"><span class="multi-select-pill-content">project</span></span><span class="multi-select-pill"><span class="multi-select-pill-content">zz-inbox</span></span></div>
+      <div class="sg-rowhead">Autocomplete</div><div style="grid-column: span 3;"><div class="suggestion-item"><span class="suggestion-content">#meeting</span></div><div class="suggestion-item"><span class="suggestion-content">#zz-inbox</span></div></div>
+    </div>
+  </section>
+
+  <footer style="margin-top:56px;padding-top:18px;border-top:1px solid var(--divider-color);font-size:11.5px;color:var(--text-faint);">
+    Static mockup for crit. Reconstructed from Tag Curator 1.0.0-rc.1 source and the v1-vision mockups (ui_curation-workspace / ui_v1-settings-and-scopes / ui_v1-onboarding). Decoration classes are verbatim from styles.css. Notebook Navigator coupling is runtime-interop only; Tag Curator is Apache-2.0 and never copies NN source.
+  </footer>
+
+</div>
+</body>
+</html>
