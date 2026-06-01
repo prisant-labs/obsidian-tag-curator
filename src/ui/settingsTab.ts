@@ -14,17 +14,7 @@ import { StateBanner } from './stateBanner';
 import { Mode } from '../types';
 import { detectNotebookNavigator, MIN_API_VERSION } from '../integrations/notebookNavigator';
 
-type TabId =
-  | 'general'
-  | 'scopes'
-  | 'workspace'
-  | 'presets'
-  | 'rules'
-  | 'commands'
-  | 'advanced'
-  | 'integrations'
-  | 'profiles'
-  | 'aliases';
+type TabId = 'general' | 'scopes' | 'rules' | 'advanced' | 'help';
 
 interface TabDescriptor {
   id: TabId;
@@ -98,75 +88,25 @@ export class TagCuratorSettingTab extends PluginSettingTab {
 
   private buildTabDescriptors(): TabDescriptor[] {
     const s = this.plugin.settingsManager.get();
-    const tagCount = this.plugin.tagMetaManager.all().size;
-    const ruleCount = resolveActiveRules(s).length;
     const customCount = s.customRules.length;
 
     return [
-      {
-        id: 'general',
-        label: 'General',
-        render: (p) => this.renderGeneral(p),
-      },
+      { id: 'general', label: 'General', render: (p) => this.renderGeneral(p) },
       {
         id: 'scopes',
-        label: 'Scopes',
+        label: 'Scopes & integrations',
         render: (p) => this.renderScopes(p),
       },
       {
-        id: 'workspace',
-        label: 'Workspace',
-        badge: tagCount.toLocaleString(),
-        badgeKind: 'count',
-        render: (p) => this.renderTagListTab(p),
-      },
-      {
-        id: 'presets',
-        label: 'Presets',
-        badge: String(PRESETS.length),
-        badgeKind: 'count',
-        render: (p) => this.renderPresets(p),
-      },
-      {
         id: 'rules',
-        label: 'Custom rules',
-        badge: String(customCount),
+        label: 'Rules',
+        badge: String(PRESETS.length + customCount),
         badgeKind: 'count',
-        render: (p) => this.renderCustomRules(p),
+        render: (p) => this.renderRules(p),
       },
-      {
-        id: 'commands',
-        label: 'Commands',
-        render: (p) => this.renderCommands(p),
-      },
-      {
-        id: 'advanced',
-        label: 'Advanced',
-        render: (p) => this.renderAdvanced(p),
-      },
-      {
-        id: 'integrations',
-        label: 'Integrations',
-        render: (p) => this.renderIntegrations(p),
-      },
-      {
-        id: 'profiles',
-        label: 'Profiles',
-        badge: 'v1.1',
-        badgeKind: 'soon',
-        deferred: true,
-        render: (p) => this.renderDeferred(p, 'Profiles', 'v1.1'),
-      },
-      {
-        id: 'aliases',
-        label: 'Aliases',
-        badge: 'v1.2',
-        badgeKind: 'soon',
-        deferred: true,
-        render: (p) => this.renderDeferred(p, 'Aliases', 'v1.2'),
-      },
+      { id: 'advanced', label: 'Advanced', render: (p) => this.renderAdvanced(p) },
+      { id: 'help', label: 'Help', render: (p) => this.renderHelp(p) },
     ];
-    void ruleCount;
   }
 
   // -----------------------------------------------------------------
@@ -182,6 +122,26 @@ export class TagCuratorSettingTab extends PluginSettingTab {
     for (const m of meta.values()) {
       if (m.count <= 1) orphanCount += 1;
     }
+
+    // Launcher (D-012): Settings launches the workspace; it lives here, not its own tab.
+    new Setting(panel)
+      .setName('Tag Curator')
+      .setDesc(
+        'See, edit, preview, and act on tags in a dockable panel. Open it here, or beside the tag pane for live side-by-side preview.',
+      )
+      .addButton((b) =>
+        b
+          .setButtonText('Open Tag Curator')
+          .setCta()
+          .onClick(() => {
+            void this.plugin.openCurationWorkspace();
+          }),
+      )
+      .addButton((b) =>
+        b.setButtonText('Open beside the tag pane').onClick(() => {
+          void this.plugin.openBesideTagPane();
+        }),
+      );
 
     // Stats header.
     const stats = panel.createDiv({ cls: 'tcst-stats' });
@@ -254,13 +214,14 @@ export class TagCuratorSettingTab extends PluginSettingTab {
     panel.createEl('p', {
       cls: 'tcst-section-sub',
       text:
-        'Each scope is independently reversible. Toggling a scope on or off takes effect immediately without restarting Obsidian.',
+        'A scope is a place your tags appear. Tag Curator can hide or flag tags in each one, independently and reversibly - toggling a scope takes effect immediately, no restart.',
     });
 
-    // Tag pane - always available.
+    new Setting(panel).setName('Obsidian surfaces').setHeading();
+
     new Setting(panel)
       .setName('Tag pane')
-      .setDesc('Hide and flag curated tags in Obsidian\'s native tag pane.')
+      .setDesc("Hide and flag curated tags in Obsidian's native tag pane.")
       .addToggle((t) =>
         t
           .setValue(this.plugin.settingsManager.isScopeEnabled('tag-pane'))
@@ -269,17 +230,40 @@ export class TagCuratorSettingTab extends PluginSettingTab {
           }),
       );
 
-    // Notebook Navigator - gated on detection result.
+    new Setting(panel)
+      .setName('Properties panel')
+      .setDesc('Curate frontmatter tags shown in the Properties panel.')
+      .addToggle((t) =>
+        t
+          .setValue(this.plugin.settingsManager.isScopeEnabled('properties'))
+          .onChange(async (v) => {
+            await this.plugin.settingsManager.setScopeEnabled('properties', v);
+          }),
+      );
+
+    new Setting(panel)
+      .setName('Autocomplete')
+      .setDesc('Hide curated tags from the editor tag suggestion list.')
+      .addToggle((t) =>
+        t
+          .setValue(this.plugin.settingsManager.isScopeEnabled('autocomplete'))
+          .onChange(async (v) => {
+            await this.plugin.settingsManager.setScopeEnabled('autocomplete', v);
+          }),
+      );
+
+    new Setting(panel).setName('Plugin integrations').setHeading();
+
+    // Notebook Navigator - a plugin surface Tag Curator can curate; gated on detection.
     const nnHandle = detectNotebookNavigator(this.app);
-    let nnDesc = 'Curate tags in the Notebook Navigator tag tree.';
+    let nnDesc = 'Curate the Notebook Navigator tag tree (runtime-interop only).';
     let nnDisabled = false;
     if (nnHandle.status === 'ready') {
-      nnDesc += ' Detected (API ' + (nnHandle.apiVersion ?? 'unknown') + ').';
+      nnDesc += ' Detected, API ' + (nnHandle.apiVersion ?? 'unknown') + '.';
     } else if (nnHandle.status === 'absent') {
-      nnDesc += ' Notebook Navigator is not installed.';
+      nnDesc += ' Not installed.';
       nnDisabled = true;
     } else {
-      // too-old
       nnDesc += ' Requires Notebook Navigator ' + MIN_API_VERSION + ' or newer.';
       nnDisabled = true;
     }
@@ -295,65 +279,44 @@ export class TagCuratorSettingTab extends PluginSettingTab {
           });
       });
 
-    // Properties panel.
+    // Optional capability integrations (no scope toggle; detected at runtime).
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const appPlugins = (this.app as any).plugins as
+      | { enabledPlugins?: Set<string>; manifests?: Record<string, unknown> }
+      | undefined;
+    const enabledPlugins: Set<string> = appPlugins?.enabledPlugins ?? new Set();
+    const allManifests: Record<string, unknown> = appPlugins?.manifests ?? {};
+    const twEnabled = enabledPlugins.has('tag-wrangler');
+    const twInstalled = 'tag-wrangler' in allManifests;
+    const twStatus = twEnabled
+      ? 'Enabled'
+      : twInstalled
+        ? 'Installed but disabled'
+        : 'Not installed';
     new Setting(panel)
-      .setName('Properties panel')
-      .setDesc('Curate frontmatter tags shown in the Properties panel.')
-      .addToggle((t) =>
-        t
-          .setValue(this.plugin.settingsManager.isScopeEnabled('properties'))
-          .onChange(async (v) => {
-            await this.plugin.settingsManager.setScopeEnabled('properties', v);
-          }),
+      .setName('Tag Wrangler')
+      .setDesc(
+        'Delegate tag renaming to Tag Wrangler; "Send to Tag Wrangler" appears in the workspace when it is enabled. Status: ' +
+          twStatus +
+          '.',
       );
 
-    // Autocomplete.
     new Setting(panel)
-      .setName('Autocomplete')
-      .setDesc('Hide curated tags from the editor tag suggestion list.')
-      .addToggle((t) =>
-        t
-          .setValue(this.plugin.settingsManager.isScopeEnabled('autocomplete'))
-          .onChange(async (v) => {
-            await this.plugin.settingsManager.setScopeEnabled('autocomplete', v);
-          }),
+      .setName('Style Settings')
+      .setDesc(
+        'Restyle the flag color, background, and bold weight from a GUI when Style Settings is installed. Built-in defaults apply otherwise.',
       );
   }
 
   // -----------------------------------------------------------------
-  // Workspace launcher (D-012) - Settings launches the Curation Workspace
+  // Rules (Presets + Custom rules)
   // -----------------------------------------------------------------
 
-  private renderTagListTab(panel: HTMLElement): void {
-    const info = panel.createDiv({ cls: 'tcst-info-callout' });
-    const ic = info.createDiv({ cls: 'tcst-info-ic', text: 'i' });
-    void ic;
-    const body = info.createDiv();
-    body.createSpan({
-      text:
-        'The Curation Workspace is where you see, edit, preview, and act on tags. Settings holds set-once config.',
-    });
-
-    new Setting(panel)
-      .setName('Curation Workspace')
-      .setDesc(
-        'Opens the workspace in the right sidebar. Same as the command Tag Curator: Open Curation Workspace. Use "Open beside the tag pane" to dock it next to the native tag pane for live side-by-side editing.',
-      )
-      .addButton((b) =>
-        b
-          .setButtonText('Open Curation Workspace')
-          .setCta()
-          .onClick(() => {
-            void this.plugin.openCurationWorkspace();
-          }),
-      )
-      .addButton((b) =>
-        b
-          .setButtonText('Open beside the tag pane')
-          .onClick(() => {
-            void this.plugin.openBesideTagPane();
-          }),
-      );
+  private renderRules(panel: HTMLElement): void {
+    new Setting(panel).setName('Presets').setHeading();
+    this.renderPresets(panel);
+    new Setting(panel).setName('Custom rules').setHeading();
+    this.renderCustomRules(panel);
   }
 
   // -----------------------------------------------------------------
@@ -391,7 +354,7 @@ export class TagCuratorSettingTab extends PluginSettingTab {
       } else {
         meta.createSpan({
           cls: 'tcst-affected tcst-affected-zero',
-          text: 'off',
+          text: `would hide ${affected} tags`,
         });
       }
 
@@ -502,10 +465,11 @@ export class TagCuratorSettingTab extends PluginSettingTab {
   }
 
   // -----------------------------------------------------------------
-  // Commands
+  // Help (Commands + FAQ + About)
   // -----------------------------------------------------------------
 
-  private renderCommands(panel: HTMLElement): void {
+  private renderHelp(panel: HTMLElement): void {
+    new Setting(panel).setName('Commands').setHeading();
     panel.createEl('p', {
       cls: 'tcst-section-sub',
       text:
@@ -521,25 +485,56 @@ export class TagCuratorSettingTab extends PluginSettingTab {
       ['Toggle preview mode', 'Flip Preview mode.'],
       [
         'Open Curation Workspace',
-        'Open / reveal the Curation Workspace in the right sidebar. Same as clicking the status bar (which opens it pre-filtered to hidden tags) or the ribbon icon.',
+        'Open / reveal the panel in the right sidebar. Same as clicking the status bar (which opens it pre-filtered to hidden tags) or the ribbon icon.',
       ],
       [
         'Open Curation Workspace beside the tag pane',
-        'Open / reveal the Curation Workspace split next to the native tag pane for live side-by-side editing. Also available from the Workspace settings button.',
-      ],
-      [
-        'Open tag list view',
-        'Open / reveal the legacy tag list leaf. Retained for layout compatibility; slated for removal in v1.1.',
-      ],
-      [
-        'Open tag list (hidden tags only)',
-        'Legacy tag list pre-filtered to currently-hidden tags.',
+        'Open / reveal the panel split next to the native tag pane for live side-by-side editing. Also available from the General settings button.',
       ],
       ['Rescan vault tags', 'Rebuild the tag sidecar across all notes.'],
     ];
     for (const [name, desc] of cmds) {
       new Setting(panel).setName(name).setDesc(desc);
     }
+
+    new Setting(panel).setName('FAQ').setHeading();
+    const faqs: Array<[string, string]> = [
+      [
+        'Does Tag Curator change my notes?',
+        'No. It is display-only - it hides or flags tags in the UI and never edits note content. Disabling or uninstalling it restores every tag.',
+      ],
+      [
+        'Where did a tag go?',
+        'A preset, rule, or per-tag override is hiding it. Open the panel and use "why is this hidden?" on its row, or run Panic disable to clear all effects at once.',
+      ],
+      [
+        'Does it work on mobile?',
+        'The display scopes are DOM-based and work on mobile; the status bar is desktop-only (Obsidian does not render one on mobile).',
+      ],
+    ];
+    for (const [q, a] of faqs) {
+      new Setting(panel).setName(q).setDesc(a);
+    }
+
+    new Setting(panel).setName('About').setHeading();
+    new Setting(panel)
+      .setName('Tag Curator ' + this.plugin.manifest.version)
+      .setDesc('Display-only, file-safe, fully reversible tag curation.')
+      .addButton((b) =>
+        b.setButtonText('GitHub').onClick(() => {
+          window.open('https://github.com/jprisant/obsidian-tag-curator');
+        }),
+      )
+      .addButton((b) =>
+        b.setButtonText('Report an issue').onClick(() => {
+          window.open('https://github.com/jprisant/obsidian-tag-curator/issues/new');
+        }),
+      )
+      .addButton((b) =>
+        b.setButtonText('Sponsor').onClick(() => {
+          window.open('https://github.com/sponsors/jprisant');
+        }),
+      );
   }
 
   // -----------------------------------------------------------------
@@ -618,85 +613,4 @@ export class TagCuratorSettingTab extends PluginSettingTab {
     this.display();
   }
 
-  // -----------------------------------------------------------------
-  // Integrations - optional-enhancement status rows (D-016)
-  // -----------------------------------------------------------------
-
-  private renderIntegrations(panel: HTMLElement): void {
-    panel.createEl('p', {
-      cls: 'tcst-section-sub',
-      text:
-        'These integrations are optional. Tag Curator works fully without any of them.',
-    });
-
-    // Style Settings.
-    new Setting(panel)
-      .setName('Style Settings')
-      .setDesc(
-        'Install the Style Settings plugin to customize Tag Curator\'s colors and density through a GUI. Built-in styling works without it.',
-      );
-
-    // Tag Wrangler - detect via app.plugins (standard ecosystem pattern; cast is localized).
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const appPlugins = (this.app as any).plugins as {
-      enabledPlugins?: Set<string>;
-      plugins?: Record<string, unknown>;
-      manifests?: Record<string, unknown>;
-    } | undefined;
-    const enabledPlugins: Set<string> = appPlugins?.enabledPlugins ?? new Set();
-    const allManifests: Record<string, unknown> = appPlugins?.manifests ?? {};
-    const twEnabled = enabledPlugins.has('tag-wrangler');
-    const twInstalled = 'tag-wrangler' in allManifests;
-    let twStatus: string;
-    if (twEnabled) {
-      twStatus = 'Enabled';
-    } else if (twInstalled) {
-      twStatus = 'Installed but disabled';
-    } else {
-      twStatus = 'Not installed';
-    }
-    new Setting(panel)
-      .setName('Tag Wrangler')
-      .setDesc(
-        'Tag Curator delegates tag renaming to Tag Wrangler. Bulk "Send to Tag Wrangler" is available in the Curation Workspace when it is enabled.',
-      )
-      .addText((t) =>
-        t.setValue(twStatus).setDisabled(true),
-      );
-
-    // Notebook Navigator - reuse detectNotebookNavigator.
-    const nnHandle = detectNotebookNavigator(this.app);
-    let nnStatus: string;
-    if (nnHandle.status === 'ready') {
-      nnStatus = 'Detected (API ' + nnHandle.apiVersion + ')';
-    } else if (nnHandle.status === 'absent') {
-      nnStatus = 'Not installed';
-    } else {
-      // too-old
-      const ver = nnHandle.apiVersion ?? 'unknown';
-      nnStatus = 'Too old (found ' + ver + ', requires ' + MIN_API_VERSION + ')';
-    }
-    new Setting(panel)
-      .setName('Notebook Navigator')
-      .setDesc(
-        'Tag Curator decorates the Notebook Navigator tag tree when a compatible version is installed.',
-      )
-      .addText((t) =>
-        t.setValue(nnStatus).setDisabled(true),
-      );
-  }
-
-  // -----------------------------------------------------------------
-  // Deferred placeholders
-  // -----------------------------------------------------------------
-
-  private renderDeferred(panel: HTMLElement, title: string, target: string): void {
-    const info = panel.createDiv({ cls: 'tcst-info-callout' });
-    info.createDiv({ cls: 'tcst-info-ic', text: 'i' });
-    const body = info.createDiv();
-    body.createEl('strong', { text: `${title} arrive in ${target}. ` });
-    body.appendText(
-      'The data model is already in place; the UI surface is part of the next planned release.',
-    );
-  }
 }
