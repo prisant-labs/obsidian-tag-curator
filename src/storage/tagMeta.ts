@@ -1,224 +1,172 @@
-/**
- * Tag metadata tracking and storage
- */
-
-import { App, Plugin, TFile } from 'obsidian';
+import { App, Events, Plugin, TFile, normalizePath } from 'obsidian';
 import { TagMeta, TagSource } from '../types';
+import { tagsFromCache } from '../util/tagUtils';
 
-export class TagMetaManager {
+interface PersistedTagMeta {
+  schemaVersion: number;
+  tags: Record<string, TagMeta>;
+}
+
+const SCHEMA = 1;
+
+export class TagMetaManager extends Events {
   private app: App;
   private plugin: Plugin;
-  private tagMetadata: Map<string, TagMeta> = new Map();
-  private saveTimeout: NodeJS.Timeout | null = null;
+  private store = new Map<string, TagMeta>();
+  private fileTags = new Map<string, Set<string>>();
+  private saveTimer: ReturnType<typeof setTimeout> | null = null;
   private debounceMs = 5000;
-  private onMetadataChanged: (() => void) | null = null;
 
   constructor(app: App, plugin: Plugin) {
+    super();
     this.app = app;
     this.plugin = plugin;
   }
 
-  /**
-   * Initialize metadata tracking
-   */
-  async init() {
-    // Load existing metadata
-    await this.loadMetadata();
-
-    // Scan all files on first load
-    await this.scanAllFiles();
-
-    // Listen for metadata cache changes
-    this.app.metadataCache.on('changed', (file) => {
-      this.updateFileMetadata(file);
-    });
+  setDebounceMs(ms: number): void {
+    this.debounceMs = Math.max(500, ms);
   }
 
-  /**
-   * Scan all markdown files to build initial metadata
-   */
-  private async scanAllFiles() {
+  private filePath(): string {
+    const dir = this.plugin.manifest.dir ?? `.obsidian/plugins/${this.plugin.manifest.id}`;
+    return normalizePath(`${dir}/tags.json`);
+  }
+
+  async load(): Promise<void> {
+    const path = this.filePath();
+    const adapter = this.app.vault.adapter;
+    try {
+      if (!(await adapter.exists(path))) {
+        this.store = new Map();
+        return;
+      }
+      const raw = await adapter.read(path);
+      const parsed = JSON.parse(raw) as PersistedTagMeta;
+      if (parsed.schemaVersion !== SCHEMA) {
+        this.store = new Map();
+        return;
+      }
+      this.store = new Map(Object.entries(parsed.tags ?? {}));
+    } catch (e) {
+      console.error('[tag-curator] tags.json corrupted, rebuilding', e);
+      this.store = new Map();
+    }
+  }
+
+  async scanAll(): Promise<void> {
     const files = this.app.vault.getMarkdownFiles();
     for (const file of files) {
-      this.updateFileMetadata(file);
+      this.indexFile(file);
     }
+    await this.flushNow();
   }
 
-  /**
-   * Load metadata from disk
-   */
-  private async loadMetadata() {
-    try {
-      const data = await this.plugin.loadData();
-      if (data?.tagMetadata) {
-        const stored = data.tagMetadata as Record<string, TagMeta>;
-        this.tagMetadata = new Map(Object.entries(stored));
-      }
-    } catch (e) {
-      console.error('Failed to load tag metadata:', e);
-    }
-  }
-
-  /**
-   * Save metadata to disk (debounced)
-   */
-  private debouncedSave() {
-    if (this.saveTimeout) {
-      clearTimeout(this.saveTimeout);
-    }
-
-    this.saveTimeout = setTimeout(async () => {
-      try {
-        const data = await this.plugin.loadData();
-        const stored = Object.fromEntries(this.tagMetadata);
-        await this.plugin.saveData({
-          ...data,
-          tagMetadata: stored,
-        });
-      } catch (e) {
-        console.error('Failed to save tag metadata:', e);
-      }
-    }, this.debounceMs);
-  }
-
-  /**
-   * Track which files contain which tags (for accurate counting)
-   */
-  private fileTagMap: Map<string, Set<string>> = new Map();
-
-  /**
-   * Update metadata for a file
-   */
-  private updateFileMetadata(file: TFile) {
+  indexFile(file: TFile): void {
     const cache = this.app.metadataCache.getFileCache(file);
-    const fileId = file.path;
+    const inlineTags = (cache?.tags ?? []).map((t) => t.tag);
+    const allTags = tagsFromCache(cache);
+    const inlineSet = new Set(inlineTags.map((t) => (t.startsWith('#') ? t.slice(1) : t)));
+    const fm = cache?.frontmatter?.tags;
+    const frontmatterSet = new Set<string>();
+    if (typeof fm === 'string') frontmatterSet.add(fm);
+    else if (Array.isArray(fm)) for (const t of fm) frontmatterSet.add(t);
     const now = Date.now();
 
-    // Collect tags from this file
-    const currentTags = new Set<string>();
+    const previousTags = this.fileTags.get(file.path) ?? new Set<string>();
+    const currentTags = new Set<string>(allTags);
+    this.fileTags.set(file.path, currentTags);
 
-    // Inline tags
-    const inlineTags = cache?.tags || [];
-    for (const tagObj of inlineTags) {
-      const tag = tagObj.tag.startsWith('#') ? tagObj.tag.slice(1) : tagObj.tag;
-      currentTags.add(tag);
-      this.updateTagMeta(tag, 'inline', now);
+    for (const tag of currentTags) {
+      // A tag may appear in BOTH inline body and frontmatter; record each
+      // source so the sidecar's `sources` field reflects every location.
+      const seen: TagSource[] = [];
+      if (inlineSet.has(tag)) seen.push('inline');
+      if (frontmatterSet.has(tag)) seen.push('frontmatter');
+      if (seen.length === 0) seen.push('frontmatter'); // fallback: came via cache but neither set
+      for (const source of seen) this.touchTag(tag, source, now);
     }
-
-    // Frontmatter tags
-    const frontmatter = cache?.frontmatter;
-    if (frontmatter && frontmatter.tags) {
-      const fmTags = frontmatter.tags as string[] | string;
-      const tagsArray = Array.isArray(fmTags) ? fmTags : [fmTags];
-
-      for (const tag of tagsArray) {
-        const normalizedTag = tag.startsWith('#') ? tag.slice(1) : tag;
-        currentTags.add(normalizedTag);
-        this.updateTagMeta(normalizedTag, 'frontmatter', now);
-      }
-    }
-
-    // Update file tag map
-    const previousTags = this.fileTagMap.get(fileId) || new Set();
-    this.fileTagMap.set(fileId, currentTags);
-
-    // Recalculate count for tags that were removed
     for (const tag of previousTags) {
-      if (!currentTags.has(tag)) {
-        this.recalculateTagCount(tag);
-      }
+      if (!currentTags.has(tag)) this.recomputeCount(tag);
     }
-
-    this.debouncedSave();
-    if (this.onMetadataChanged) {
-      this.onMetadataChanged();
-    }
+    this.scheduleSave();
+    this.trigger('changed');
   }
 
-  /**
-   * Update or create metadata for a tag
-   */
-  private updateTagMeta(tag: string, source: TagSource, now: number) {
-    let meta = this.tagMetadata.get(tag);
-    if (!meta) {
-      meta = {
+  removeFile(filePath: string): void {
+    const previous = this.fileTags.get(filePath);
+    if (!previous) return;
+    this.fileTags.delete(filePath);
+    for (const tag of previous) this.recomputeCount(tag);
+    this.scheduleSave();
+    this.trigger('changed');
+  }
+
+  renameFile(oldPath: string, newPath: string): void {
+    const existing = this.fileTags.get(oldPath);
+    if (!existing) return;
+    this.fileTags.delete(oldPath);
+    this.fileTags.set(newPath, existing);
+  }
+
+  private touchTag(tag: string, source: TagSource, now: number): void {
+    const existing = this.store.get(tag);
+    if (!existing) {
+      this.store.set(tag, {
         tag,
         firstSeen: now,
         lastSeen: now,
         count: 1,
         sources: [source],
-      };
+      });
     } else {
-      meta.lastSeen = now;
-      if (!meta.sources.includes(source)) {
-        meta.sources.push(source);
-      }
+      existing.lastSeen = now;
+      if (!existing.sources.includes(source)) existing.sources.push(source);
     }
-    this.tagMetadata.set(tag, meta);
+    this.recomputeCount(tag);
   }
 
-  /**
-   * Recalculate count for a tag based on file tag map
-   */
-  private recalculateTagCount(tag: string) {
+  private recomputeCount(tag: string): void {
     let count = 0;
-    for (const fileTags of this.fileTagMap.values()) {
-      if (fileTags.has(tag)) {
-        count++;
-      }
-    }
-    const meta = this.tagMetadata.get(tag);
-    if (meta) {
-      meta.count = count;
-      if (count === 0) {
-        this.tagMetadata.delete(tag);
-      } else {
-        this.tagMetadata.set(tag, meta);
-      }
-    }
+    for (const set of this.fileTags.values()) if (set.has(tag)) count++;
+    const existing = this.store.get(tag);
+    if (!existing) return;
+    if (count === 0) this.store.delete(tag);
+    else existing.count = count;
   }
 
-  /**
-   * Get metadata for a tag
-   */
-  getTagMeta(tag: string): TagMeta | undefined {
-    return this.tagMetadata.get(tag);
+  private scheduleSave(): void {
+    if (this.saveTimer) clearTimeout(this.saveTimer);
+    this.saveTimer = setTimeout(() => {
+      void this.flushNow();
+    }, this.debounceMs);
   }
 
-  /**
-   * Get all tag metadata
-   */
-  getAllTagMeta(): Map<string, TagMeta> {
-    return new Map(this.tagMetadata);
+  private async flushNow(): Promise<void> {
+    this.saveTimer = null;
+    const payload: PersistedTagMeta = {
+      schemaVersion: SCHEMA,
+      tags: Object.fromEntries(this.store),
+    };
+    const adapter = this.app.vault.adapter;
+    const path = this.filePath();
+    const dir = path.substring(0, path.lastIndexOf('/'));
+    if (!(await adapter.exists(dir))) await adapter.mkdir(dir);
+    await adapter.write(path, JSON.stringify(payload, null, 2));
   }
 
-  /**
-   * Get all tags
-   */
-  getAllTags(): string[] {
-    return Array.from(this.tagMetadata.keys());
+  get(tag: string): TagMeta | undefined {
+    return this.store.get(tag);
   }
 
-  /**
-   * Set debounce time
-   */
-  setDebounceMs(ms: number) {
-    this.debounceMs = ms;
+  all(): Map<string, TagMeta> {
+    return new Map(this.store);
   }
 
-  /**
-   * Register a callback for when metadata changes
-   */
-  onChanged(callback: () => void) {
-    this.onMetadataChanged = callback;
-  }
-
-  /**
-   * Clean up
-   */
-  unload() {
-    if (this.saveTimeout) {
-      clearTimeout(this.saveTimeout);
+  unload(): void {
+    if (this.saveTimer) {
+      clearTimeout(this.saveTimer);
+      this.saveTimer = null;
+      void this.flushNow();
     }
   }
 }

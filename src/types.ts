@@ -1,45 +1,6 @@
-/**
- * Core types for Tag Curator plugin
- */
+export const SCHEMA_VERSION = 5;
 
-export interface TagCuratorSettings {
-  mode: 'default' | 'allow-only' | 'inbox';
-  defaultScopes: Scope[];
-  enabledPresets: string[];
-  enabledRules: string[];
-  dryRun: boolean;
-  debugLog: boolean;
-  sidecarDebounceMs: number;
-}
-
-export const DEFAULT_SETTINGS: TagCuratorSettings = {
-  mode: 'default',
-  defaultScopes: ['tag-pane'],
-  enabledPresets: ['hide-hex-codes', 'hide-url-anchors', 'hide-orphans'],
-  enabledRules: [],
-  dryRun: false,
-  debugLog: false,
-  sidecarDebounceMs: 5000,
-};
-
-export interface Rule {
-  id: string;
-  name: string;
-  enabled: boolean;
-  priority: number;
-  match: MatchCriteria;
-  action: Action;
-  scopes: Scope[];
-  notes?: string;
-}
-
-export interface MatchCriteria {
-  type: 'regex' | 'frequency' | 'list';
-  pattern?: string;
-  operator?: '<' | '<=' | '>' | '>=' | '=';
-  value?: number | string;
-  list?: string[];
-}
+export type Mode = 'default' | 'allow-only' | 'inbox';
 
 export type Action = 'hide' | 'show-only' | 'flag' | 'group' | 'delegate-color';
 
@@ -57,22 +18,104 @@ export type Scope =
   | 'notebook-navigator'
   | 'tag-wrangler-menu';
 
-export interface TagMeta {
-  tag: string;
-  firstSeen: number;
-  lastSeen: number;
-  count: number;
-  description?: string;
-  aliases?: string[];
-  reviewed?: boolean;
-  sources: TagSource[];
+export type MatchType = 'regex' | 'frequency' | 'list';
+export type FrequencyOperator = '<' | '<=' | '>' | '>=' | '=';
+
+export interface MatchCriteria {
+  type: MatchType;
+  pattern?: string;
+  operator?: FrequencyOperator;
+  value?: number;
+  list?: string[];
+}
+
+export interface Rule {
+  id: string;
+  name: string;
+  enabled: boolean;
+  priority: number;
+  match: MatchCriteria;
+  action: Action;
+  scopes: Scope[];
+  notes?: string;
+  builtin?: boolean;
 }
 
 export type TagSource = 'frontmatter' | 'inline';
 
 /**
- * Preset rule configuration
+ * Per-tag visibility override (D-015). A tag pinned to 'show' is always visible
+ * (the spec's safety net, beats every rule); a tag pinned to 'hide' is always
+ * hidden without authoring a rule (beats every rule except an always-show on the
+ * same tag, which cannot co-occur since the store holds one value per tag).
  */
+export type TagOverride = 'show' | 'hide';
+
+export interface TagMeta {
+  tag: string;
+  firstSeen: number;
+  lastSeen: number;
+  count: number;
+  sources: TagSource[];
+  description?: string;
+  aliases?: string[];
+  reviewed?: boolean;
+}
+
+export interface TagCuratorSettings {
+  schemaVersion: number;
+  enabled: boolean;
+  mode: Mode;
+  defaultScopes: Scope[];
+  enabledPresets: string[];
+  customRules: Rule[];
+  // Per-tag visibility overrides (D-015), keyed by tag (no leading #). Resolved
+  // ahead of rules: 'show' beats every rule, 'hide' beats every rule except an
+  // always-show on the same tag. Schema v4 added this; v3->v4 defaults it to {}.
+  overrides: Record<string, TagOverride>;
+  // Per-scope global enable, keyed by Scope (e.g. 'tag-pane', 'notebook-navigator').
+  // This is the "is this surface live at all" switch and is deliberately separate
+  // from `defaultScopes` (which controls rule applicability per scope). A scope
+  // absent from the map is treated as enabled (see isScopeEnabled): the four v1.0
+  // scopes default true. Schema v5 added this; v4->v5 defaults it. Phases 6-8
+  // reuse this field for properties / autocomplete / the Settings Scopes section.
+  scopeEnabled: Record<string, boolean>;
+  previewMode: boolean;
+  debugLog: boolean;
+  sidecarDebounceMs: number;
+  // First-run welcome modal (D-008). False on a fresh install, true once dismissed.
+  // Schema v3 added this; migration from v2 defaults it to false (so existing BRAT
+  // testers see the modal once on next load - intentional).
+  seenWelcomeModal: boolean;
+  // One-time "Notebook Navigator is too old for the NN scope" notice (Phase 5B).
+  // False until the notice has been shown once; flipped true and persisted so the
+  // user is not nagged on every load when NN is below MIN_API_VERSION.
+  seenNnTooOldNotice: boolean;
+}
+
+export const DEFAULT_SETTINGS: TagCuratorSettings = {
+  schemaVersion: SCHEMA_VERSION,
+  enabled: true,
+  mode: 'default',
+  defaultScopes: ['tag-pane'],
+  enabledPresets: ['hide-hex-codes', 'hide-url-anchors'],
+  customRules: [],
+  overrides: {},
+  // The four v1.0 scopes ship enabled. Unlisted scopes are treated as enabled by
+  // isScopeEnabled, so adding a scope here is only needed to ship it OFF by default.
+  scopeEnabled: {
+    'tag-pane': true,
+    'notebook-navigator': true,
+    properties: true,
+    autocomplete: true,
+  },
+  previewMode: false,
+  seenWelcomeModal: false,
+  seenNnTooOldNotice: false,
+  debugLog: false,
+  sidecarDebounceMs: 5000,
+};
+
 export interface RulePreset {
   id: string;
   name: string;
@@ -80,11 +123,29 @@ export interface RulePreset {
   rule: Rule;
 }
 
-/**
- * Match result for a tag against a rule
- */
 export interface MatchResult {
   matched: boolean;
   ruleId: string;
   ruleName: string;
+}
+
+export interface AttributedMatch {
+  ruleId: string;
+  ruleName: string;
+  action: Action;
+  scopes: Scope[];
+  priority: number;
+  builtin: boolean;
+  reason: string;
+  // Set only when this match comes from a per-tag override (D-015) rather than a
+  // rule. Lets RuleEngine.resolveVisibility return the existing RuleAttribution
+  // shape (so TagListModel and ObserverBase consume one type) while flagging that
+  // the effective reason is an always-show / always-hide override, not a rule.
+  overrideReason?: 'always-show' | 'always-hide';
+}
+
+export interface RuleAttribution {
+  tag: string;
+  effective: AttributedMatch | null;
+  allMatches: AttributedMatch[];
 }

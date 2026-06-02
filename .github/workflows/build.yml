@@ -1,71 +1,43 @@
-name: Build and Release
+name: build
+
+# CI gate for every PR and every push to main.
+# Runs the full verification chain: lint -> typecheck -> test -> build -> verify-artifacts.
+# Keep permissions minimal: this job only reads the repo, it never writes.
 
 on:
   push:
     branches: [main]
-    tags: ['v*']
   pull_request:
     branches: [main]
+
+# Cancel an in-flight run when a newer commit arrives on the same ref.
+# Saves CI minutes on rapid pushes; the latest commit is the only one that matters.
+concurrency:
+  group: build-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
 
 jobs:
   build:
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-
     steps:
-      - uses: actions/checkout@v4
-
-      - name: Use Node.js
-        uses: actions/setup-node@v4
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
         with:
-          node-version: '20'
+          # Single source of truth for the Node version: .nvmrc (currently 20).
+          # Bump Node by editing .nvmrc, not this file.
+          node-version-file: '.nvmrc'
           cache: 'npm'
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Lint code
-        run: npm run lint
-
-      - name: Build plugin
-        run: npm run build
-
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run typecheck
+      - run: npm run test
+      - run: npm run build
       - name: Verify build artifacts
         run: |
-          test -f main.js || exit 1
-          test -f manifest.json || exit 1
-          test -f versions.json || exit 1
-          echo "Build artifacts verified"
-
-  release:
-    if: startsWith(github.ref, 'refs/tags/v')
-    needs: build
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Use Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'npm'
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Build plugin
-        run: npm run build
-
-      - name: Create Release
-        uses: softprops/action-gh-release@v2
-        with:
-          files: |
-            main.js
-            manifest.json
-            versions.json
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          test -f main.js
+          test -f manifest.json
+          test -f styles.css
+          test -f versions.json

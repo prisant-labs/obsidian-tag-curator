@@ -28,12 +28,16 @@ styles.css         # Styling for UI components
 
 ### Rule Evaluation
 
-Tags are evaluated against active rules using a **last-match-wins** strategy:
+Tags are evaluated against active rules using a **highest-priority-match-wins** strategy:
 
-1. Rules are checked in priority order (ascending)
-2. Each rule tests if its criteria match the tag
-3. The last matching rule's action (hide/show) determines visibility
-4. If no rules match, the default behavior applies
+1. Enabled rules are sorted by `priority` descending (highest first).
+2. Each rule tests if its criteria match the tag.
+3. The **first** matching rule (= the highest-priority match) determines visibility.
+4. If no rules match, the default behavior applies.
+
+> An earlier implementation sorted priority-descending but then kept the **last** match in the loop, which inverted the semantics to lowest-priority-wins. That was a silent bug; it was fixed 2026-05-28 (see Q-005 in `docs/internal/scope-and-decisions.md`).
+>
+> For v0.1 the priority value is **hidden from the UI** (D-009): new custom rules default to `priority: 50`; built-in presets keep their values (80-100). v0.2 will surface a drag-to-reorder card list (B012).
 
 ### Three Match Types
 
