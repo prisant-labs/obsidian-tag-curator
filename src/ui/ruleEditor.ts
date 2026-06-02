@@ -42,6 +42,11 @@ export class RuleEditor {
   private draft: Rule | null = null;
   private isNew = false;
 
+  // Tags whose preview detail accordion is expanded. Tracked on the instance so
+  // an override toggle (which re-renders the whole editor via settings.onChange)
+  // keeps the open panel open instead of collapsing it.
+  private openPreviewTags = new Set<string>();
+
   // Unsubscribe handle from settingsManager.onChange; released in destroy() so
   // a mounted-then-unmounted editor (e.g. switching workspace modes) does not
   // leak a listener that keeps rendering into a detached root.
@@ -444,20 +449,16 @@ export class RuleEditor {
       text: 'Every tag any rule is affecting',
     });
 
-    const affected: Array<{ tag: string; count: number; ruleName: string }> = [];
+    const affected: Array<{ m: TagMeta; ruleName: string }> = [];
     for (const m of meta.values()) {
       const attr = RuleEngine.getRuleAttribution(m.tag, m, activeRules);
       if (attr.effective) {
-        affected.push({
-          tag: m.tag,
-          count: m.count,
-          ruleName: attr.effective.ruleName,
-        });
+        affected.push({ m, ruleName: attr.effective.ruleName });
       }
     }
-    affected.sort((a, b) => b.count - a.count);
+    affected.sort((a, b) => b.m.count - a.m.count);
 
-    const totalInstances = affected.reduce((s, a) => s + a.count, 0);
+    const totalInstances = affected.reduce((s, a) => s + a.m.count, 0);
     this.renderStatRow(head, affected.length, totalInstances);
     head.createDiv({
       cls: 'tcr-pd-sub',
@@ -473,10 +474,7 @@ export class RuleEditor {
       return;
     }
     for (const a of affected) {
-      const row = body.createDiv({ cls: 'tcr-pd-row' });
-      row.createSpan({ cls: 'tcr-pd-tag', text: a.tag });
-      row.createSpan({ cls: 'tcr-pd-count', text: String(a.count) });
-      row.createSpan({ cls: 'tcr-pd-rule', text: a.ruleName });
+      this.previewRow(body, a.m, a.ruleName);
     }
   }
 
@@ -518,10 +516,91 @@ export class RuleEditor {
       return;
     }
     for (const m of matching) {
-      const row = body.createDiv({ cls: 'tcr-pd-row' });
-      row.createSpan({ cls: 'tcr-pd-tag', text: m.tag });
-      row.createSpan({ cls: 'tcr-pd-count', text: String(m.count) });
+      this.previewRow(body, m, null);
     }
+  }
+
+  // A single preview row with an info-icon accordion. The collapsed row shows
+  // tag + count; expanding reveals a key/value detail panel plus per-tag
+  // "Always show / Always hide" override pins (D-015). Used by both the
+  // vault-wide and rule-filtered previews; ruleLabel is null in edit mode where
+  // the list is already filtered to one rule.
+  private previewRow(
+    body: HTMLElement,
+    m: TagMeta,
+    ruleLabel: string | null,
+  ): void {
+    const item = body.createDiv({ cls: 'tcr-pd-item' });
+    const row = item.createDiv({ cls: 'tcr-pd-row' });
+    row.createSpan({ cls: 'tcr-pd-tag', text: m.tag });
+    row.createSpan({ cls: 'tcr-pd-count', text: String(m.count) });
+    const info = row.createSpan({ cls: 'tcr-pd-info', text: 'ⓘ' });
+    info.setAttribute('role', 'button');
+    info.setAttribute('aria-label', `Details for ${m.tag}`);
+
+    const open = this.openPreviewTags.has(m.tag);
+    const detail = item.createDiv({ cls: 'tcr-pd-detail' });
+    if (!open) detail.addClass('tcr-pd-detail-collapsed');
+    if (open) info.addClass('open');
+
+    const kv = detail.createDiv({ cls: 'tcr-pd-kv' });
+    if (ruleLabel) this.kvRow(kv, 'Affected by', ruleLabel);
+    this.kvRow(kv, 'Notes', String(m.count));
+    this.kvRow(kv, 'First seen', formatPreviewDate(m.firstSeen));
+    this.kvRow(kv, 'Last used', formatPreviewDate(m.lastSeen));
+    this.renderOverrideActions(detail, m.tag);
+
+    info.addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (this.openPreviewTags.has(m.tag)) {
+        this.openPreviewTags.delete(m.tag);
+        detail.addClass('tcr-pd-detail-collapsed');
+        info.removeClass('open');
+      } else {
+        this.openPreviewTags.add(m.tag);
+        detail.removeClass('tcr-pd-detail-collapsed');
+        info.addClass('open');
+      }
+    });
+  }
+
+  private kvRow(parent: HTMLElement, key: string, value: string): void {
+    const r = parent.createDiv({ cls: 'tcr-pd-kv-row' });
+    r.createSpan({ cls: 'tcr-pd-kv-key', text: key });
+    r.createSpan({ cls: 'tcr-pd-kv-val', text: value });
+  }
+
+  private renderOverrideActions(parent: HTMLElement, tag: string): void {
+    const current = this.plugin.settingsManager.get().overrides[tag];
+    const wrap = parent.createDiv({ cls: 'tcr-pd-ov' });
+    wrap.createSpan({ cls: 'tcr-pd-kv-key', text: 'Override' });
+    const btns = wrap.createDiv({ cls: 'tcr-pd-ov-btns' });
+
+    const showBtn = btns.createEl('button', {
+      cls: 'tcr-pd-ov-btn',
+      text: 'Always show',
+    });
+    if (current === 'show') showBtn.addClass('on');
+    showBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      void this.plugin.settingsManager.setOverride(
+        tag,
+        current === 'show' ? null : 'show',
+      );
+    });
+
+    const hideBtn = btns.createEl('button', {
+      cls: 'tcr-pd-ov-btn',
+      text: 'Always hide',
+    });
+    if (current === 'hide') hideBtn.addClass('on');
+    hideBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      void this.plugin.settingsManager.setOverride(
+        tag,
+        current === 'hide' ? null : 'hide',
+      );
+    });
   }
 
   private renderStatRow(
@@ -655,6 +734,16 @@ function blankCriteriaFor(type: MatchType): MatchCriteria {
     case 'list':
       return { type: 'list', list: [] };
   }
+}
+
+function formatPreviewDate(ms: number): string {
+  if (!ms) return 'n/a';
+  const d = new Date(ms);
+  return d.toLocaleDateString(undefined, {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+  });
 }
 
 function frequencyMatchesMeta(criteria: MatchCriteria, m: TagMeta): boolean {
