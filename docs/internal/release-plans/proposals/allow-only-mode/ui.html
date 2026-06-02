@@ -1,0 +1,389 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Allow-Only Mode - UI Proposal (#4)</title>
+<style>
+  :root[data-theme="dark"] {
+    --background-primary: #1e1e1e;
+    --background-primary-alt: #1a1a1a;
+    --background-secondary: #252525;
+    --background-tertiary: #151515;
+    --background-modifier-hover: #2f2f2f;
+    --background-modifier-border: #333;
+    --background-modifier-form-field: #1a1a1a;
+    --text-normal: #dcddde;
+    --text-muted: #999;
+    --text-faint: #6e6e6e;
+    --text-on-accent: #ffffff;
+    --text-accent: #a78bfa;
+    --text-warning: #f5c97c;
+    --text-success: #67d391;
+    --interactive-accent: #7c3aed;
+    --interactive-accent-hover: #8b5cf6;
+    --interactive-normal: #2a2a2a;
+    --interactive-hover: #353535;
+    --divider-color: #2a2a2a;
+    --shadow-l: 0 12px 28px rgba(0,0,0,0.5);
+    --code-bg: #161616;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body { background: var(--background-tertiary); color: var(--text-normal); font-family: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", Roboto, sans-serif; font-size: 14px; line-height: 1.5; }
+  code { background: var(--code-bg); padding: 1px 5px; border-radius: 4px; font-size: 0.92em; font-family: "SFMono-Regular", Consolas, monospace; }
+
+  .page { display: grid; grid-template-columns: 240px 1fr; min-height: 100vh; }
+  .sidebar { position: sticky; top: 0; height: 100vh; background: var(--background-secondary); border-right: 1px solid var(--divider-color); padding: 24px 18px; overflow-y: auto; }
+  .sidebar h1 { margin: 0 0 4px; font-size: 16px; font-weight: 700; }
+  .sidebar .subtitle { margin: 0 0 18px; font-size: 11.5px; color: var(--text-muted); }
+  .sidebar .section-label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-faint); margin: 14px 6px 6px; font-weight: 600; }
+  .sidebar nav { display: flex; flex-direction: column; gap: 2px; }
+  .sidebar nav a { display: flex; align-items: center; gap: 8px; padding: 6px 10px; border-radius: 6px; color: var(--text-muted); text-decoration: none; font-size: 12.5px; }
+  .sidebar nav a:hover { background: var(--background-modifier-hover); color: var(--text-normal); }
+  .sidebar nav a.active { background: var(--interactive-accent); color: var(--text-on-accent); }
+  .sidebar .meta { margin-top: 18px; padding: 11px; background: var(--background-tertiary); border-radius: 6px; font-size: 11px; color: var(--text-muted); line-height: 1.55; }
+  .sidebar .meta strong { color: var(--text-normal); }
+
+  .canvas { padding: 42px 56px 100px; max-width: 1180px; }
+  .lede { max-width: 780px; margin-bottom: 50px; }
+  .lede h2 { font-size: 28px; margin: 0 0 12px; }
+  .lede p { color: var(--text-muted); font-size: 14.5px; }
+  .lede .badges { display: flex; gap: 8px; margin-top: 14px; flex-wrap: wrap; }
+  .badge-large { font-size: 11px; padding: 4px 10px; border-radius: 999px; border: 1px solid var(--divider-color); background: var(--background-secondary); color: var(--text-muted); }
+  .badge-large.draft { background: rgba(245,201,124,0.15); color: var(--text-warning); border-color: rgba(245,201,124,0.35); }
+  .badge-large.target { background: rgba(124,58,237,0.15); color: var(--text-accent); border-color: rgba(124,58,237,0.35); }
+
+  section.block { padding-top: 20px; margin-bottom: 70px; scroll-margin-top: 24px; }
+  .block-header { margin-bottom: 22px; }
+  .block-eyebrow { font-size: 11px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-faint); margin-bottom: 6px; }
+  .block-title { margin: 0 0 8px; font-size: 24px; font-weight: 700; }
+  .block-desc { color: var(--text-muted); max-width: 800px; font-size: 14px; }
+
+  .mockup { background: var(--background-primary); border: 1px solid var(--background-modifier-border); border-radius: 12px; overflow: hidden; box-shadow: var(--shadow-l); }
+  .mockup-titlebar { display: flex; align-items: center; gap: 8px; padding: 10px 14px; background: var(--background-secondary); border-bottom: 1px solid var(--divider-color); font-size: 12px; color: var(--text-muted); }
+  .traffic { display: flex; gap: 6px; }
+  .traffic span { width: 11px; height: 11px; border-radius: 50%; display: inline-block; }
+  .traffic span:nth-child(1){ background:#ff5f57; } .traffic span:nth-child(2){ background:#febc2e; } .traffic span:nth-child(3){ background:#28c840; }
+  .mockup-title { flex: 1; text-align: center; font-weight: 500; color: var(--text-normal); font-size: 12px; }
+  .mockup-body { padding: 20px; }
+
+  /* State banners */
+  .banner { display: flex; align-items: flex-start; gap: 12px; padding: 11px 16px; font-size: 12.5px; border-radius: 9px; margin-bottom: 12px; }
+  .banner-ic { width: 18px; height: 18px; border-radius: 50%; display: grid; place-items: center; font-size: 11px; font-weight: 700; flex-shrink: 0; margin-top: 2px; }
+  .banner-msg { flex: 1; line-height: 1.5; }
+  .banner-msg strong { color: var(--text-normal); }
+  .banner-msg .sub { display: block; font-size: 11.5px; color: var(--text-muted); margin-top: 4px; }
+  .banner-action { background: transparent; border: 1px solid currentColor; color: inherit; font: inherit; font-size: 11.5px; padding: 4px 10px; border-radius: 5px; cursor: pointer; opacity: 0.85; align-self: flex-start; margin-top: 1px; }
+  .banner-action:hover { opacity: 1; }
+
+  .banner.allow-only { background: rgba(96, 165, 250, 0.08); color: #93c5fd; }
+  .banner.allow-only .banner-ic { background: #60a5fa; color: var(--background-primary); }
+  .banner.preview { background: rgba(245,201,124,0.1); color: var(--text-warning); }
+  .banner.preview .banner-ic { background: var(--text-warning); color: var(--background-primary); }
+  .banner.off { background: var(--background-secondary); color: var(--text-muted); }
+  .banner.off .banner-ic { background: var(--text-faint); color: var(--background-primary); }
+
+  /* Mode dropdown */
+  .mode-row { background: var(--background-secondary); border: 1px solid var(--divider-color); border-radius: 9px; padding: 14px 18px; max-width: 720px; }
+  .mode-row-title { font-size: 14px; font-weight: 600; display: flex; align-items: center; gap: 8px; }
+  .mode-row-desc { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
+  .mode-row-control { margin-top: 12px; display: flex; align-items: center; gap: 12px; }
+  .input, .select { background: var(--background-modifier-form-field); border: 1px solid var(--background-modifier-border); border-radius: 6px; padding: 7px 10px; color: var(--text-normal); font: inherit; font-size: 13px; }
+  .select.medium { width: 280px; }
+  .help-ic { display: inline-flex; align-items: center; justify-content: center; width: 14px; height: 14px; border-radius: 50%; border: 1px solid var(--background-modifier-border); color: var(--text-muted); font-size: 9.5px; font-weight: 700; cursor: help; vertical-align: middle; }
+  .help-ic::before { content: "?"; }
+
+  /* Mode-switch modal */
+  .modal-scrim { background: rgba(0,0,0,0.5); padding: 40px; display: grid; place-items: center; }
+  .modal { width: 100%; max-width: 540px; background: var(--background-primary); border: 1px solid var(--background-modifier-border); border-radius: 12px; overflow: hidden; box-shadow: var(--shadow-l); }
+  .modal-head { padding: 22px 26px 8px; }
+  .modal-head h3 { margin: 0; font-size: 20px; letter-spacing: -0.005em; }
+  .modal-body { padding: 8px 26px 22px; font-size: 13px; line-height: 1.6; color: var(--text-muted); }
+  .modal-body p { margin: 12px 0; }
+  .modal-body ul { margin: 8px 0 12px; padding-left: 20px; }
+  .modal-body strong { color: var(--text-normal); }
+  .impact-row { background: var(--background-secondary); border: 1px solid var(--divider-color); border-radius: 8px; padding: 12px 14px; margin: 14px 0; font-size: 13px; color: var(--text-normal); }
+  .impact-row .num { font-weight: 700; color: var(--text-accent); }
+  .hint-callout { background: rgba(245,201,124,0.08); border: 1px solid rgba(245,201,124,0.3); border-radius: 8px; padding: 11px 13px; margin: 14px 0; font-size: 12px; line-height: 1.55; }
+  .hint-callout strong { color: var(--text-warning); }
+  .modal-foot { display: flex; gap: 10px; justify-content: flex-end; padding: 14px 26px 18px; border-top: 1px solid var(--divider-color); }
+  .btn { font: inherit; font-size: 12.5px; padding: 7px 14px; border-radius: 6px; border: 1px solid var(--background-modifier-border); background: var(--interactive-normal); color: var(--text-normal); cursor: pointer; }
+  .btn:hover { background: var(--interactive-hover); }
+  .btn.accent { background: var(--interactive-accent); border-color: var(--interactive-accent); color: var(--text-on-accent); }
+  .btn.ghost { background: transparent; }
+  .btn.small { padding: 4px 10px; font-size: 11.5px; }
+
+  /* Tag list comparison */
+  .tag-table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+  .tag-table th { text-align: left; font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-faint); padding: 7px 9px; border-bottom: 1px solid var(--background-modifier-border); font-weight: 600; }
+  .tag-table td { padding: 8px 9px; border-bottom: 1px solid var(--divider-color); }
+  .tag-table tr.hidden td .tagname { color: var(--text-faint); text-decoration: line-through; }
+  .src-pill { font-size: 10.5px; color: var(--text-faint); border: 1px solid var(--divider-color); border-radius: 4px; padding: 1px 5px; }
+  .vis-pill { font-size: 11px; }
+  .vis-pill.shown { color: var(--text-success); }
+  .vis-pill.hidden { color: #93c5fd; }
+
+  .filter-row { display: flex; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; }
+  .chip { font-size: 12px; padding: 5px 11px; border-radius: 999px; border: 1px solid var(--background-modifier-border); background: var(--background-secondary); color: var(--text-muted); cursor: pointer; }
+  .chip.active { background: rgba(96,165,250,0.15); border-color: rgba(96,165,250,0.4); color: #93c5fd; }
+
+  /* Status bar */
+  .status-bar { background: var(--background-secondary); padding: 7px 14px; border-top: 1px solid var(--divider-color); font-size: 12px; color: var(--text-muted); display: flex; align-items: center; gap: 8px; border-radius: 7px; margin-top: 6px; }
+  .status-bar .dot { width: 7px; height: 7px; border-radius: 50%; }
+  .status-bar.allow .dot { background: #60a5fa; }
+  .status-bar.default .dot { background: var(--interactive-accent); }
+  .status-bar.preview .dot { background: var(--text-warning); }
+  .status-bar.off .dot { background: var(--text-faint); }
+</style>
+</head>
+<body>
+<div class="page">
+  <aside class="sidebar">
+    <h1>Allow-only mode</h1>
+    <p class="subtitle">Issue #4</p>
+    <div class="section-label">Sections</div>
+    <nav>
+      <a href="#dropdown" class="active">1 - Settings: mode dropdown</a>
+      <a href="#switch-modal">2 - Mode-switch dialog</a>
+      <a href="#banner">3 - State banner variant</a>
+      <a href="#tag-list">4 - Tag list view</a>
+      <a href="#status-bar">5 - Status bar copy</a>
+    </nav>
+    <div class="meta">
+      <strong>Status:</strong> Draft / Unreleased<br>
+      <strong>Target:</strong> v0.2<br>
+      <strong>Issue:</strong> #4<br>
+      <strong>Spec:</strong> spec.md<br>
+      <strong>Plan:</strong> plan.md
+    </div>
+  </aside>
+
+  <main class="canvas">
+    <div class="lede">
+      <h2>Allow-only mode</h2>
+      <p>v0.1 ships <strong>default mode</strong>: rules name tags to hide; unmatched tags stay visible. Allow-only inverts that: <strong>only tags matching at least one allow rule are visible</strong>; everything else is hidden by default. For users with a curated taxonomy who treat unknown tags as drafts.</p>
+      <div class="badges">
+        <span class="badge-large draft">Draft</span>
+        <span class="badge-large target">v0.2 target</span>
+        <span class="badge-large">Smallest code change</span>
+        <span class="badge-large">No schema bump</span>
+      </div>
+    </div>
+
+    <!-- Section 1: Settings dropdown -->
+    <section class="block" id="dropdown">
+      <div class="block-header">
+        <div class="block-eyebrow">Settings > General</div>
+        <h2 class="block-title">1 - Mode dropdown lights up</h2>
+        <p class="block-desc">The Mode dropdown was visible in v0.1 with Allow-only and Inbox disabled. v0.2 enables Allow-only; Inbox stays disabled until v0.3. Selecting Allow-only opens the confirmation dialog (next section) before the change applies.</p>
+      </div>
+      <div class="mockup">
+        <div class="mockup-titlebar"><div class="traffic"><span></span><span></span><span></span></div><div class="mockup-title">Settings - Tag Curator - General</div></div>
+        <div class="mockup-body">
+          <div class="mode-row">
+            <div class="mode-row-title">Mode <span class="help-ic" title="Hover for details about each mode"></span></div>
+            <div class="mode-row-desc">How Tag Curator decides which tags to show. Switching modes opens a confirmation dialog so you understand the impact.</div>
+            <div class="mode-row-control">
+              <select class="select medium">
+                <option>Default (hide matched)</option>
+                <option selected>Allow-only (show matched only)</option>
+                <option disabled>Inbox (v0.3)</option>
+              </select>
+              <span style="font-size:11.5px; color:var(--text-muted);">Currently active</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 2: Mode-switch dialog -->
+    <section class="block" id="switch-modal">
+      <div class="block-header">
+        <div class="block-eyebrow">New modal</div>
+        <h2 class="block-title">2 - Mode-switch dialog</h2>
+        <p class="block-desc">Confirms the mode change with concrete impact numbers from the current rule set, plus a hint about presets that may need attention. Single-click to commit, no surprises.</p>
+      </div>
+      <div class="mockup">
+        <div class="mockup-titlebar"><div class="traffic"><span></span><span></span><span></span></div><div class="mockup-title">Obsidian</div></div>
+        <div class="modal-scrim">
+          <div class="modal">
+            <div class="modal-head">
+              <h3>Switch to allow-only mode?</h3>
+            </div>
+            <div class="modal-body">
+              <p>In allow-only mode:</p>
+              <ul>
+                <li><strong>Only tags matching at least one enabled rule are shown.</strong></li>
+                <li>All other tags are hidden.</li>
+              </ul>
+              <div class="impact-row">
+                You currently have <span class="num">3</span> enabled rules. They will permit roughly <span class="num">38</span> tags. The other <span class="num">162</span> will be hidden.
+              </div>
+              <div class="hint-callout">
+                <strong>Heads up:</strong> in allow-only mode, your noise-hiding presets like <code>Hide hex codes</code> act backwards (they would <em>permit</em> hex codes). Consider toggling those presets off, or switching back to default mode where they belong.
+              </div>
+            </div>
+            <div class="modal-foot">
+              <button class="btn ghost">Cancel</button>
+              <button class="btn accent">Switch to allow-only</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 3: State banner -->
+    <section class="block" id="banner">
+      <div class="block-header">
+        <div class="block-eyebrow">D-007 extension</div>
+        <h2 class="block-title">3 - State banner variant (info-blue)</h2>
+        <p class="block-desc">A third banner variant joins Preview (amber) and Off (muted). Allow-only takes precedence over Preview when both are on; the sub-line carries the secondary state.</p>
+      </div>
+      <div class="mockup">
+        <div class="mockup-titlebar"><div class="traffic"><span></span><span></span><span></span></div><div class="mockup-title">Banner variants</div></div>
+        <div class="mockup-body" style="display:flex; flex-direction: column; gap: 14px;">
+          <div class="banner allow-only">
+            <div class="banner-ic">!</div>
+            <div class="banner-msg">
+              <strong>Allow-only mode is on.</strong> Only tags matching at least one enabled rule are visible; all other tags are hidden.
+            </div>
+            <button class="banner-action">Turn off allow-only</button>
+          </div>
+
+          <div class="banner allow-only">
+            <div class="banner-ic">!</div>
+            <div class="banner-msg">
+              <strong>Allow-only mode is on.</strong> Only tags matching at least one enabled rule are visible; all other tags are hidden.
+              <span class="sub">Preview mode is also on; unmatched tags are flagged, not hidden.</span>
+            </div>
+            <button class="banner-action">Turn off allow-only</button>
+          </div>
+
+          <div style="font-size:11.5px; color:var(--text-faint); margin-top: 4px;">Existing v0.1 banners for reference:</div>
+
+          <div class="banner preview">
+            <div class="banner-ic">!</div>
+            <div class="banner-msg">
+              <strong>Preview mode is on.</strong> Matched tags are flagged in place, not hidden.
+            </div>
+            <button class="banner-action">Turn off preview</button>
+          </div>
+
+          <div class="banner off">
+            <div class="banner-ic">!</div>
+            <div class="banner-msg">
+              <strong>Tag Curator is off.</strong> No tags are being curated.
+            </div>
+            <button class="banner-action">Turn on</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 4: Tag list view -->
+    <section class="block" id="tag-list">
+      <div class="block-header">
+        <div class="block-eyebrow">Tag list integration</div>
+        <h2 class="block-title">4 - Tag list view shows allow-only attribution</h2>
+        <p class="block-desc">Unmatched tags show as hidden with rule attribution <em>"Allow-only: unmatched tag"</em>. A new filter chip <strong>Hidden (allow-only)</strong> isolates the unaccepted set so users can audit and decide whether to add allow rules.</p>
+      </div>
+      <div class="mockup">
+        <div class="mockup-titlebar"><div class="traffic"><span></span><span></span><span></span></div><div class="mockup-title">Tag list view (allow-only mode)</div></div>
+        <div class="mockup-body">
+          <div class="filter-row">
+            <div class="chip">All</div>
+            <div class="chip active">Hidden (allow-only)</div>
+            <div class="chip">Orphans</div>
+            <div class="chip">Frontmatter</div>
+          </div>
+          <table class="tag-table">
+            <thead>
+              <tr>
+                <th>Tag</th>
+                <th>Count</th>
+                <th>Source</th>
+                <th>Visible?</th>
+                <th>Rule</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><span class="tagname">ai</span></td>
+                <td>47</td>
+                <td><span class="src-pill">both</span></td>
+                <td><span class="vis-pill shown">shown</span></td>
+                <td>My curated taxonomy</td>
+              </tr>
+              <tr class="hidden">
+                <td><span class="tagname">ffaa00</span></td>
+                <td>3</td>
+                <td><span class="src-pill">inline</span></td>
+                <td><span class="vis-pill hidden">hidden</span></td>
+                <td>Allow-only: unmatched tag</td>
+              </tr>
+              <tr class="hidden">
+                <td><span class="tagname">section-3</span></td>
+                <td>1</td>
+                <td><span class="src-pill">inline</span></td>
+                <td><span class="vis-pill hidden">hidden</span></td>
+                <td>Allow-only: unmatched tag</td>
+              </tr>
+              <tr>
+                <td><span class="tagname">project/acme</span></td>
+                <td>132</td>
+                <td><span class="src-pill">both</span></td>
+                <td><span class="vis-pill shown">shown</span></td>
+                <td>My curated taxonomy</td>
+              </tr>
+              <tr class="hidden">
+                <td><span class="tagname">draft-2026</span></td>
+                <td>6</td>
+                <td><span class="src-pill">inline</span></td>
+                <td><span class="vis-pill hidden">hidden</span></td>
+                <td>Allow-only: unmatched tag</td>
+              </tr>
+              <tr class="hidden">
+                <td><span class="tagname">x</span></td>
+                <td>1</td>
+                <td><span class="src-pill">inline</span></td>
+                <td><span class="vis-pill hidden">hidden</span></td>
+                <td>Allow-only: unmatched tag</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 5: Status bar -->
+    <section class="block" id="status-bar">
+      <div class="block-header">
+        <div class="block-eyebrow">Status bar copy</div>
+        <h2 class="block-title">5 - Status bar reflects active mode</h2>
+        <p class="block-desc">The status bar's copy shifts based on mode + preview state combination. Clicking the item still opens the Tag list filtered to hidden, whichever variant is active.</p>
+      </div>
+      <div class="mockup">
+        <div class="mockup-titlebar"><div class="traffic"><span></span><span></span><span></span></div><div class="mockup-title">Status bar variants</div></div>
+        <div class="mockup-body" style="font-family: -apple-system, BlinkMacSystemFont, sans-serif;">
+          <div style="font-size:11.5px; color:var(--text-faint); margin-bottom:6px;">Default + enabled (v0.1 baseline)</div>
+          <div class="status-bar default"><span class="dot"></span>Tag Curator: 38 tags hidden</div>
+
+          <div style="font-size:11.5px; color:var(--text-faint); margin: 16px 0 6px;">Default + preview</div>
+          <div class="status-bar preview"><span class="dot"></span>Tag Curator (preview): 38 flagged</div>
+
+          <div style="font-size:11.5px; color:var(--text-faint); margin: 16px 0 6px;">Allow-only + enabled (new)</div>
+          <div class="status-bar allow"><span class="dot"></span>Tag Curator (allow-only): 162 unaccepted</div>
+
+          <div style="font-size:11.5px; color:var(--text-faint); margin: 16px 0 6px;">Allow-only + preview (new)</div>
+          <div class="status-bar allow"><span class="dot"></span>Tag Curator (allow-only, preview): 162 unaccepted (flagged)</div>
+
+          <div style="font-size:11.5px; color:var(--text-faint); margin: 16px 0 6px;">Disabled</div>
+          <div class="status-bar off"><span class="dot"></span>Tag Curator: off</div>
+        </div>
+      </div>
+    </section>
+  </main>
+</div>
+</body>
+</html>

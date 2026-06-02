@@ -884,6 +884,1433 @@
   .statusbar .dot.off { background: var(--text-faint); }
   .statusbar .right { display: flex; gap: 16px; }
   .statusbar .indicator strong { color: var(--text-normal); font-weight: 500; }
+
+  /* -------- Top tabs (Option 2 + 21 use this) -------- */
+  .top-tabs {
+    display: flex;
+    gap: 2px;
+    padding: 0 18px;
+    background: var(--background-secondary);
+    border-bottom: 1px solid var(--divider-color);
+    overflow-x: auto;
+  }
+  .top-tab {
+    padding: 12px 14px;
+    font-size: 13px;
+    color: var(--text-muted);
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    white-space: nowrap;
+    transition: color 0.12s ease, border-color 0.12s ease;
+  }
+  .top-tab:hover { color: var(--text-normal); }
+  .top-tab.active {
+    color: var(--text-normal);
+    border-bottom-color: var(--interactive-accent);
+    font-weight: 500;
+  }
+  .top-tab .badge {
+    display: inline-block;
+    margin-left: 6px;
+    padding: 1px 6px;
+    border-radius: 8px;
+    background: var(--background-tertiary);
+    color: var(--text-faint);
+    font-size: 10px;
+    font-weight: 600;
+    vertical-align: 1px;
+  }
+  .top-tab.active .badge { background: var(--interactive-accent); color: var(--text-on-accent); }
+
+  /* Tab panel body (used inside mockups for top-tab layout) */
+  .top-tab-panel {
+    padding: 20px 22px 22px;
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    background: var(--background-primary);
+  }
+  .top-tab-panel-header {
+    margin-bottom: 6px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+  }
+  .top-tab-panel-title {
+    font-size: 17px;
+    font-weight: 600;
+    color: var(--text-normal);
+  }
+  .top-tab-panel-subtitle {
+    color: var(--text-muted);
+    font-size: 12.5px;
+    margin-bottom: 16px;
+  }
+
+  /* -------- Settings search (Option 8) -------- */
+  .settings-search-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 18px;
+    background: var(--background-secondary);
+    border-bottom: 1px solid var(--divider-color);
+  }
+  .settings-search-input {
+    flex: 1;
+    background: var(--background-modifier-form-field);
+    color: var(--text-normal);
+    border: 1px solid var(--background-modifier-border);
+    border-radius: 6px;
+    padding: 7px 12px 7px 30px;
+    font-size: 13px;
+    background-image: radial-gradient(circle at 12px center, transparent 4px, var(--text-muted) 4px, var(--text-muted) 4.5px, transparent 4.5px),
+                      linear-gradient(135deg, transparent 0 50%, var(--text-muted) 50% 60%, transparent 60%);
+    background-repeat: no-repeat;
+    background-size: 12px 12px, 4px 4px;
+    background-position: 8px center, 17px 17px;
+  }
+  .settings-search-result-count {
+    font-size: 11px;
+    color: var(--text-muted);
+  }
+  .settings-search-hit {
+    background: rgba(124, 58, 237, 0.18);
+    border-radius: 3px;
+    padding: 0 2px;
+  }
+  .settings-search-empty {
+    padding: 40px 20px;
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 13px;
+  }
+
+  /* -------- Tag list bulk actions (Option 10) -------- */
+  .bulk-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 8px 14px;
+    background: var(--background-secondary);
+    border: 1px solid var(--interactive-accent);
+    border-radius: 8px;
+    margin-bottom: 12px;
+    font-size: 13px;
+  }
+  .bulk-toolbar .count {
+    color: var(--text-normal);
+    font-weight: 500;
+  }
+  .bulk-toolbar .divider {
+    width: 1px;
+    height: 16px;
+    background: var(--divider-color);
+  }
+  .bulk-toolbar .spacer { flex: 1; }
+  .bulk-toolbar .btn { padding: 4px 10px; font-size: 12px; }
+  .row-checkbox {
+    width: 14px;
+    height: 14px;
+    border: 1px solid var(--background-modifier-border);
+    border-radius: 3px;
+    background: var(--background-primary);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .row-checkbox.on { background: var(--interactive-accent); border-color: var(--interactive-accent); }
+  .row-checkbox.on::after {
+    content: "";
+    width: 4px;
+    height: 7px;
+    border: solid white;
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg) translate(0, -1px);
+  }
+  .row-checkbox.indeterminate { background: var(--interactive-accent); border-color: var(--interactive-accent); }
+  .row-checkbox.indeterminate::after {
+    content: "";
+    width: 7px;
+    height: 2px;
+    background: white;
+    transform: none;
+    border: 0;
+  }
+
+  /* -------- Tag-pane row badge (Option 14) -------- */
+  .tagrow {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 10px;
+    border-radius: 4px;
+    font-size: 13px;
+    color: var(--text-normal);
+    cursor: pointer;
+  }
+  .tagrow:hover { background: var(--background-modifier-hover); }
+  .tagrow.curated {
+    color: var(--text-faint);
+    text-decoration: line-through;
+    text-decoration-color: var(--text-faint);
+  }
+  .tagrow .tag-text { flex: 1; min-width: 0; }
+  .tagrow .count {
+    color: var(--text-faint);
+    font-variant-numeric: tabular-nums;
+    font-size: 11px;
+  }
+  .tagrow .curator-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 1px 6px;
+    background: rgba(124, 58, 237, 0.15);
+    color: var(--text-accent);
+    border-radius: 10px;
+    font-size: 10px;
+    font-weight: 600;
+    cursor: help;
+  }
+  .tagrow .curator-badge.flagged { background: rgba(245, 201, 124, 0.18); color: var(--text-warning); }
+  .tagrow .curator-badge .dot {
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: var(--text-accent);
+  }
+  .tagrow .curator-badge.flagged .dot { background: var(--text-warning); }
+
+  /* -------- Hover tooltip (Option 15) -------- */
+  .tooltip-anchor {
+    position: relative;
+    display: inline-block;
+  }
+  .tooltip {
+    position: absolute;
+    bottom: calc(100% + 10px);
+    left: 0;
+    width: 280px;
+    background: var(--background-tertiary);
+    color: var(--text-normal);
+    border: 1px solid var(--background-modifier-border);
+    border-radius: 6px;
+    padding: 10px 12px;
+    box-shadow: var(--shadow-m);
+    font-size: 12px;
+    line-height: 1.55;
+    z-index: 10;
+  }
+  .tooltip::after {
+    content: "";
+    position: absolute;
+    top: 100%;
+    left: 20px;
+    border: 6px solid transparent;
+    border-top-color: var(--background-tertiary);
+  }
+  .tooltip .label {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-faint);
+    margin-bottom: 4px;
+  }
+  .tooltip .reason {
+    font-family: ui-monospace, "Cascadia Code", Menlo, Monaco, Consolas, monospace;
+    font-size: 11.5px;
+    background: var(--code-bg);
+    padding: 4px 6px;
+    border-radius: 3px;
+    margin-top: 6px;
+    color: var(--text-normal);
+  }
+  .tooltip .actions {
+    display: flex;
+    gap: 6px;
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid var(--divider-color);
+  }
+  .tooltip .actions a {
+    color: var(--text-accent);
+    font-size: 11.5px;
+    text-decoration: none;
+    cursor: pointer;
+  }
+  .tooltip .actions a:hover { text-decoration: underline; }
+
+  /* -------- Context menu (Option 16) -------- */
+  .ctx-menu {
+    position: absolute;
+    top: 30px;
+    left: 80px;
+    background: var(--background-primary);
+    border: 1px solid var(--background-modifier-border);
+    border-radius: 6px;
+    box-shadow: var(--shadow-l);
+    padding: 4px;
+    min-width: 220px;
+    z-index: 20;
+    font-size: 13px;
+  }
+  .ctx-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 6px 10px;
+    border-radius: 4px;
+    color: var(--text-normal);
+    cursor: pointer;
+  }
+  .ctx-item:hover { background: var(--background-modifier-hover); }
+  .ctx-item.danger { color: var(--text-error); }
+  .ctx-item .icon {
+    width: 14px;
+    height: 14px;
+    border-radius: 3px;
+    background: var(--background-modifier-border);
+    flex-shrink: 0;
+  }
+  .ctx-item .shortcut {
+    margin-left: auto;
+    color: var(--text-faint);
+    font-size: 11px;
+    font-variant-numeric: tabular-nums;
+  }
+  .ctx-divider {
+    height: 1px;
+    background: var(--divider-color);
+    margin: 4px 6px;
+  }
+  .ctx-header {
+    padding: 6px 10px 4px;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-faint);
+  }
+
+  /* -------- Welcome modal (Option 17) -------- */
+  .modal-backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.55);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 30;
+  }
+  .modal {
+    width: 540px;
+    max-height: 80%;
+    background: var(--background-primary);
+    border: 1px solid var(--background-modifier-border);
+    border-radius: 12px;
+    box-shadow: var(--shadow-l);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+  .modal-header {
+    padding: 18px 22px 12px;
+    border-bottom: 1px solid var(--divider-color);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .modal-title { font-size: 16px; font-weight: 600; color: var(--text-normal); }
+  .modal-close {
+    width: 22px; height: 22px;
+    border-radius: 4px;
+    background: transparent;
+    border: 0;
+    color: var(--text-muted);
+    font-size: 18px;
+    line-height: 1;
+    cursor: pointer;
+  }
+  .modal-close:hover { background: var(--background-modifier-hover); color: var(--text-normal); }
+  .modal-body {
+    padding: 18px 22px;
+    overflow-y: auto;
+    flex: 1;
+  }
+  .modal-footer {
+    padding: 14px 22px;
+    border-top: 1px solid var(--divider-color);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+  }
+  .welcome-step {
+    display: flex;
+    gap: 14px;
+    padding: 12px 0;
+    align-items: flex-start;
+  }
+  .welcome-step .num {
+    width: 22px; height: 22px;
+    border-radius: 50%;
+    background: var(--interactive-accent);
+    color: var(--text-on-accent);
+    font-size: 12px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .welcome-step .body { flex: 1; }
+  .welcome-step h4 {
+    margin: 0 0 4px 0;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-normal);
+  }
+  .welcome-step p {
+    margin: 0;
+    font-size: 12.5px;
+    color: var(--text-muted);
+    line-height: 1.55;
+  }
+
+  /* -------- Empty states (Option 18) -------- */
+  .empty-state {
+    padding: 56px 32px;
+    text-align: center;
+    color: var(--text-muted);
+  }
+  .empty-state .icon {
+    width: 56px; height: 56px;
+    border-radius: 50%;
+    margin: 0 auto 16px;
+    background: var(--background-secondary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-faint);
+    font-size: 22px;
+  }
+  .empty-state h3 {
+    margin: 0 0 6px;
+    color: var(--text-normal);
+    font-size: 15px;
+    font-weight: 600;
+  }
+  .empty-state p {
+    margin: 0 auto 16px;
+    max-width: 360px;
+    font-size: 12.5px;
+    line-height: 1.55;
+  }
+  .empty-state .ctas {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+  }
+
+  /* -------- Error states (Option 19) -------- */
+  .alert {
+    display: flex;
+    gap: 12px;
+    padding: 12px 14px;
+    border-radius: 8px;
+    margin-bottom: 14px;
+    font-size: 12.5px;
+    line-height: 1.55;
+  }
+  .alert.error {
+    background: rgba(var(--background-modifier-error-rgb), 0.5);
+    border: 1px solid var(--text-error);
+    color: var(--text-normal);
+  }
+  .alert.warning {
+    background: rgba(245, 201, 124, 0.1);
+    border: 1px solid var(--text-warning);
+  }
+  .alert.info {
+    background: var(--background-secondary);
+    border: 1px solid var(--divider-color);
+  }
+  .alert .alert-icon {
+    width: 18px; height: 18px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 12px;
+  }
+  .alert.error .alert-icon { background: var(--text-error); color: var(--text-on-accent); }
+  .alert.warning .alert-icon { background: var(--text-warning); color: var(--text-on-accent); }
+  .alert.info .alert-icon { background: var(--text-muted); color: var(--text-on-accent); }
+  .alert .alert-body { flex: 1; }
+  .alert strong { display: block; color: var(--text-normal); margin-bottom: 3px; }
+  .alert .alert-actions { margin-top: 8px; display: flex; gap: 6px; }
+  .alert code {
+    background: var(--code-bg);
+    padding: 1px 5px;
+    border-radius: 3px;
+    font-family: ui-monospace, "Cascadia Code", Menlo, Monaco, Consolas, monospace;
+    font-size: 11.5px;
+  }
+
+  /* -------- Command palette (Option 20) -------- */
+  .palette {
+    width: 600px;
+    background: var(--background-primary);
+    border: 1px solid var(--background-modifier-border);
+    border-radius: 10px;
+    box-shadow: var(--shadow-l);
+    overflow: hidden;
+  }
+  .palette-input {
+    padding: 14px 18px;
+    border-bottom: 1px solid var(--divider-color);
+    font-size: 14px;
+    color: var(--text-normal);
+  }
+  .palette-input::before {
+    content: "> ";
+    color: var(--text-faint);
+  }
+  .palette-list { padding: 6px; max-height: 360px; overflow-y: auto; }
+  .palette-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 8px 12px;
+    border-radius: 5px;
+    font-size: 13px;
+    color: var(--text-normal);
+    cursor: pointer;
+  }
+  .palette-item.selected { background: var(--background-modifier-hover); }
+  .palette-item .name { flex: 1; }
+  .palette-item .scope {
+    font-size: 11px;
+    color: var(--text-faint);
+  }
+  .palette-item .hotkey {
+    font-size: 11px;
+    color: var(--text-faint);
+    font-variant-numeric: tabular-nums;
+    background: var(--background-secondary);
+    padding: 1px 6px;
+    border-radius: 3px;
+  }
+
+  /* -------- Density toggle preview (Option 21) -------- */
+  .density-preview { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; margin-top: 16px; }
+  .density-card {
+    border: 1px solid var(--divider-color);
+    border-radius: 8px;
+    background: var(--background-primary);
+    overflow: hidden;
+  }
+  .density-card .label {
+    padding: 8px 12px;
+    background: var(--background-secondary);
+    border-bottom: 1px solid var(--divider-color);
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-normal);
+    display: flex;
+    justify-content: space-between;
+  }
+  .density-card .label .selected-mark {
+    color: var(--text-accent);
+    font-size: 11px;
+  }
+  .density-card .preview-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    border-bottom: 1px solid var(--divider-color);
+    font-size: 12px;
+    color: var(--text-normal);
+  }
+  .density-card.compact .preview-row { padding: 3px 12px; }
+  .density-card.comfortable .preview-row { padding: 7px 12px; }
+  .density-card.spacious .preview-row { padding: 12px 14px; }
+  .density-card .preview-row:last-child { border-bottom: 0; }
+  .density-card .preview-row .count { margin-left: auto; color: var(--text-faint); font-size: 11px; }
+
+  /* -------- Tag detail sheet (Option 11) -------- */
+  .tag-detail-sheet {
+    flex: 1;
+    background: var(--background-primary);
+    padding: 24px 28px;
+    overflow-y: auto;
+  }
+  .tag-detail-sheet h2 {
+    margin: 0 0 4px;
+    font-size: 22px;
+    font-weight: 600;
+  }
+  .tag-detail-sheet .breadcrumb {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-bottom: 12px;
+  }
+  .stat-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+    margin: 18px 0;
+  }
+  .stat-grid .stat {
+    background: var(--background-secondary);
+    border: 1px solid var(--divider-color);
+    border-radius: 8px;
+    padding: 10px 12px;
+  }
+  .stat-grid .stat .stat-label {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-faint);
+    margin-bottom: 3px;
+  }
+  .stat-grid .stat .stat-value {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--text-normal);
+    font-variant-numeric: tabular-nums;
+  }
+  .occurrence-list { font-size: 12.5px; }
+  .occurrence-list .occurrence {
+    display: flex;
+    justify-content: space-between;
+    padding: 6px 0;
+    border-bottom: 1px solid var(--divider-color);
+  }
+  .occurrence-list .occurrence:last-child { border-bottom: 0; }
+  .occurrence .path { color: var(--text-normal); }
+  .occurrence .source { color: var(--text-faint); font-size: 11px; }
+
+  /* -------- Grouped tag list (Option 9) -------- */
+  .rule-group { margin-bottom: 14px; border: 1px solid var(--divider-color); border-radius: 8px; overflow: hidden; }
+  .rule-group-head {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 14px;
+    background: var(--background-secondary);
+    border-bottom: 1px solid var(--divider-color);
+    cursor: pointer;
+  }
+  .rule-group-head .chevron {
+    width: 8px; height: 8px;
+    border-right: 1.5px solid var(--text-muted);
+    border-bottom: 1.5px solid var(--text-muted);
+    transform: rotate(45deg);
+    transition: transform 0.12s ease;
+  }
+  .rule-group.collapsed .chevron { transform: rotate(-45deg); }
+  .rule-group-head .name { font-weight: 500; font-size: 13px; color: var(--text-normal); }
+  .rule-group-head .count { color: var(--text-faint); font-size: 12px; }
+  .rule-group-head .btn { margin-left: auto; padding: 3px 8px; font-size: 11px; }
+  .rule-group-body { padding: 6px 0; }
+  .rule-group.collapsed .rule-group-body { display: none; }
+
+  /* -------- Rule editor inline embedded (Option 12) + Wizard (Option 13) -------- */
+  .inline-rule-card {
+    border: 1px solid var(--background-modifier-border);
+    border-radius: 10px;
+    background: var(--background-primary);
+    overflow: hidden;
+    margin-bottom: 12px;
+  }
+  .inline-rule-head {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 14px;
+    background: var(--background-secondary);
+    border-bottom: 1px solid var(--divider-color);
+  }
+  .inline-rule-head .title { font-size: 13px; font-weight: 500; color: var(--text-normal); }
+  .inline-rule-head .meta { font-size: 11px; color: var(--text-faint); }
+  .inline-rule-head .spacer { flex: 1; }
+  .inline-rule-body { padding: 16px 18px; display: grid; grid-template-columns: 1fr 1fr; gap: 14px 22px; }
+  .inline-rule-body .field-block { display: flex; flex-direction: column; gap: 4px; }
+  .inline-rule-body label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-faint); font-weight: 600; }
+
+  .wizard-steps { display: flex; gap: 0; padding: 14px 18px; background: var(--background-secondary); border-bottom: 1px solid var(--divider-color); }
+  .wizard-step {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex: 1;
+    color: var(--text-faint);
+    font-size: 12px;
+  }
+  .wizard-step .num {
+    width: 22px; height: 22px;
+    border-radius: 50%;
+    background: var(--background-tertiary);
+    color: var(--text-faint);
+    font-weight: 600;
+    font-size: 11px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .wizard-step.done .num { background: var(--text-success); color: var(--text-on-accent); }
+  .wizard-step.current .num { background: var(--interactive-accent); color: var(--text-on-accent); }
+  .wizard-step.current { color: var(--text-normal); font-weight: 500; }
+  .wizard-step .connector {
+    flex: 1;
+    height: 1px;
+    background: var(--divider-color);
+    margin-left: 8px;
+  }
+  .wizard-step:last-child .connector { display: none; }
+  .wizard-body { padding: 22px 24px; }
+  .wizard-body h3 { margin: 0 0 6px; font-size: 16px; font-weight: 600; }
+  .wizard-body p { margin: 0 0 18px; color: var(--text-muted); font-size: 12.5px; max-width: 480px; }
+  .wizard-choice-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+  .wizard-choice {
+    border: 1px solid var(--divider-color);
+    border-radius: 8px;
+    padding: 14px;
+    cursor: pointer;
+    background: var(--background-primary);
+  }
+  .wizard-choice:hover { border-color: var(--background-modifier-border-hover); }
+  .wizard-choice.selected { border-color: var(--interactive-accent); background: rgba(124, 58, 237, 0.06); }
+  .wizard-choice .choice-title { font-size: 13px; font-weight: 500; margin-bottom: 4px; color: var(--text-normal); }
+  .wizard-choice .choice-desc { font-size: 11.5px; color: var(--text-muted); line-height: 1.5; }
+
+  /* -------- Hotkey table (Option 20 supplement) -------- */
+  .hotkey-table { width: 100%; border-collapse: collapse; margin-top: 12px; font-size: 13px; }
+  .hotkey-table th, .hotkey-table td {
+    text-align: left;
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--divider-color);
+  }
+  .hotkey-table th {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-faint);
+    font-weight: 600;
+  }
+  .hotkey-table kbd {
+    font-family: ui-monospace, "Cascadia Code", Menlo, Monaco, Consolas, monospace;
+    background: var(--background-tertiary);
+    border: 1px solid var(--background-modifier-border);
+    border-bottom-width: 2px;
+    border-radius: 3px;
+    padding: 1px 6px;
+    font-size: 11px;
+    color: var(--text-normal);
+    margin-right: 3px;
+  }
+
+  /* -------- Engine-extension marker (Opt 22-31 use this) -------- */
+  .engine-extension-flag {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 2px 8px;
+    background: rgba(245, 201, 124, 0.16);
+    color: var(--text-warning);
+    border-radius: 10px;
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin-left: 8px;
+    vertical-align: 2px;
+  }
+  .engine-extension-flag::before {
+    content: "";
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: var(--text-warning);
+  }
+
+  /* -------- Compound criteria builder (Opt 22) -------- */
+  .compound-canvas {
+    border: 1px solid var(--background-modifier-border);
+    border-radius: 10px;
+    padding: 14px;
+    background: var(--background-secondary-alt);
+  }
+  .compound-group {
+    border: 1px dashed var(--background-modifier-border);
+    border-radius: 8px;
+    padding: 10px;
+    background: var(--background-primary);
+    margin-bottom: 10px;
+    position: relative;
+  }
+  .compound-group-label {
+    position: absolute;
+    top: -9px;
+    left: 12px;
+    background: var(--background-secondary-alt);
+    padding: 0 6px;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-muted);
+    font-weight: 600;
+  }
+  .compound-criterion {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px;
+    background: var(--background-secondary);
+    border-radius: 6px;
+    font-size: 12.5px;
+    margin-bottom: 6px;
+  }
+  .compound-criterion:last-child { margin-bottom: 0; }
+  .compound-criterion .drag-handle {
+    color: var(--text-faint);
+    cursor: grab;
+    font-size: 14px;
+    line-height: 1;
+  }
+  .compound-criterion .op-pill {
+    background: var(--interactive-accent);
+    color: var(--text-on-accent);
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+  }
+  .compound-criterion .op-pill.or { background: var(--text-success); }
+  .compound-criterion .op-pill.not { background: var(--text-error); }
+  .compound-criterion .field { flex: 1; color: var(--text-normal); }
+  .compound-criterion .field code {
+    background: var(--code-bg);
+    padding: 1px 5px;
+    border-radius: 3px;
+    font-size: 11.5px;
+  }
+  .compound-criterion .remove {
+    color: var(--text-faint);
+    cursor: pointer;
+    font-size: 14px;
+    line-height: 1;
+    padding: 2px 6px;
+  }
+  .compound-criterion .remove:hover { color: var(--text-error); }
+  .compound-add-row {
+    display: flex;
+    gap: 6px;
+    margin-top: 6px;
+  }
+  .compound-add-row .btn { font-size: 11px; padding: 4px 10px; }
+
+  /* -------- Rule impact preview (Opt 23) -------- */
+  .impact-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-top: 16px;
+  }
+  .impact-card {
+    background: var(--background-secondary);
+    border: 1px solid var(--divider-color);
+    border-radius: 10px;
+    padding: 14px;
+  }
+  .impact-card .impact-label {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-faint);
+    font-weight: 600;
+    margin-bottom: 8px;
+  }
+  .impact-bar {
+    height: 6px;
+    background: var(--background-tertiary);
+    border-radius: 3px;
+    overflow: hidden;
+    margin: 8px 0;
+  }
+  .impact-bar .fill {
+    height: 100%;
+    background: var(--text-success);
+    transition: width 0.3s ease;
+  }
+  .impact-bar.before .fill { background: var(--text-muted); }
+  .impact-bar.after .fill { background: var(--interactive-accent); }
+  .impact-delta {
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+  }
+  .impact-delta .value {
+    font-size: 26px;
+    font-weight: 600;
+    color: var(--text-normal);
+    font-variant-numeric: tabular-nums;
+  }
+  .impact-delta .delta {
+    font-size: 12px;
+    font-weight: 600;
+  }
+  .impact-delta .delta.positive { color: var(--text-success); }
+  .impact-delta .delta.negative { color: var(--text-error); }
+  .impact-tag-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-top: 10px;
+    max-height: 140px;
+    overflow-y: auto;
+  }
+  .impact-chip {
+    background: var(--background-tertiary);
+    color: var(--text-muted);
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-size: 11px;
+    font-variant-numeric: tabular-nums;
+  }
+  .impact-chip.changed {
+    background: rgba(124, 58, 237, 0.18);
+    color: var(--text-accent);
+    font-weight: 500;
+  }
+
+  /* -------- Conflict resolver (Opt 24) -------- */
+  .conflict-matrix {
+    border: 1px solid var(--divider-color);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  .conflict-row {
+    display: grid;
+    grid-template-columns: 1.5fr 1fr 1fr 80px;
+    align-items: center;
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--divider-color);
+    font-size: 12.5px;
+  }
+  .conflict-row:last-child { border-bottom: 0; }
+  .conflict-row.header {
+    background: var(--background-secondary);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-faint);
+    font-weight: 600;
+  }
+  .conflict-row .rule-name {
+    color: var(--text-normal);
+    font-weight: 500;
+  }
+  .conflict-row .priority-input {
+    background: var(--background-modifier-form-field);
+    border: 1px solid var(--background-modifier-border);
+    border-radius: 4px;
+    padding: 3px 6px;
+    width: 60px;
+    font-size: 12px;
+    color: var(--text-normal);
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+  }
+  .conflict-row .winner-badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+  }
+  .conflict-row .winner-badge.wins {
+    background: rgba(103, 211, 145, 0.18);
+    color: var(--text-success);
+  }
+  .conflict-row .winner-badge.loses {
+    background: var(--background-tertiary);
+    color: var(--text-faint);
+  }
+  .conflict-summary {
+    background: var(--background-secondary);
+    border-radius: 8px;
+    padding: 14px;
+    margin-bottom: 14px;
+    font-size: 12.5px;
+    line-height: 1.55;
+    color: var(--text-muted);
+  }
+  .conflict-summary strong { color: var(--text-normal); }
+
+  /* -------- Multi-action palette (Opt 25) -------- */
+  .action-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+  }
+  .action-tile {
+    border: 1px solid var(--divider-color);
+    border-radius: 8px;
+    padding: 12px;
+    background: var(--background-primary);
+    cursor: pointer;
+    transition: border-color 0.12s ease, background 0.12s ease;
+  }
+  .action-tile:hover { border-color: var(--background-modifier-border-hover); }
+  .action-tile.selected {
+    border-color: var(--interactive-accent);
+    background: rgba(124, 58, 237, 0.06);
+  }
+  .action-tile .action-icon {
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    background: var(--background-secondary);
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    color: var(--text-muted);
+  }
+  .action-tile.selected .action-icon {
+    background: var(--interactive-accent);
+    color: var(--text-on-accent);
+  }
+  .action-tile h4 {
+    margin: 0 0 4px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-normal);
+  }
+  .action-tile p {
+    margin: 0;
+    font-size: 11.5px;
+    color: var(--text-muted);
+    line-height: 1.5;
+  }
+  .action-tile .pill {
+    display: inline-block;
+    margin-top: 6px;
+    padding: 1px 6px;
+    background: var(--background-tertiary);
+    color: var(--text-faint);
+    font-size: 9.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    border-radius: 4px;
+  }
+
+  /* -------- Hierarchy cascade (Opt 26) -------- */
+  .tree {
+    font-size: 13px;
+  }
+  .tree-node {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 8px;
+    border-radius: 4px;
+    margin-bottom: 1px;
+  }
+  .tree-node:hover { background: var(--background-modifier-hover); }
+  .tree-node.depth-1 { padding-left: 22px; }
+  .tree-node.depth-2 { padding-left: 40px; }
+  .tree-node.depth-3 { padding-left: 58px; }
+  .tree-node .chevron {
+    width: 6px; height: 6px;
+    border-right: 1.5px solid var(--text-muted);
+    border-bottom: 1.5px solid var(--text-muted);
+    transform: rotate(45deg);
+  }
+  .tree-node.collapsed .chevron { transform: rotate(-45deg); }
+  .tree-node.leaf .chevron { visibility: hidden; }
+  .tree-node .tag-name { color: var(--text-normal); }
+  .tree-node.affected .tag-name { color: var(--text-faint); text-decoration: line-through; }
+  .tree-node .count { color: var(--text-faint); font-size: 11px; font-variant-numeric: tabular-nums; margin-left: auto; }
+  .tree-node .cascade-mark {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 1px 6px;
+    background: rgba(124, 58, 237, 0.18);
+    color: var(--text-accent);
+    border-radius: 10px;
+    font-size: 9.5px;
+    font-weight: 600;
+    text-transform: uppercase;
+  }
+  .cascade-toggle {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 14px;
+    background: var(--background-secondary);
+    border-radius: 8px;
+    margin-bottom: 12px;
+  }
+  .cascade-toggle .copy { font-size: 12.5px; color: var(--text-normal); flex: 1; line-height: 1.5; }
+  .cascade-toggle .copy small { color: var(--text-muted); font-size: 11px; display: block; }
+
+  /* -------- Co-occurrence rules (Opt 27) -------- */
+  .co-builder {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+  .co-block {
+    background: var(--background-secondary);
+    border: 1px solid var(--divider-color);
+    border-radius: 8px;
+    padding: 12px;
+  }
+  .co-block h4 {
+    margin: 0 0 8px;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-faint);
+    font-weight: 600;
+  }
+  .co-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+  .co-tag {
+    background: var(--background-tertiary);
+    color: var(--text-normal);
+    padding: 3px 9px;
+    border-radius: 14px;
+    font-size: 12px;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+  }
+  .co-tag .x { color: var(--text-faint); cursor: pointer; font-size: 12px; }
+  .co-tag.add-pill {
+    background: transparent;
+    border: 1px dashed var(--background-modifier-border);
+    color: var(--text-muted);
+    cursor: pointer;
+  }
+  .co-result {
+    margin-top: 14px;
+    padding: 12px;
+    background: var(--background-secondary-alt);
+    border-radius: 8px;
+    font-size: 12.5px;
+    color: var(--text-normal);
+    line-height: 1.55;
+  }
+  .co-result .result-count {
+    font-size: 22px;
+    font-weight: 600;
+    color: var(--text-accent);
+    font-variant-numeric: tabular-nums;
+    margin-right: 6px;
+  }
+
+  /* -------- Review workflow (Opt 28) -------- */
+  .review-pills {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 14px;
+  }
+  .review-pill {
+    padding: 5px 12px;
+    border-radius: 14px;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    background: var(--background-secondary);
+    color: var(--text-muted);
+    border: 1px solid var(--divider-color);
+  }
+  .review-pill.active.pending { background: rgba(245, 201, 124, 0.16); color: var(--text-warning); border-color: var(--text-warning); }
+  .review-pill.active.decided { background: rgba(103, 211, 145, 0.16); color: var(--text-success); border-color: var(--text-success); }
+  .review-pill.active.ignored { background: var(--background-tertiary); color: var(--text-faint); border-color: var(--background-modifier-border); }
+  .review-pill .count {
+    margin-left: 4px;
+    background: var(--background-primary);
+    padding: 1px 6px;
+    border-radius: 8px;
+    font-size: 10px;
+  }
+  .review-card {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 12px 14px;
+    background: var(--background-secondary);
+    border: 1px solid var(--divider-color);
+    border-radius: 8px;
+    margin-bottom: 8px;
+  }
+  .review-card .review-tag {
+    font-size: 14px;
+    color: var(--text-normal);
+    font-weight: 500;
+  }
+  .review-card .review-meta {
+    font-size: 11.5px;
+    color: var(--text-muted);
+  }
+  .review-card .review-actions { display: flex; gap: 6px; margin-left: auto; }
+  .review-card .review-actions .btn { padding: 4px 10px; font-size: 11.5px; }
+
+  /* -------- Rule library / preset gallery (Opt 29) -------- */
+  .library-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin-top: 12px;
+  }
+  .library-card {
+    background: var(--background-primary);
+    border: 1px solid var(--divider-color);
+    border-radius: 10px;
+    padding: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .library-card .library-eyebrow {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-faint);
+    font-weight: 600;
+  }
+  .library-card h4 {
+    margin: 0;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-normal);
+  }
+  .library-card p {
+    margin: 0;
+    font-size: 12px;
+    color: var(--text-muted);
+    line-height: 1.5;
+    flex: 1;
+  }
+  .library-card .library-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 8px;
+    border-top: 1px solid var(--divider-color);
+    font-size: 11px;
+    color: var(--text-faint);
+  }
+  .library-card .library-meta .author { color: var(--text-muted); }
+  .library-card .library-meta .install-btn {
+    background: var(--interactive-accent);
+    color: var(--text-on-accent);
+    border: 0;
+    border-radius: 4px;
+    padding: 4px 10px;
+    font-size: 11px;
+    cursor: pointer;
+    font-family: inherit;
+  }
+  .library-card .library-meta .install-btn.installed {
+    background: var(--background-secondary);
+    color: var(--text-muted);
+  }
+  .library-filter-bar {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 12px;
+    flex-wrap: wrap;
+  }
+  .library-chip {
+    padding: 4px 10px;
+    border-radius: 14px;
+    background: var(--background-secondary);
+    color: var(--text-muted);
+    font-size: 11.5px;
+    cursor: pointer;
+    border: 1px solid var(--divider-color);
+  }
+  .library-chip.active {
+    background: var(--interactive-accent);
+    color: var(--text-on-accent);
+    border-color: var(--interactive-accent);
+  }
+
+  /* -------- Tag analytics dashboard (Opt 30) -------- */
+  .analytics-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+    margin-bottom: 14px;
+  }
+  .analytics-stat {
+    background: var(--background-primary);
+    border: 1px solid var(--divider-color);
+    border-radius: 10px;
+    padding: 14px;
+  }
+  .analytics-stat .stat-label {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-faint);
+    font-weight: 600;
+    margin-bottom: 4px;
+  }
+  .analytics-stat .stat-value {
+    font-size: 26px;
+    font-weight: 600;
+    color: var(--text-normal);
+    font-variant-numeric: tabular-nums;
+    line-height: 1.1;
+  }
+  .analytics-stat .stat-trend {
+    font-size: 11px;
+    margin-top: 4px;
+    color: var(--text-muted);
+  }
+  .analytics-stat .stat-trend.up { color: var(--text-success); }
+  .analytics-stat .stat-trend.down { color: var(--text-error); }
+  .analytics-stat .sparkline {
+    margin-top: 10px;
+    height: 28px;
+    display: flex;
+    align-items: flex-end;
+    gap: 3px;
+  }
+  .analytics-stat .sparkline .bar {
+    flex: 1;
+    background: var(--interactive-accent);
+    border-radius: 1.5px;
+    opacity: 0.6;
+  }
+  .analytics-panel {
+    background: var(--background-primary);
+    border: 1px solid var(--divider-color);
+    border-radius: 10px;
+    padding: 16px;
+  }
+  .analytics-panel h4 {
+    margin: 0 0 10px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-normal);
+  }
+  .analytics-panel .panel-subtitle {
+    font-size: 11.5px;
+    color: var(--text-muted);
+    margin-bottom: 12px;
+  }
+  .suggestion-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--divider-color);
+    font-size: 12.5px;
+  }
+  .suggestion-row:last-child { border-bottom: 0; }
+  .suggestion-row .icon-orb {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: rgba(124, 58, 237, 0.18);
+    color: var(--text-accent);
+    font-size: 11px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .suggestion-row .body { flex: 1; color: var(--text-normal); }
+  .suggestion-row .body small { color: var(--text-muted); font-size: 11px; display: block; }
+  .suggestion-row .btn { padding: 3px 9px; font-size: 11px; }
+
+  /* -------- Merge & alias workflow (Opt 31) -------- */
+  .merge-canvas {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    gap: 14px;
+    align-items: stretch;
+  }
+  .merge-side {
+    background: var(--background-secondary);
+    border: 1px solid var(--divider-color);
+    border-radius: 10px;
+    padding: 14px;
+  }
+  .merge-side h4 {
+    margin: 0 0 10px;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-faint);
+    font-weight: 600;
+  }
+  .merge-side.target {
+    border-color: var(--interactive-accent);
+    background: rgba(124, 58, 237, 0.06);
+  }
+  .merge-tag-large {
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--text-normal);
+    margin-bottom: 4px;
+  }
+  .merge-tag-large.target { color: var(--text-accent); }
+  .merge-arrow {
+    align-self: center;
+    color: var(--text-accent);
+    font-size: 26px;
+    font-weight: 700;
+    padding: 0 6px;
+  }
+  .merge-aliases-list {
+    margin-top: 8px;
+  }
+  .merge-aliases-list .alias-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 0;
+    border-bottom: 1px solid var(--divider-color);
+    font-size: 12.5px;
+  }
+  .merge-aliases-list .alias-row:last-child { border-bottom: 0; }
+  .merge-aliases-list .alias-row .strike { color: var(--text-faint); text-decoration: line-through; }
+  .merge-aliases-list .alias-row .count { color: var(--text-faint); font-size: 11px; font-variant-numeric: tabular-nums; margin-left: auto; }
+  .merge-impact {
+    margin-top: 16px;
+    padding: 14px;
+    background: var(--background-tertiary);
+    border-radius: 8px;
+    font-size: 12.5px;
+    color: var(--text-muted);
+    line-height: 1.55;
+  }
+  .merge-impact strong { color: var(--text-normal); }
+  .merge-impact .impact-num { color: var(--text-accent); font-weight: 600; }
+  .merge-confirm-row {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    margin-top: 14px;
+  }
 </style>
 </head>
 <body>
@@ -895,24 +2322,68 @@
     <div class="section-label">Settings tab</div>
     <nav>
       <a href="#opt-1" data-nav="opt-1"><span class="nav-num">1</span> Native (minimal)</a>
-      <a href="#opt-2" data-nav="opt-2"><span class="nav-num">2</span> Sidebar nav</a>
+      <a href="#opt-2" data-nav="opt-2"><span class="nav-num">2</span> Top tabs</a>
       <a href="#opt-3" data-nav="opt-3"><span class="nav-num">3</span> Cards + stats</a>
+      <a href="#opt-8" data-nav="opt-8"><span class="nav-num">8</span> Settings search</a>
     </nav>
 
     <div class="section-label">Tag list view</div>
     <nav>
       <a href="#opt-4" data-nav="opt-4"><span class="nav-num">4</span> Compact table</a>
       <a href="#opt-5" data-nav="opt-5"><span class="nav-num">5</span> Master / detail</a>
+      <a href="#opt-9" data-nav="opt-9"><span class="nav-num">9</span> Grouped by rule</a>
+      <a href="#opt-10" data-nav="opt-10"><span class="nav-num">10</span> Bulk actions</a>
+      <a href="#opt-11" data-nav="opt-11"><span class="nav-num">11</span> Tag detail sheet</a>
     </nav>
 
     <div class="section-label">Rule editor</div>
     <nav>
       <a href="#opt-6" data-nav="opt-6"><span class="nav-num">6</span> Three-pane builder</a>
+      <a href="#opt-12" data-nav="opt-12"><span class="nav-num">12</span> Inline embedded</a>
+      <a href="#opt-13" data-nav="opt-13"><span class="nav-num">13</span> Wizard</a>
     </nav>
 
     <div class="section-label">Diagnostics</div>
     <nav>
       <a href="#opt-7" data-nav="opt-7"><span class="nav-num">7</span> Status bar variants</a>
+      <a href="#opt-14" data-nav="opt-14"><span class="nav-num">14</span> Row badge</a>
+      <a href="#opt-15" data-nav="opt-15"><span class="nav-num">15</span> Hover tooltip</a>
+      <a href="#opt-16" data-nav="opt-16"><span class="nav-num">16</span> Context menu</a>
+    </nav>
+
+    <div class="section-label">Onboarding &amp; states</div>
+    <nav>
+      <a href="#opt-17" data-nav="opt-17"><span class="nav-num">17</span> Welcome modal</a>
+      <a href="#opt-18" data-nav="opt-18"><span class="nav-num">18</span> Empty states</a>
+      <a href="#opt-19" data-nav="opt-19"><span class="nav-num">19</span> Error states</a>
+    </nav>
+
+    <div class="section-label">Commands &amp; UX polish</div>
+    <nav>
+      <a href="#opt-20" data-nav="opt-20"><span class="nav-num">20</span> Palette &amp; hotkeys</a>
+      <a href="#opt-21" data-nav="opt-21"><span class="nav-num">21</span> Density toggle</a>
+    </nav>
+
+    <div class="section-label">Advanced rule composition</div>
+    <nav>
+      <a href="#opt-22" data-nav="opt-22"><span class="nav-num">22</span> Compound criteria</a>
+      <a href="#opt-23" data-nav="opt-23"><span class="nav-num">23</span> Impact preview</a>
+      <a href="#opt-24" data-nav="opt-24"><span class="nav-num">24</span> Conflict resolver</a>
+      <a href="#opt-25" data-nav="opt-25"><span class="nav-num">25</span> Multi-action palette</a>
+    </nav>
+
+    <div class="section-label">Tag definition &amp; lifecycle</div>
+    <nav>
+      <a href="#opt-26" data-nav="opt-26"><span class="nav-num">26</span> Hierarchy cascade</a>
+      <a href="#opt-27" data-nav="opt-27"><span class="nav-num">27</span> Co-occurrence</a>
+      <a href="#opt-28" data-nav="opt-28"><span class="nav-num">28</span> Review workflow</a>
+    </nav>
+
+    <div class="section-label">Potential experience (v0.2-v0.4)</div>
+    <nav>
+      <a href="#opt-29" data-nav="opt-29"><span class="nav-num">29</span> Rule library</a>
+      <a href="#opt-30" data-nav="opt-30"><span class="nav-num">30</span> Tag analytics</a>
+      <a href="#opt-31" data-nav="opt-31"><span class="nav-num">31</span> Merge &amp; alias</a>
     </nav>
 
     <div class="theme-toggle" role="tablist">
@@ -1031,11 +2502,11 @@
     <section id="opt-2" class="option">
       <div class="option-header">
         <div class="option-eyebrow">Settings tab · Option 2</div>
-        <h2 class="option-title">Sidebar nav (mockup match)</h2>
-        <p class="option-desc">Vertical category nav on the left, current section on the right. Matches the first discovery PNG. Scales well as v0.2 / v0.3 features arrive (Aliases, Profiles, Integrations) without exploding the scroll length.</p>
+        <h2 class="option-title">Top tabs</h2>
+        <p class="option-desc">Horizontal tab strip across the top of the settings tab, with the active section rendered below. Obsidian's outer Settings UI already uses left-nav for the plugin list, so left-nav inside a plugin's settings double-stacks navigation. Top tabs avoid that and read as a within-plugin sub-navigation rather than a competing chrome layer. Tabs carry small badges with section state (rule count, hidden-tag count) for at-a-glance status.</p>
         <div class="tradeoffs">
-          <div class="tradeoff pro"><strong>Pros</strong>Maps cleanly to the spec's planned section structure. Easier to find Advanced / Integrations later. Looks polished.</div>
-          <div class="tradeoff con"><strong>Cons</strong>More custom CSS. Hides content behind clicks. Diverges from Obsidian convention slightly.</div>
+          <div class="tradeoff pro"><strong>Pros</strong>Doesn't compete with Obsidian's left-nav chrome. Tab badges expose state without an extra row. Scales as v0.2 / v0.3 sections arrive. Familiar pattern from VS Code, JetBrains, modern web settings.</div>
+          <div class="tradeoff con"><strong>Cons</strong>Slightly more custom CSS than Option 1. Tabs can overflow horizontally if section count grows past 7-8 (mitigation: horizontal scroll, established here).</div>
         </div>
       </div>
 
@@ -1046,110 +2517,84 @@
           <div style="width: 50px;"></div>
         </div>
         <div class="mockup-body" style="flex-direction: column;">
-          <div style="display: flex; flex: 1; min-height: 0;">
-            <nav class="opt2-nav">
-              <div class="head">Tag Curator</div>
-              <a href="#" class="active"><span class="icon"></span> General</a>
-              <a href="#"><span class="icon"></span> Rules</a>
-              <a href="#"><span class="icon"></span> Tags</a>
-              <a href="#"><span class="icon"></span> Aliases <span style="margin-left:auto;font-size:10px;opacity:0.5;">v0.3</span></a>
-              <a href="#"><span class="icon"></span> Profiles <span style="margin-left:auto;font-size:10px;opacity:0.5;">v0.3</span></a>
-              <a href="#"><span class="icon"></span> Integrations <span style="margin-left:auto;font-size:10px;opacity:0.5;">v0.3</span></a>
-              <a href="#"><span class="icon"></span> Advanced</a>
-            </nav>
-            <div class="opt2-content">
-              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
-                <div>
-                  <div class="setting-name" style="font-size: 18px;">General</div>
-                  <div class="setting-desc" style="margin-top: 2px;">Enable Tag Curator across the vault.</div>
-                </div>
-                <div class="toggle on"></div>
-              </div>
-
-              <div class="setting-heading-eyebrow">Mode</div>
-              <div class="setting-item">
-                <div class="setting-info">
-                  <div class="setting-name">How rules are interpreted</div>
-                  <div class="setting-desc">Choose default, allow-only, inbox, or dry-run.</div>
-                </div>
-                <div class="setting-control">
-                  <select class="dropdown" style="margin-right:4px;"><option>Default</option></select>
-                </div>
-              </div>
-
-              <div class="setting-item">
-                <div class="setting-info">
-                  <div class="setting-name">Active profile</div>
-                  <div class="setting-desc">Saved rule-set configurations switchable from the palette. <span style="color: var(--text-faint);">(v0.3)</span></div>
-                </div>
-                <div class="setting-control"><select class="dropdown" disabled><option>Default mode</option></select></div>
-              </div>
-
-              <div class="setting-heading-eyebrow">Default scopes</div>
-              <div class="setting-item">
-                <div class="setting-info">
-                  <div class="setting-name">Where filters apply</div>
-                  <div class="setting-desc">Tag pane is the only scope in v0.1. More arrive in v0.2.</div>
-                </div>
-                <div class="setting-control" style="gap: 16px;">
-                  <label class="check-row"><span class="checkbox on"></span> Tag pane</label>
-                  <label class="check-row disabled"><span class="checkbox"></span> Autocomplete</label>
-                  <label class="check-row disabled"><span class="checkbox"></span> Properties</label>
-                </div>
-              </div>
-
-              <div class="setting-heading-eyebrow">Built-in presets</div>
-              <div class="setting-item">
-                <div class="setting-info">
-                  <div class="setting-name">Hide hex color codes</div>
-                  <div class="setting-desc">CSS hex codes from web clippings.</div>
-                </div>
-                <div class="toggle on"></div>
-              </div>
-              <div class="setting-item">
-                <div class="setting-info">
-                  <div class="setting-name">Hide URL anchor fragments</div>
-                  <div class="setting-desc">Common URL fragments from web clippings.</div>
-                </div>
-                <div class="toggle on"></div>
-              </div>
-              <div class="setting-item">
-                <div class="setting-info">
-                  <div class="setting-name">Hide single-character tags</div>
-                  <div class="setting-desc">Accidental tags like #a or #x.</div>
-                </div>
-                <div class="toggle"></div>
-              </div>
-              <div class="setting-item">
-                <div class="setting-info">
-                  <div class="setting-name">Hide orphan tags</div>
-                  <div class="setting-desc">Tags appearing in one or fewer notes.</div>
-                </div>
-                <div class="toggle"></div>
-              </div>
-
-              <div class="setting-heading-eyebrow">Integrations detected</div>
-              <div class="integration-row">
-                <span class="integration-dot"></span>
-                <span class="integration-name">Tag Wrangler</span>
-                <span class="integration-status">Available · v0.3 will register menu items</span>
-              </div>
-              <div class="integration-row">
-                <span class="integration-dot off"></span>
-                <span class="integration-name">Notebook Navigator</span>
-                <span class="integration-status">Not installed</span>
-              </div>
-            </div>
+          <div class="top-tabs">
+            <div class="top-tab active">General</div>
+            <div class="top-tab">Presets <span class="badge">2</span></div>
+            <div class="top-tab">Custom rules <span class="badge">3</span></div>
+            <div class="top-tab">Diagnostics <span class="badge">318</span></div>
+            <div class="top-tab">Aliases <span class="badge">v0.3</span></div>
+            <div class="top-tab">Profiles <span class="badge">v0.3</span></div>
+            <div class="top-tab">Integrations</div>
+            <div class="top-tab">Advanced</div>
           </div>
-          <div class="opt2-footer">
-            <div style="display: flex; gap: 8px;">
-              <button class="btn">Open tag list</button>
-              <button class="btn">Run dry-run</button>
+
+          <div class="top-tab-panel">
+            <div class="top-tab-panel-header">
+              <div>
+                <div class="top-tab-panel-title">General</div>
+                <div class="top-tab-panel-subtitle">Master controls and default behavior.</div>
+              </div>
+              <div style="display: flex; gap: 8px;">
+                <button class="btn">Open tag list</button>
+                <button class="btn warning">Panic disable</button>
+              </div>
             </div>
-            <button class="btn warning">Panic disable</button>
+
+            <div class="setting-item">
+              <div class="setting-info">
+                <div class="setting-name">Enable Tag Curator</div>
+                <div class="setting-desc">Master switch. When off, no filtering is applied and the status bar reads "off."</div>
+              </div>
+              <div class="setting-control"><div class="toggle on"></div></div>
+            </div>
+
+            <div class="setting-item">
+              <div class="setting-info">
+                <div class="setting-name">Mode</div>
+                <div class="setting-desc">How Tag Curator interprets rules. Allow-only and inbox arrive in v0.2.</div>
+              </div>
+              <div class="setting-control"><select class="dropdown"><option>Default (hide matched)</option></select></div>
+            </div>
+
+            <div class="setting-item">
+              <div class="setting-info">
+                <div class="setting-name">Dry-run mode</div>
+                <div class="setting-desc">Flag matching tags instead of hiding them. Use to preview rule impact safely.</div>
+              </div>
+              <div class="setting-control"><div class="toggle"></div></div>
+            </div>
+
+            <div class="setting-heading">Default scopes</div>
+
+            <div class="setting-item">
+              <div class="setting-info">
+                <div class="setting-name">Where filters apply</div>
+                <div class="setting-desc">Tag pane is the only scope in v0.1. More arrive in v0.2.</div>
+              </div>
+              <div class="setting-control" style="gap: 16px;">
+                <label class="check-row"><span class="checkbox on"></span> Tag pane</label>
+                <label class="check-row disabled"><span class="checkbox"></span> Autocomplete</label>
+                <label class="check-row disabled"><span class="checkbox"></span> Properties</label>
+              </div>
+            </div>
+
+            <div class="setting-heading">Integrations detected</div>
+            <div class="integration-row">
+              <span class="integration-dot"></span>
+              <span class="integration-name">Tag Wrangler</span>
+              <span class="integration-status">Available · v0.3 will register menu items</span>
+            </div>
+            <div class="integration-row">
+              <span class="integration-dot off"></span>
+              <span class="integration-name">Notebook Navigator</span>
+              <span class="integration-status">Not installed</span>
+            </div>
           </div>
         </div>
       </div>
+      <p class="footer-note">
+        <strong>Implementation note:</strong> The tab strip is a single horizontal flex container with <code>overflow-x: auto</code>, so adding tabs (Aliases, Profiles, etc.) does not break the layout. The tab badges use the same <code>--interactive-accent</code> token that lights up the row in the active state, so the active tab visually "owns" its count. Click-state is stored in <code>data.json</code> under <code>activeSettingsTab</code> so reopening Settings returns to the tab you were last on.
+      </p>
     </section>
 
     <!-- ============ Option 3: Cards + Stats Settings ============ -->
@@ -1671,6 +3116,1769 @@
 
       <p class="footer-note">
         <strong>Recommendation:</strong> Ship variant B as the default. It carries the count (the spec's required affordance) plus a click hint, uses the visible-dot pattern Obsidian users already recognize from indexing-status indicators, and degrades cleanly to variant C in dry-run and variant D when disabled. Variant A reads abruptly; variant E packs too much for an 11px status surface.
+      </p>
+    </section>
+
+    <!-- ============ Option 8: Settings search ============ -->
+    <section id="opt-8" class="option">
+      <div class="option-header">
+        <div class="option-eyebrow">Settings tab · Option 8</div>
+        <h2 class="option-title">Inline settings search</h2>
+        <p class="option-desc">A persistent search field above the settings tab content that highlights matching <code>Setting()</code> rows and hides everything else as the user types. Native Obsidian's outer settings panel uses this pattern; mirroring it inside Tag Curator's settings shortens the path from "I want to change X" to "I'm changing X." Works orthogonally to any layout (Native, Top tabs, Cards) - the search is a layer above the layout.</p>
+        <div class="tradeoffs">
+          <div class="tradeoff pro"><strong>Pros</strong>Matches Obsidian's own settings UX. Scales to v0.3+ when section count grows. Discoverable - users already look for a search field. Negligible CSS cost.</div>
+          <div class="tradeoff con"><strong>Cons</strong>Adds a row of chrome that some users will find unnecessary at v0.1 scale. Empty-search-result state requires its own design.</div>
+        </div>
+      </div>
+
+      <div class="mockup">
+        <div class="mockup-titlebar">
+          <div class="traffic"><span></span><span></span><span></span></div>
+          <div class="mockup-title">Settings - Tag Curator</div>
+          <div style="width: 50px;"></div>
+        </div>
+        <div class="mockup-body" style="flex-direction: column;">
+          <div class="settings-search-row">
+            <input class="settings-search-input" type="text" value="dry" placeholder="Search settings...">
+            <span class="settings-search-result-count">2 of 24 matches</span>
+          </div>
+          <div class="top-tab-panel">
+            <div class="setting-heading">General</div>
+            <div class="setting-item">
+              <div class="setting-info">
+                <div class="setting-name"><span class="settings-search-hit">Dry</span>-run mode</div>
+                <div class="setting-desc">Flag matching tags instead of hiding them. Use to preview rule impact safely.</div>
+              </div>
+              <div class="setting-control"><div class="toggle"></div></div>
+            </div>
+
+            <div class="setting-heading">Advanced</div>
+            <div class="setting-item">
+              <div class="setting-info">
+                <div class="setting-name">Default to <span class="settings-search-hit">dry</span>-run on new rules</div>
+                <div class="setting-desc">When you create a new rule, start it in dry-run mode by default until you confirm.</div>
+              </div>
+              <div class="setting-control"><div class="toggle on"></div></div>
+            </div>
+
+            <div style="margin-top: 24px; padding: 12px; background: var(--background-secondary); border-radius: 6px; font-size: 12px; color: var(--text-muted);">
+              <strong style="color: var(--text-normal);">22 other settings hidden by search.</strong> Clear the search to see them.
+            </div>
+          </div>
+        </div>
+      </div>
+      <p class="footer-note">
+        Implementation reuses Obsidian's own <code>SettingsTab.searchSetting()</code> shape: each <code>Setting()</code> is wrapped in a container with a <code>data-search-text</code> attribute aggregating the name and description; the input filters the DOM by simple <code>.includes()</code> case-insensitive. No fuzzy match in v0.1; if users miss it, add Fuse.js in v0.2.
+      </p>
+    </section>
+
+    <!-- ============ Option 9: Tag list grouped by rule ============ -->
+    <section id="opt-9" class="option">
+      <div class="option-header">
+        <div class="option-eyebrow">Tag list view · Option 9</div>
+        <h2 class="option-title">Grouped by rule</h2>
+        <p class="option-desc">Instead of a flat table of tags, the tag list opens collapsed sections per active rule. Each section shows the rule name, its hidden-tag count, and a "Disable rule" button. Best when the user wants to triage by rule ("show me everything the hex preset is hiding") rather than by tag. Works alongside Option 4 (Compact table) as a view-mode toggle, not a replacement.</p>
+        <div class="tradeoffs">
+          <div class="tradeoff pro"><strong>Pros</strong>Surfaces the rule-to-tag relationship explicitly. Easier to evaluate "is this preset too aggressive?" One-click to disable the offending rule.</div>
+          <div class="tradeoff con"><strong>Cons</strong>A tag matched by multiple rules appears in the lowest-priority group only (last-match-wins). May confuse users without the existing tooltip diagnostic.</div>
+        </div>
+      </div>
+
+      <div class="mockup">
+        <div class="mockup-titlebar">
+          <div class="traffic"><span></span><span></span><span></span></div>
+          <div class="mockup-title">Tag list - grouped by rule</div>
+          <div style="width: 50px;"></div>
+        </div>
+        <div class="mockup-body" style="flex-direction: column; padding: 18px;">
+          <div style="display: flex; gap: 8px; margin-bottom: 14px;">
+            <button class="btn">All tags</button>
+            <button class="btn cta">Grouped by rule</button>
+            <button class="btn">Hidden only</button>
+            <input class="input" placeholder="Search tags..." style="flex: 1;">
+          </div>
+
+          <div class="rule-group">
+            <div class="rule-group-head">
+              <div class="chevron"></div>
+              <span class="name">Hide hex color codes</span>
+              <span class="count">· 217 hidden · preset</span>
+              <button class="btn">Disable rule</button>
+            </div>
+            <div class="rule-group-body">
+              <div class="tagrow curated" style="padding: 4px 28px;">
+                <span class="tag-text">#FFAA00</span>
+                <span class="count">3</span>
+              </div>
+              <div class="tagrow curated" style="padding: 4px 28px;">
+                <span class="tag-text">#abc123</span>
+                <span class="count">2</span>
+              </div>
+              <div class="tagrow curated" style="padding: 4px 28px;">
+                <span class="tag-text">#deadbe</span>
+                <span class="count">1</span>
+              </div>
+              <div style="padding: 6px 28px; color: var(--text-faint); font-size: 11.5px;">+ 214 more</div>
+            </div>
+          </div>
+
+          <div class="rule-group">
+            <div class="rule-group-head">
+              <div class="chevron"></div>
+              <span class="name">Hide URL anchor fragments</span>
+              <span class="count">· 94 hidden · preset</span>
+              <button class="btn">Disable rule</button>
+            </div>
+            <div class="rule-group-body">
+              <div class="tagrow curated" style="padding: 4px 28px;">
+                <span class="tag-text">#top</span>
+                <span class="count">8</span>
+              </div>
+              <div class="tagrow curated" style="padding: 4px 28px;">
+                <span class="tag-text">#section-3</span>
+                <span class="count">2</span>
+              </div>
+              <div style="padding: 6px 28px; color: var(--text-faint); font-size: 11.5px;">+ 92 more</div>
+            </div>
+          </div>
+
+          <div class="rule-group collapsed">
+            <div class="rule-group-head">
+              <div class="chevron"></div>
+              <span class="name">Hide test tags (custom)</span>
+              <span class="count">· 7 hidden</span>
+              <button class="btn">Disable rule</button>
+            </div>
+            <div class="rule-group-body"></div>
+          </div>
+
+          <div class="rule-group collapsed">
+            <div class="rule-group-head">
+              <div class="chevron"></div>
+              <span class="name">Visible (no rule matched)</span>
+              <span class="count">· 824 visible</span>
+            </div>
+            <div class="rule-group-body"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ Option 10: Bulk actions toolbar ============ -->
+    <section id="opt-10" class="option">
+      <div class="option-header">
+        <div class="option-eyebrow">Tag list view · Option 10</div>
+        <h2 class="option-title">Bulk actions toolbar</h2>
+        <p class="option-desc">When the user checks one or more rows, a sticky action bar appears at the top of the tag list. Bulk operations cover the common triage moves: add selected tags to an allow-list, build a custom rule from them, or copy the tag names to the clipboard. The selection state survives sort and filter changes (uses tag name as the key) so workflows like "filter to count &lt;= 1, select all, build a rule" feel natural.</p>
+        <div class="tradeoffs">
+          <div class="tradeoff pro"><strong>Pros</strong>Turns the tag list into a triage workbench. Massive time-saver for power users with cluttered vaults. Pattern is universal (Gmail, Linear, etc).</div>
+          <div class="tradeoff con"><strong>Cons</strong>Adds a column for checkboxes. Selection state is non-trivial to model when sort/filter is changing. Bulk delete is dangerous; defer to v0.2 with confirmation flow.</div>
+        </div>
+      </div>
+
+      <div class="mockup">
+        <div class="mockup-titlebar">
+          <div class="traffic"><span></span><span></span><span></span></div>
+          <div class="mockup-title">Tag list - bulk actions</div>
+          <div style="width: 50px;"></div>
+        </div>
+        <div class="mockup-body" style="flex-direction: column; padding: 18px;">
+          <div class="bulk-toolbar">
+            <span class="row-checkbox indeterminate"></span>
+            <span class="count">3 tags selected</span>
+            <span class="divider"></span>
+            <button class="btn">Build rule from selection</button>
+            <button class="btn">Add to allow-list</button>
+            <button class="btn">Copy names</button>
+            <span class="spacer"></span>
+            <button class="btn" style="background: transparent; border-color: transparent; color: var(--text-muted);">Clear selection</button>
+          </div>
+
+          <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
+            <thead>
+              <tr style="border-bottom: 1px solid var(--divider-color);">
+                <th style="padding: 8px; width: 24px;"><span class="row-checkbox"></span></th>
+                <th style="text-align: left; padding: 8px; color: var(--text-muted); font-weight: 500;">Tag</th>
+                <th style="text-align: right; padding: 8px; color: var(--text-muted); font-weight: 500; width: 80px;">Count</th>
+                <th style="text-align: left; padding: 8px; color: var(--text-muted); font-weight: 500; width: 200px;">Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr style="border-bottom: 1px solid var(--divider-color); background: rgba(124, 58, 237, 0.06);">
+                <td style="padding: 8px;"><span class="row-checkbox on"></span></td>
+                <td style="padding: 8px;">#proj-acme</td>
+                <td style="padding: 8px; text-align: right; font-variant-numeric: tabular-nums; color: var(--text-faint);">12</td>
+                <td style="padding: 8px; color: var(--text-muted);">visible</td>
+              </tr>
+              <tr style="border-bottom: 1px solid var(--divider-color); background: rgba(124, 58, 237, 0.06);">
+                <td style="padding: 8px;"><span class="row-checkbox on"></span></td>
+                <td style="padding: 8px;">#proj-beta</td>
+                <td style="padding: 8px; text-align: right; font-variant-numeric: tabular-nums; color: var(--text-faint);">8</td>
+                <td style="padding: 8px; color: var(--text-muted);">visible</td>
+              </tr>
+              <tr style="border-bottom: 1px solid var(--divider-color); background: rgba(124, 58, 237, 0.06);">
+                <td style="padding: 8px;"><span class="row-checkbox on"></span></td>
+                <td style="padding: 8px;">#proj-gamma</td>
+                <td style="padding: 8px; text-align: right; font-variant-numeric: tabular-nums; color: var(--text-faint);">5</td>
+                <td style="padding: 8px; color: var(--text-muted);">visible</td>
+              </tr>
+              <tr style="border-bottom: 1px solid var(--divider-color);">
+                <td style="padding: 8px;"><span class="row-checkbox"></span></td>
+                <td style="padding: 8px;">#FFAA00</td>
+                <td style="padding: 8px; text-align: right; font-variant-numeric: tabular-nums; color: var(--text-faint);">1</td>
+                <td style="padding: 8px;"><span style="color: var(--text-accent); font-size: 12px;">Hidden by: Hide hex color codes</span></td>
+              </tr>
+              <tr style="border-bottom: 1px solid var(--divider-color);">
+                <td style="padding: 8px;"><span class="row-checkbox"></span></td>
+                <td style="padding: 8px;">#top</td>
+                <td style="padding: 8px; text-align: right; font-variant-numeric: tabular-nums; color: var(--text-faint);">8</td>
+                <td style="padding: 8px;"><span style="color: var(--text-accent); font-size: 12px;">Hidden by: Hide URL anchor fragments</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <p class="footer-note">
+        "Build rule from selection" opens the rule editor pre-filled with a list-match-criteria of the selected tag names. This is the v0.1 "I want to hide these specific tags" path - no regex required.
+      </p>
+    </section>
+
+    <!-- ============ Option 11: Tag detail sheet ============ -->
+    <section id="opt-11" class="option">
+      <div class="option-header">
+        <div class="option-eyebrow">Tag list view · Option 11</div>
+        <h2 class="option-title">Tag detail sheet</h2>
+        <p class="option-desc">A refinement of Option 5's master-detail panel: full-page detail when a tag row is clicked. Shows tag metadata (count, first/last seen, sources), the full rule attribution chain, all occurrences (file path + source), and per-tag overrides. This is the surface where a user understands "everything Obsidian knows about #foo" - foundational for v0.3 alias suggestions and v0.4 inbox triage.</p>
+        <div class="tradeoffs">
+          <div class="tradeoff pro"><strong>Pros</strong>Single source of truth per tag. Surfaces the diagnostic chain prominently. Sets up v0.3 alias suggestions and v0.4 merge proposals.</div>
+          <div class="tradeoff con"><strong>Cons</strong>Most users will rarely open it. Listing occurrences is non-trivial when count is high (page or truncate?). Defer to v0.2 if v0.1 budget is tight.</div>
+        </div>
+      </div>
+
+      <div class="mockup">
+        <div class="mockup-titlebar">
+          <div class="traffic"><span></span><span></span><span></span></div>
+          <div class="mockup-title">Tag list - tag detail</div>
+          <div style="width: 50px;"></div>
+        </div>
+        <div class="mockup-body">
+          <div class="tag-detail-sheet">
+            <div class="breadcrumb">Tag list / <strong style="color: var(--text-normal);">#proj-acme</strong></div>
+            <h2>#proj-acme</h2>
+
+            <div class="stat-grid">
+              <div class="stat">
+                <div class="stat-label">Notes</div>
+                <div class="stat-value">12</div>
+              </div>
+              <div class="stat">
+                <div class="stat-label">First seen</div>
+                <div class="stat-value" style="font-size: 13px;">Mar 04, 2026</div>
+              </div>
+              <div class="stat">
+                <div class="stat-label">Last seen</div>
+                <div class="stat-value" style="font-size: 13px;">May 14, 2026</div>
+              </div>
+              <div class="stat">
+                <div class="stat-label">Sources</div>
+                <div class="stat-value" style="font-size: 13px;">inline, frontmatter</div>
+              </div>
+            </div>
+
+            <div class="setting-heading">Diagnostic</div>
+            <div class="alert info">
+              <div class="alert-icon">i</div>
+              <div class="alert-body">
+                <strong>Visible (no rule matched)</strong>
+                This tag is shown in the tag pane. No active rule has it as a target.
+              </div>
+            </div>
+
+            <div class="setting-heading">Per-tag overrides</div>
+            <div class="setting-item">
+              <div class="setting-info">
+                <div class="setting-name">Always show this tag</div>
+                <div class="setting-desc">Even if a future rule matches it.</div>
+              </div>
+              <div class="setting-control"><div class="toggle"></div></div>
+            </div>
+            <div class="setting-item">
+              <div class="setting-info">
+                <div class="setting-name">Always hide this tag</div>
+                <div class="setting-desc">Adds this tag to a personal hide-list rule.</div>
+              </div>
+              <div class="setting-control"><div class="toggle"></div></div>
+            </div>
+
+            <div class="setting-heading">Occurrences (12)</div>
+            <div class="occurrence-list">
+              <div class="occurrence"><span class="path">2026/Q2/projects/acme/kickoff.md</span><span class="source">inline · 3 occurrences</span></div>
+              <div class="occurrence"><span class="path">2026/Q2/projects/acme/discovery.md</span><span class="source">inline · 1 occurrence</span></div>
+              <div class="occurrence"><span class="path">2026/Q1/projects/acme/handoff.md</span><span class="source">frontmatter</span></div>
+              <div class="occurrence"><span class="path">people/customer-name.md</span><span class="source">inline · 2 occurrences</span></div>
+              <div class="occurrence" style="color: var(--text-faint);"><span class="path">+ 8 more</span><span></span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ Option 12: Rule editor inline embedded ============ -->
+    <section id="opt-12" class="option">
+      <div class="option-header">
+        <div class="option-eyebrow">Rule editor · Option 12</div>
+        <h2 class="option-title">Inline embedded editor</h2>
+        <p class="option-desc">Rules expand in place. Instead of a modal popup, clicking the pencil icon on a rule row flips that row into edit mode with all fields exposed and a live tag-match preview at the bottom. This is the gentlest UX for the common case ("tweak one rule") and avoids the "lost context" problem of modals. The three-pane builder (Option 6) is better for creating from scratch; the inline pattern is better for everyday edits.</p>
+        <div class="tradeoffs">
+          <div class="tradeoff pro"><strong>Pros</strong>No modal context switch. Multiple rules can be edited in sequence. Familiar pattern (Notion, Airtable, Linear). Lower implementation cost than Option 6.</div>
+          <div class="tradeoff con"><strong>Cons</strong>Long rule lists become hard to scan when several rows are expanded. Live preview crowds the row at narrow widths.</div>
+        </div>
+      </div>
+
+      <div class="mockup">
+        <div class="mockup-titlebar">
+          <div class="traffic"><span></span><span></span><span></span></div>
+          <div class="mockup-title">Custom rules - inline editor</div>
+          <div style="width: 50px;"></div>
+        </div>
+        <div class="mockup-body" style="flex-direction: column; padding: 18px;">
+          <div class="inline-rule-card">
+            <div class="inline-rule-head">
+              <div class="toggle on"></div>
+              <span class="title">Hide hex color codes</span>
+              <span class="meta">· preset · priority 100</span>
+              <span class="spacer"></span>
+              <button class="btn">Edit</button>
+              <button class="btn">Delete</button>
+            </div>
+          </div>
+
+          <div class="inline-rule-card" style="border-color: var(--interactive-accent);">
+            <div class="inline-rule-head">
+              <div class="toggle on"></div>
+              <span class="title">Hide test tags (custom)</span>
+              <span class="meta">· priority 60 · 7 tags affected</span>
+              <span class="spacer"></span>
+              <button class="btn cta">Save</button>
+              <button class="btn">Cancel</button>
+            </div>
+            <div class="inline-rule-body">
+              <div class="field-block">
+                <label>Match type</label>
+                <select class="dropdown"><option>Regex</option></select>
+              </div>
+              <div class="field-block">
+                <label>Priority</label>
+                <input class="input" type="number" value="60">
+              </div>
+              <div class="field-block" style="grid-column: span 2;">
+                <label>Pattern</label>
+                <input class="input mono" type="text" value="^test-|^scratch-|^throwaway$">
+                <span class="field-helper ok">Safe regex. Compiles cleanly.</span>
+              </div>
+              <div class="field-block" style="grid-column: span 2;">
+                <label>Live preview (7 matches in your vault)</label>
+                <div style="display: flex; flex-wrap: wrap; gap: 6px;">
+                  <span class="curator-badge"><span class="dot"></span>test-import</span>
+                  <span class="curator-badge"><span class="dot"></span>test-2024</span>
+                  <span class="curator-badge"><span class="dot"></span>scratch-notes</span>
+                  <span class="curator-badge"><span class="dot"></span>scratch-001</span>
+                  <span class="curator-badge"><span class="dot"></span>throwaway</span>
+                  <span class="curator-badge"><span class="dot"></span>test-old</span>
+                  <span class="curator-badge"><span class="dot"></span>test-archive</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="inline-rule-card">
+            <div class="inline-rule-head">
+              <div class="toggle"></div>
+              <span class="title">Hide orphan tags</span>
+              <span class="meta">· preset · disabled</span>
+              <span class="spacer"></span>
+              <button class="btn">Edit</button>
+            </div>
+          </div>
+
+          <button class="btn cta" style="align-self: flex-start; margin-top: 6px;">+ New rule</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ Option 13: Rule editor wizard ============ -->
+    <section id="opt-13" class="option">
+      <div class="option-header">
+        <div class="option-eyebrow">Rule editor · Option 13</div>
+        <h2 class="option-title">Wizard (step-by-step)</h2>
+        <p class="option-desc">For users who don't know what a regex is. A three-step wizard ("What kind of rule?", "Which tags?", "Confirm") that translates intent into a rule without exposing match-type-vs-pattern terminology up front. Sits alongside the expert paths (Option 6 builder, Option 12 inline) as an entry-level alternative reached via "New rule from scratch" CTA in empty states.</p>
+        <div class="tradeoffs">
+          <div class="tradeoff pro"><strong>Pros</strong>Lowest cognitive load for first-time rule creation. Encodes best-practice naming and priority. Pairs well with the welcome modal (Option 17).</div>
+          <div class="tradeoff con"><strong>Cons</strong>Wizards age poorly with returning users. Need a "skip to expert mode" escape hatch. Three steps minimum even for trivial rules.</div>
+        </div>
+      </div>
+
+      <div class="mockup">
+        <div class="mockup-titlebar">
+          <div class="traffic"><span></span><span></span><span></span></div>
+          <div class="mockup-title">New rule</div>
+          <div style="width: 50px;"></div>
+        </div>
+        <div class="mockup-body" style="flex-direction: column;">
+          <div class="wizard-steps">
+            <div class="wizard-step done"><div class="num">1</div> Type<div class="connector"></div></div>
+            <div class="wizard-step current"><div class="num">2</div> Tags<div class="connector"></div></div>
+            <div class="wizard-step"><div class="num">3</div> Confirm</div>
+          </div>
+          <div class="wizard-body">
+            <h3>Which tags should this rule cover?</h3>
+            <p>You chose <strong style="color: var(--text-normal);">"Hide tags matching a pattern"</strong>. Pick a starting point. You can refine the pattern in the next step.</p>
+
+            <div class="wizard-choice-grid">
+              <div class="wizard-choice selected">
+                <div class="choice-title">Specific tags</div>
+                <div class="choice-desc">Pick exact tag names from your vault. Easiest path. No pattern needed.</div>
+              </div>
+              <div class="wizard-choice">
+                <div class="choice-title">Tag prefix</div>
+                <div class="choice-desc">Match anything starting with a prefix you choose. Like <code>#test-*</code> or <code>#archive-*</code>.</div>
+              </div>
+              <div class="wizard-choice">
+                <div class="choice-title">Custom pattern</div>
+                <div class="choice-desc">Write a regex. Switches to the expert editor.</div>
+              </div>
+            </div>
+
+            <div style="margin-top: 22px; padding-top: 18px; border-top: 1px solid var(--divider-color); display: flex; justify-content: space-between;">
+              <button class="btn">Back</button>
+              <div style="display: flex; gap: 8px;">
+                <button class="btn" style="background: transparent; border-color: transparent; color: var(--text-muted);">Switch to expert editor</button>
+                <button class="btn cta">Next</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ Option 14: Tag-pane row badge ============ -->
+    <section id="opt-14" class="option">
+      <div class="option-header">
+        <div class="option-eyebrow">Diagnostics · Option 14</div>
+        <h2 class="option-title">Tag-pane row badge</h2>
+        <p class="option-desc">Today, hidden tags vanish from the tag pane entirely. That's the v0.1 contract. This option goes one step further for the dry-run and "show-affected" mode: an unobtrusive purple pill on the tag-pane row marks tags Tag Curator is acting on, with a tiny "i" or rule-name preview inline. Surfaces the plugin's presence without occupying chrome, and gives the user a one-glance answer to "why does this row look different?"</p>
+        <div class="tradeoffs">
+          <div class="tradeoff pro"><strong>Pros</strong>Makes plugin effects visible at the point of use, not behind a separate view. Pairs naturally with dry-run mode. Theme-friendly (uses accent token).</div>
+          <div class="tradeoff con"><strong>Cons</strong>Visual noise in the tag pane at large vaults. Some users prefer the "totally invisible" v0.1 contract; opt-in is correct. Adds a class to DOM that themes may want to override.</div>
+        </div>
+      </div>
+
+      <div class="mockup">
+        <div class="mockup-titlebar">
+          <div class="traffic"><span></span><span></span><span></span></div>
+          <div class="mockup-title">Tag pane - row badges</div>
+          <div style="width: 50px;"></div>
+        </div>
+        <div class="mockup-body" style="padding: 18px; flex-direction: column;">
+          <div style="display: flex; gap: 24px;">
+            <div style="flex: 1;">
+              <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 8px;">Tag pane (left rail) - dry-run mode</div>
+              <div style="background: var(--background-secondary); border-radius: 8px; padding: 8px;">
+                <div class="tagrow"><span class="tag-text">#projects</span><span class="count">128</span></div>
+                <div class="tagrow"><span class="tag-text">#research</span><span class="count">82</span></div>
+                <div class="tagrow"><span class="tag-text">#FFAA00</span><span class="count">3</span><span class="curator-badge flagged"><span class="dot"></span>hex</span></div>
+                <div class="tagrow"><span class="tag-text">#abc123</span><span class="count">2</span><span class="curator-badge flagged"><span class="dot"></span>hex</span></div>
+                <div class="tagrow"><span class="tag-text">#top</span><span class="count">8</span><span class="curator-badge flagged"><span class="dot"></span>url</span></div>
+                <div class="tagrow"><span class="tag-text">#meeting</span><span class="count">47</span></div>
+                <div class="tagrow"><span class="tag-text">#test-import</span><span class="count">1</span><span class="curator-badge flagged"><span class="dot"></span>custom</span></div>
+                <div class="tagrow"><span class="tag-text">#literature</span><span class="count">34</span></div>
+              </div>
+            </div>
+            <div style="flex: 1;">
+              <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 8px;">Tag pane - hide mode (default), affected rows are removed entirely</div>
+              <div style="background: var(--background-secondary); border-radius: 8px; padding: 8px;">
+                <div class="tagrow"><span class="tag-text">#projects</span><span class="count">128</span></div>
+                <div class="tagrow"><span class="tag-text">#research</span><span class="count">82</span></div>
+                <div class="tagrow"><span class="tag-text">#meeting</span><span class="count">47</span></div>
+                <div class="tagrow"><span class="tag-text">#literature</span><span class="count">34</span></div>
+                <div style="padding: 8px 10px; color: var(--text-faint); font-size: 11.5px;">+ 318 tags hidden by 5 rules</div>
+              </div>
+            </div>
+          </div>
+          <p class="footer-note" style="margin-top: 24px;">
+            The badge text is a 3-letter mnemonic of the rule (<code>hex</code>, <code>url</code>, <code>custom</code>). Hover surfaces the full rule name via Option 15 tooltip. Right-click surfaces the rule via Option 16 context menu.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ Option 15: Tag hover tooltip ============ -->
+    <section id="opt-15" class="option">
+      <div class="option-header">
+        <div class="option-eyebrow">Diagnostics · Option 15</div>
+        <h2 class="option-title">Tag hover tooltip</h2>
+        <p class="option-desc">Hovering a tag-pane row that Tag Curator is acting on (flagged in dry-run, or recently hidden in default mode) surfaces a small popover showing the matching rule, the human-readable reason from <code>RuleEngine.getRuleAttribution()</code>, and quick-action links: "always show this tag," "open the rule," "open in tag list." Implements the spec §5.9 diagnostic at the cheapest possible surface.</p>
+        <div class="tradeoffs">
+          <div class="tradeoff pro"><strong>Pros</strong>Diagnostic is one mouse-over away, no clicks required. Reuses the existing engine helper end-to-end. Pairs with the row badge (Option 14).</div>
+          <div class="tradeoff con"><strong>Cons</strong>Mobile users get no hover. Tooltips need to feel snappy or they're worse than nothing (200ms delay max). Z-index conflicts with sibling Obsidian plugins (Tag Wrangler menus) are possible.</div>
+        </div>
+      </div>
+
+      <div class="mockup">
+        <div class="mockup-titlebar">
+          <div class="traffic"><span></span><span></span><span></span></div>
+          <div class="mockup-title">Tag pane - hover diagnostic</div>
+          <div style="width: 50px;"></div>
+        </div>
+        <div class="mockup-body" style="padding: 18px;">
+          <div style="background: var(--background-secondary); border-radius: 8px; padding: 8px; max-width: 320px; position: relative;">
+            <div class="tagrow"><span class="tag-text">#projects</span><span class="count">128</span></div>
+            <div class="tagrow"><span class="tag-text">#research</span><span class="count">82</span></div>
+            <div class="tooltip-anchor" style="display: block;">
+              <div class="tagrow" style="background: var(--background-modifier-hover);"><span class="tag-text">#FFAA00</span><span class="count">3</span><span class="curator-badge flagged"><span class="dot"></span>hex</span></div>
+              <div class="tooltip">
+                <div class="label">Flagged in dry-run by</div>
+                <div style="font-weight: 500; color: var(--text-normal);">Hide hex color codes</div>
+                <div style="color: var(--text-muted); font-size: 11.5px; margin-top: 4px;">Built-in preset · priority 100 · scope: tag-pane</div>
+                <div class="reason">matches /^[0-9A-Fa-f]{3,8}$/</div>
+                <div class="actions">
+                  <a>Always show this tag</a>
+                  <a>Open rule</a>
+                  <a>Open in tag list</a>
+                </div>
+              </div>
+            </div>
+            <div class="tagrow"><span class="tag-text">#meeting</span><span class="count">47</span></div>
+          </div>
+        </div>
+      </div>
+      <p class="footer-note">
+        Implementation uses Obsidian's <code>setTooltip()</code> for the simple case (just the rule name) and a custom HTML popover for the rich variant shown here. The two are toggled by a setting: "Show full diagnostic on hover" (default off, opt-in for power users).
+      </p>
+    </section>
+
+    <!-- ============ Option 16: Context menu ============ -->
+    <section id="opt-16" class="option">
+      <div class="option-header">
+        <div class="option-eyebrow">Diagnostics · Option 16</div>
+        <h2 class="option-title">Context menu (right-click)</h2>
+        <p class="option-desc">Right-clicking a tag-pane row opens an Obsidian-native <code>Menu</code> with Tag Curator's per-tag actions: rule attribution, override toggles, "build rule from tag," and a link into the tag list detail. Coexists with Tag Wrangler's own menu items (they merge into the same menu). This is the discovery-friendly counterpart to the hover tooltip - mobile-accessible (via long-press) and persistent enough to read at leisure.</p>
+        <div class="tradeoffs">
+          <div class="tradeoff pro"><strong>Pros</strong>Uses Obsidian's native menu system - theme-correct, accessible, mobile-friendly. Composes with other plugins. No new components needed.</div>
+          <div class="tradeoff con"><strong>Cons</strong>Discoverable only if users right-click. Menu can become long if multiple plugins contribute. Section headers help.</div>
+        </div>
+      </div>
+
+      <div class="mockup">
+        <div class="mockup-titlebar">
+          <div class="traffic"><span></span><span></span><span></span></div>
+          <div class="mockup-title">Tag pane - context menu</div>
+          <div style="width: 50px;"></div>
+        </div>
+        <div class="mockup-body" style="padding: 18px; position: relative;">
+          <div style="background: var(--background-secondary); border-radius: 8px; padding: 8px; max-width: 320px;">
+            <div class="tagrow"><span class="tag-text">#projects</span><span class="count">128</span></div>
+            <div class="tagrow"><span class="tag-text">#research</span><span class="count">82</span></div>
+            <div class="tagrow" style="background: var(--background-modifier-hover);"><span class="tag-text">#FFAA00</span><span class="count">3</span><span class="curator-badge flagged"><span class="dot"></span>hex</span></div>
+            <div class="tagrow"><span class="tag-text">#meeting</span><span class="count">47</span></div>
+          </div>
+
+          <div class="ctx-menu" style="left: 220px; top: 80px;">
+            <div class="ctx-header">Tag Curator</div>
+            <div class="ctx-item"><span class="icon"></span> Why is this tag flagged?<span class="shortcut">?</span></div>
+            <div class="ctx-item"><span class="icon"></span> Always show this tag</div>
+            <div class="ctx-item"><span class="icon"></span> Always hide this tag</div>
+            <div class="ctx-item"><span class="icon"></span> Build rule from this tag</div>
+            <div class="ctx-item"><span class="icon"></span> Open in tag list<span class="shortcut">Enter</span></div>
+            <div class="ctx-divider"></div>
+            <div class="ctx-header">Tag Wrangler</div>
+            <div class="ctx-item"><span class="icon"></span> Rename tag...</div>
+            <div class="ctx-item"><span class="icon"></span> Find usages</div>
+            <div class="ctx-divider"></div>
+            <div class="ctx-item danger"><span class="icon"></span> Disable matching rule</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ Option 17: First-run welcome modal ============ -->
+    <section id="opt-17" class="option">
+      <div class="option-header">
+        <div class="option-eyebrow">Onboarding · Option 17</div>
+        <h2 class="option-title">First-run welcome modal</h2>
+        <p class="option-desc">A single, dismissible modal that fires the first time Tag Curator is enabled in a vault. Explains the "display-only, file-safe, fully reversible" contract up-front (the biggest concern users have on install), shows the two default presets that will run, and offers a "preview before applying" path that switches to dry-run mode for first impressions. The plan defers full onboarding to v0.2, but this minimal modal is small enough for v0.1 and answers the most common install-time question.</p>
+        <div class="tradeoffs">
+          <div class="tradeoff pro"><strong>Pros</strong>Resolves the trust question immediately. Sets the dry-run habit early. Single dismiss; never appears again. Low implementation cost (one Modal subclass).</div>
+          <div class="tradeoff con"><strong>Cons</strong>Modal interrupts the install moment. Some users will skim and miss the file-safe contract anyway. Adds an "already seen welcome" flag to settings.</div>
+        </div>
+      </div>
+
+      <div class="mockup" style="background: var(--background-secondary);">
+        <div class="mockup-titlebar">
+          <div class="traffic"><span></span><span></span><span></span></div>
+          <div class="mockup-title">Tag Curator - welcome</div>
+          <div style="width: 50px;"></div>
+        </div>
+        <div class="mockup-body" style="position: relative; min-height: 480px; padding: 24px;">
+          <div style="background: var(--background-primary); border-radius: 8px; padding: 14px; opacity: 0.4;">
+            <div style="font-size: 13px; color: var(--text-muted);">Tag pane (will be filterable once you finish setup)</div>
+          </div>
+
+          <div class="modal-backdrop">
+            <div class="modal">
+              <div class="modal-header">
+                <div class="modal-title">Welcome to Tag Curator</div>
+                <button class="modal-close">x</button>
+              </div>
+              <div class="modal-body">
+                <p style="margin-top: 0; color: var(--text-muted);">Tag Curator hides noisy tags from your tag pane without touching your notes. Two things to know before you start:</p>
+
+                <div class="welcome-step">
+                  <div class="num">1</div>
+                  <div class="body">
+                    <h4>Your notes are never modified.</h4>
+                    <p>Tag Curator only changes how tags <em>display</em> in the tag pane. Tags stay in your notes exactly as you wrote them. Uninstall the plugin and everything reverts instantly.</p>
+                  </div>
+                </div>
+
+                <div class="welcome-step">
+                  <div class="num">2</div>
+                  <div class="body">
+                    <h4>Two presets are on by default.</h4>
+                    <p>Tag Curator will hide hex color codes (like <code>#FFAA00</code> from web clippings) and URL anchor fragments (like <code>#section-3</code>). Three other presets exist but are off; turn them on later if useful.</p>
+                  </div>
+                </div>
+
+                <div class="welcome-step">
+                  <div class="num">3</div>
+                  <div class="body">
+                    <h4>Preview before applying.</h4>
+                    <p>Start in dry-run mode to see what <em>would</em> be hidden, before anything disappears. We recommend this for the first few minutes.</p>
+                  </div>
+                </div>
+              </div>
+              <div class="modal-footer">
+                <a style="color: var(--text-muted); font-size: 12px; text-decoration: none;">Read the docs</a>
+                <div style="display: flex; gap: 8px;">
+                  <button class="btn">Apply hide rules now</button>
+                  <button class="btn cta">Start in dry-run</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ Option 18: Empty states ============ -->
+    <section id="opt-18" class="option">
+      <div class="option-header">
+        <div class="option-eyebrow">Onboarding &amp; states · Option 18</div>
+        <h2 class="option-title">Empty states</h2>
+        <p class="option-desc">The three empty states users will encounter: zero custom rules (Settings &gt; Custom rules tab), zero hidden tags (Tag list filtered to hidden), and a brand-new vault with zero tags at all (Tag list view). Each has a clear illustration-free metaphor, one-sentence explanation, and a primary CTA. Avoids the common Obsidian-plugin failure mode of "empty table with no header explaining what would go there."</p>
+        <div class="tradeoffs">
+          <div class="tradeoff pro"><strong>Pros</strong>Removes the "is this broken?" moment. Each state has a clear next action. Low effort to implement (three components, no shared state).</div>
+          <div class="tradeoff con"><strong>Cons</strong>Easy to forget once written. Different states must stay consistent in voice and CTA pattern.</div>
+        </div>
+      </div>
+
+      <div class="mockup">
+        <div class="mockup-titlebar">
+          <div class="traffic"><span></span><span></span><span></span></div>
+          <div class="mockup-title">Empty states</div>
+          <div style="width: 50px;"></div>
+        </div>
+        <div class="mockup-body" style="flex-direction: column; padding: 0;">
+          <div style="border-bottom: 1px solid var(--divider-color); padding: 8px 18px; font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-faint);">A. No custom rules yet (Settings &gt; Custom rules)</div>
+          <div class="empty-state">
+            <div class="icon">+</div>
+            <h3>No custom rules yet</h3>
+            <p>The built-in presets handle hex codes and URL fragments. Add your own rule for vault-specific noise like draft prefixes, test tags, or stale projects.</p>
+            <div class="ctas">
+              <button class="btn cta">+ New rule</button>
+              <button class="btn">See examples</button>
+            </div>
+          </div>
+
+          <div style="border-bottom: 1px solid var(--divider-color); border-top: 1px solid var(--divider-color); padding: 8px 18px; font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-faint);">B. Tag list filtered to "hidden only," nothing hidden</div>
+          <div class="empty-state">
+            <div class="icon">o</div>
+            <h3>Nothing is hidden</h3>
+            <p>No tag in this vault matches any active rule. Either you have a tidy vault, or your rules need a wider net. Enable a preset to start hiding common noise.</p>
+            <div class="ctas">
+              <button class="btn cta">Open settings</button>
+              <button class="btn">Show all tags</button>
+            </div>
+          </div>
+
+          <div style="border-bottom: 1px solid var(--divider-color); border-top: 1px solid var(--divider-color); padding: 8px 18px; font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-faint);">C. Brand-new vault, no tags at all</div>
+          <div class="empty-state">
+            <div class="icon">#</div>
+            <h3>No tags in this vault</h3>
+            <p>Tag Curator activates once your vault has tags. Add a tag (<code>#example</code>) in any note, or import existing notes, and this view will populate.</p>
+            <div class="ctas">
+              <button class="btn">Read the docs</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ Option 19: Error states ============ -->
+    <section id="opt-19" class="option">
+      <div class="option-header">
+        <div class="option-eyebrow">Onboarding &amp; states · Option 19</div>
+        <h2 class="option-title">Error states</h2>
+        <p class="option-desc">Three failure modes Tag Curator can hit, each with explicit recovery paths. Regex compile failure (most common, in rule editor), <code>tags.json</code> sidecar corruption (rare but possible after disk issues or sync conflicts), and rule conflicts (same tag matched by two rules with the same priority). Each state shows what happened, what's safe, and the one button that fixes it.</p>
+        <div class="tradeoffs">
+          <div class="tradeoff pro"><strong>Pros</strong>Failure modes have explicit owners and recovery actions. Users do not have to guess. The "what's safe" line preserves trust in the plugin's file-safety contract.</div>
+          <div class="tradeoff con"><strong>Cons</strong>Three alert styles to design. Conflict warnings need rule-attribution awareness.</div>
+        </div>
+      </div>
+
+      <div class="mockup">
+        <div class="mockup-titlebar">
+          <div class="traffic"><span></span><span></span><span></span></div>
+          <div class="mockup-title">Error states</div>
+          <div style="width: 50px;"></div>
+        </div>
+        <div class="mockup-body" style="flex-direction: column; padding: 22px;">
+
+          <div style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-faint); margin-bottom: 8px;">A. Regex parse failure in rule editor</div>
+          <div class="alert error">
+            <div class="alert-icon">!</div>
+            <div class="alert-body">
+              <strong>Invalid regex: <code>[unterminated</code></strong>
+              The pattern doesn't compile: unterminated character class at position 1. Fix the pattern or switch to a list-match rule.
+              <div class="alert-actions">
+                <button class="btn">Insert closing bracket</button>
+                <button class="btn">Switch to list match</button>
+              </div>
+            </div>
+          </div>
+
+          <div style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-faint); margin: 18px 0 8px;">B. tags.json corrupted (after a sync conflict, partial disk write, or manual edit)</div>
+          <div class="alert warning">
+            <div class="alert-icon">!</div>
+            <div class="alert-body">
+              <strong>tags.json could not be read</strong>
+              The tag metadata sidecar at <code>.obsidian/plugins/tag-curator/tags.json</code> is missing or corrupted. Tag Curator is using an empty in-memory cache until you rebuild. <strong style="color: var(--text-normal);">Your notes are safe</strong> - this file is auto-generated and contains no original content.
+              <div class="alert-actions">
+                <button class="btn cta">Rebuild from vault scan</button>
+                <button class="btn">View error details</button>
+              </div>
+            </div>
+          </div>
+
+          <div style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-faint); margin: 18px 0 8px;">C. iOS-unsafe regex (lookbehind rejected at compile time)</div>
+          <div class="alert error">
+            <div class="alert-icon">!</div>
+            <div class="alert-body">
+              <strong>Pattern not allowed: lookbehind</strong>
+              <code>(?&lt;=draft-)\w+</code> uses a lookbehind assertion, which crashes plugin load on iOS &lt; 16.4. Rewrite without lookbehind, or use a list-match rule.
+              <div class="alert-actions">
+                <button class="btn">Open regex docs</button>
+              </div>
+            </div>
+          </div>
+
+          <div style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-faint); margin: 18px 0 8px;">D. Two rules at same priority match the same tag</div>
+          <div class="alert info">
+            <div class="alert-icon">i</div>
+            <div class="alert-body">
+              <strong>Rule conflict on <code>#FFAA00</code></strong>
+              "Hide hex color codes" and "Custom: hex shorthand" both match this tag at priority 100. The later-defined rule wins under last-match-wins, but the ordering is implicit. Set distinct priorities to make the resolution explicit.
+              <div class="alert-actions">
+                <button class="btn">Open priority settings</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ Option 20: Command palette + hotkeys ============ -->
+    <section id="opt-20" class="option">
+      <div class="option-header">
+        <div class="option-eyebrow">Commands &amp; UX polish · Option 20</div>
+        <h2 class="option-title">Command palette &amp; hotkey reference</h2>
+        <p class="option-desc">All Tag Curator commands appear in Obsidian's command palette (Cmd/Ctrl+P) prefixed with "Tag Curator:" so they cluster naturally. Each is named for its outcome, not its implementation: "Open tag list" not "Open TagListView." A consolidated hotkey reference in the settings tab teaches users what to bind in Obsidian's hotkey UI. The plan ships 6 commands; this mockup names them in their final form.</p>
+        <div class="tradeoffs">
+          <div class="tradeoff pro"><strong>Pros</strong>Discoverable. Obsidian users already know to look here. The shared "Tag Curator:" prefix makes the plugin findable. Free i18n via Obsidian's command localization.</div>
+          <div class="tradeoff con"><strong>Cons</strong>Six commands is the upper limit of "not overwhelming." Defer v0.2 commands (refresh, profile switch) until they're useful.</div>
+        </div>
+      </div>
+
+      <div class="mockup">
+        <div class="mockup-titlebar">
+          <div class="traffic"><span></span><span></span><span></span></div>
+          <div class="mockup-title">Command palette &amp; hotkeys</div>
+          <div style="width: 50px;"></div>
+        </div>
+        <div class="mockup-body" style="padding: 32px 22px; display: block;">
+          <div style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-faint); margin-bottom: 10px;">Command palette (Cmd/Ctrl+P)</div>
+          <div class="palette" style="margin: 0 auto;">
+            <div class="palette-input">tag curator</div>
+            <div class="palette-list">
+              <div class="palette-item selected">
+                <span class="name"><strong>Tag Curator:</strong> Open tag list view</span>
+                <span class="hotkey">Cmd+Shift+T</span>
+              </div>
+              <div class="palette-item">
+                <span class="name"><strong>Tag Curator:</strong> Open tag list (hidden tags only)</span>
+                <span class="hotkey">-</span>
+              </div>
+              <div class="palette-item">
+                <span class="name"><strong>Tag Curator:</strong> Toggle enable</span>
+                <span class="hotkey">-</span>
+              </div>
+              <div class="palette-item">
+                <span class="name"><strong>Tag Curator:</strong> Toggle dry-run mode</span>
+                <span class="hotkey">-</span>
+              </div>
+              <div class="palette-item">
+                <span class="name"><strong>Tag Curator:</strong> Rescan vault tags</span>
+                <span class="hotkey">-</span>
+              </div>
+              <div class="palette-item">
+                <span class="name"><strong>Tag Curator:</strong> Panic disable (remove all DOM effects now)</span>
+                <span class="scope">danger</span>
+              </div>
+            </div>
+          </div>
+
+          <div style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-faint); margin: 30px 0 6px;">Hotkey reference (Settings &gt; Tag Curator &gt; Advanced)</div>
+          <table class="hotkey-table">
+            <thead>
+              <tr>
+                <th>Action</th>
+                <th>Default</th>
+                <th>Notes</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Open tag list view</td>
+                <td><kbd>Cmd</kbd><kbd>Shift</kbd><kbd>T</kbd></td>
+                <td>Rebindable in Obsidian's Hotkey settings</td>
+              </tr>
+              <tr>
+                <td>Toggle enable</td>
+                <td>unbound</td>
+                <td>Useful for quick A/B comparison</td>
+              </tr>
+              <tr>
+                <td>Toggle dry-run mode</td>
+                <td>unbound</td>
+                <td>Pairs with the status-bar variant C</td>
+              </tr>
+              <tr>
+                <td>Rescan vault tags</td>
+                <td>unbound</td>
+                <td>Recovers from sync hiccups</td>
+              </tr>
+              <tr>
+                <td>Panic disable</td>
+                <td>unbound</td>
+                <td>Intentionally unbound by default - this is a safety net, not a daily action</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ Option 21: Density toggle ============ -->
+    <section id="opt-21" class="option">
+      <div class="option-header">
+        <div class="option-eyebrow">Commands &amp; UX polish · Option 21</div>
+        <h2 class="option-title">Density toggle</h2>
+        <p class="option-desc">A three-position density preference (compact, comfortable, spacious) that applies to the tag list view rows and any inline rule cards. Users on small displays or with vaults that have thousands of tags benefit from compact rows; users who care about readability prefer spacious. Lives in Settings &gt; Advanced, persisted to <code>data.json</code> as a single string, and applied via a CSS class on the view's root container.</p>
+        <div class="tradeoffs">
+          <div class="tradeoff pro"><strong>Pros</strong>One setting unlocks two markedly different experiences. Theme-compatible. Negligible runtime cost.</div>
+          <div class="tradeoff con"><strong>Cons</strong>Three CSS variants to test. Some Obsidian themes already override row padding; this setting may collide with them.</div>
+        </div>
+      </div>
+
+      <div class="mockup">
+        <div class="mockup-titlebar">
+          <div class="traffic"><span></span><span></span><span></span></div>
+          <div class="mockup-title">Density preview</div>
+          <div style="width: 50px;"></div>
+        </div>
+        <div class="mockup-body" style="padding: 22px; display: block;">
+          <div class="setting-item">
+            <div class="setting-info">
+              <div class="setting-name">Tag list density</div>
+              <div class="setting-desc">Controls row height and padding throughout Tag Curator. Affects the tag list view and inline rule cards.</div>
+            </div>
+            <div class="setting-control">
+              <select class="dropdown"><option>Comfortable (default)</option></select>
+            </div>
+          </div>
+
+          <div class="density-preview">
+            <div class="density-card compact">
+              <div class="label">Compact <span class="selected-mark">3px / row</span></div>
+              <div class="preview-row">#projects <span class="count">128</span></div>
+              <div class="preview-row">#research <span class="count">82</span></div>
+              <div class="preview-row">#FFAA00 <span class="count">3</span></div>
+              <div class="preview-row">#meeting <span class="count">47</span></div>
+              <div class="preview-row">#literature <span class="count">34</span></div>
+              <div class="preview-row">#daily <span class="count">912</span></div>
+              <div class="preview-row">#wip <span class="count">15</span></div>
+            </div>
+            <div class="density-card comfortable">
+              <div class="label">Comfortable <span class="selected-mark">selected</span></div>
+              <div class="preview-row">#projects <span class="count">128</span></div>
+              <div class="preview-row">#research <span class="count">82</span></div>
+              <div class="preview-row">#FFAA00 <span class="count">3</span></div>
+              <div class="preview-row">#meeting <span class="count">47</span></div>
+              <div class="preview-row">#literature <span class="count">34</span></div>
+            </div>
+            <div class="density-card spacious">
+              <div class="label">Spacious <span class="selected-mark">12px / row</span></div>
+              <div class="preview-row">#projects <span class="count">128</span></div>
+              <div class="preview-row">#research <span class="count">82</span></div>
+              <div class="preview-row">#FFAA00 <span class="count">3</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <p class="footer-note">
+        Density is one of several v0.1 "small wins" that don't require UI rework but raise the perceived polish of the plugin. Pairs well with the Tag Curator settings search (Option 8) - both surface in the Advanced tab.
+      </p>
+    </section>
+
+    <!-- ============ Option 22: Compound criteria builder ============ -->
+    <section id="opt-22" class="option">
+      <div class="option-header">
+        <div class="option-eyebrow">Advanced rule composition · Option 22</div>
+        <h2 class="option-title">Compound criteria builder <span class="engine-extension-flag">engine extension</span></h2>
+        <p class="option-desc">v0.1 rules have one match criterion (regex, frequency, or list). Power users want compound logic: "regex match AND count &lt;= 5 AND NOT in this allow-list." This option adds an AND/OR/NOT group canvas where users compose multiple criteria with drag-and-drop, visual grouping, and per-group operators. Requires extending the rule model from a single <code>MatchCriteria</code> to a tree of criterion nodes.</p>
+        <div class="tradeoffs">
+          <div class="tradeoff pro"><strong>Pros</strong>Solves real cases (hide archived tags that are also orphans). Visual model maps cleanly to the data shape. Composes with the wizard (Option 13) - wizard emits a single-criterion tree, this canvas adds branches.</div>
+          <div class="tradeoff con"><strong>Cons</strong>Engine model change: <code>MatchCriteria</code> becomes <code>MatchNode</code> with <code>op: 'and' | 'or' | 'not'</code> and <code>children</code>. Migration required. Defer to v0.2 once the v0.1 contract is stable.</div>
+        </div>
+      </div>
+
+      <div class="mockup">
+        <div class="mockup-titlebar">
+          <div class="traffic"><span></span><span></span><span></span></div>
+          <div class="mockup-title">Compound rule - archive orphans</div>
+          <div style="width: 50px;"></div>
+        </div>
+        <div class="mockup-body" style="flex-direction: column; padding: 18px;">
+          <div style="margin-bottom: 14px;">
+            <div class="field-label">Rule name</div>
+            <input class="input" value="Hide archived orphan tags">
+          </div>
+
+          <div class="compound-canvas">
+            <div class="compound-group">
+              <div class="compound-group-label">All of (AND)</div>
+
+              <div class="compound-criterion">
+                <span class="drag-handle">::</span>
+                <span class="op-pill">regex</span>
+                <span class="field">matches <code>^(archive|old|stale)-</code></span>
+                <span class="remove">x</span>
+              </div>
+
+              <div class="compound-criterion">
+                <span class="drag-handle">::</span>
+                <span class="op-pill or">freq</span>
+                <span class="field">count &lt;= 5</span>
+                <span class="remove">x</span>
+              </div>
+
+              <div class="compound-group" style="margin-top: 8px;">
+                <div class="compound-group-label">None of (NOT)</div>
+                <div class="compound-criterion">
+                  <span class="drag-handle">::</span>
+                  <span class="op-pill not">list</span>
+                  <span class="field">in <code>[archive-keep, archive-pinned]</code></span>
+                  <span class="remove">x</span>
+                </div>
+              </div>
+
+              <div class="compound-add-row">
+                <button class="btn">+ Add condition</button>
+                <button class="btn">+ Add group</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="impact-grid" style="margin-top: 18px;">
+            <div class="impact-card">
+              <div class="impact-label">Will match</div>
+              <div class="impact-delta">
+                <span class="value">17</span>
+                <span style="color: var(--text-muted); font-size: 11px;">tags</span>
+              </div>
+              <div class="impact-tag-chips">
+                <span class="impact-chip">#archive-2020</span>
+                <span class="impact-chip">#archive-q1</span>
+                <span class="impact-chip">#old-projects</span>
+                <span class="impact-chip">#old-meeting-notes</span>
+                <span class="impact-chip">#stale-research</span>
+                <span class="impact-chip">+ 12 more</span>
+              </div>
+            </div>
+            <div class="impact-card">
+              <div class="impact-label">Excluded by NOT clause</div>
+              <div class="impact-delta">
+                <span class="value">2</span>
+                <span style="color: var(--text-muted); font-size: 11px;">tags spared</span>
+              </div>
+              <div class="impact-tag-chips">
+                <span class="impact-chip changed">#archive-keep</span>
+                <span class="impact-chip changed">#archive-pinned</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <p class="footer-note">
+        Engine-side change: <code>Rule.match</code> becomes <code>Rule.matchTree</code>, a recursive node. Evaluator walks the tree with short-circuit logic. Existing single-criterion rules migrate to a root node with one child (zero behavior change). All v0.1 tests still pass; new tests cover boolean composition.
+      </p>
+    </section>
+
+    <!-- ============ Option 23: Rule impact preview ============ -->
+    <section id="opt-23" class="option">
+      <div class="option-header">
+        <div class="option-eyebrow">Advanced rule composition · Option 23</div>
+        <h2 class="option-title">Rule impact preview</h2>
+        <p class="option-desc">Before enabling or saving a rule, surface the vault-wide consequences: "if you turn this on, 318 tags will be hidden, of which 14 are tags you used in the past week." Two-column before/after view with delta counts and a chip list of changed tags. Pairs with both the wizard (Option 13) final step and the inline editor (Option 12) save action.</p>
+        <div class="tradeoffs">
+          <div class="tradeoff pro"><strong>Pros</strong>Removes the "did this rule do what I expected?" question. Recency-aware (showing recently-used tags affected) catches mistakes a user would otherwise discover later. No engine change - uses existing <code>getRuleAttribution</code> in a what-if mode.</div>
+          <div class="tradeoff con"><strong>Cons</strong>Computing across a large vault on every keystroke is expensive (debounce required). The recency lookup needs <code>TagMeta.lastSeen</code> already in v0.1, but framing "past week" as a window adds policy decisions (which window? per user?).</div>
+        </div>
+      </div>
+
+      <div class="mockup">
+        <div class="mockup-titlebar">
+          <div class="traffic"><span></span><span></span><span></span></div>
+          <div class="mockup-title">Rule impact preview</div>
+          <div style="width: 50px;"></div>
+        </div>
+        <div class="mockup-body" style="flex-direction: column; padding: 22px;">
+          <div style="margin-bottom: 12px;">
+            <div style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-faint); font-weight: 600;">Reviewing rule</div>
+            <div style="font-size: 16px; font-weight: 600; color: var(--text-normal); margin-top: 4px;">Hide orphan tags (count &lt;= 1)</div>
+          </div>
+
+          <div class="impact-grid">
+            <div class="impact-card">
+              <div class="impact-label">Tag pane (before)</div>
+              <div class="impact-delta">
+                <span class="value">1,247</span>
+                <span style="color: var(--text-muted); font-size: 11px;">visible</span>
+              </div>
+              <div class="impact-bar before"><div class="fill" style="width: 100%;"></div></div>
+              <div style="font-size: 11px; color: var(--text-muted); margin-top: 6px;">All tags currently shown.</div>
+            </div>
+
+            <div class="impact-card">
+              <div class="impact-label">Tag pane (after)</div>
+              <div class="impact-delta">
+                <span class="value">929</span>
+                <span class="delta negative">- 318</span>
+              </div>
+              <div class="impact-bar after"><div class="fill" style="width: 74.5%;"></div></div>
+              <div style="font-size: 11px; color: var(--text-muted); margin-top: 6px;">25% of tags hidden.</div>
+            </div>
+          </div>
+
+          <div class="alert warning" style="margin-top: 18px;">
+            <div class="alert-icon">!</div>
+            <div class="alert-body">
+              <strong>14 of the hidden tags are recent (used in past 7 days)</strong>
+              Tag Curator typically expects orphan tags to be old. Recent orphans may be tags you just created. Review the list below before applying.
+            </div>
+          </div>
+
+          <div style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-faint); font-weight: 600; margin-top: 14px; margin-bottom: 6px;">Recent orphans that will be hidden</div>
+          <div class="impact-tag-chips" style="max-height: none;">
+            <span class="impact-chip changed">#proj-acme-q3</span>
+            <span class="impact-chip changed">#customer-bigco</span>
+            <span class="impact-chip changed">#interview-2026-05-12</span>
+            <span class="impact-chip changed">#retrospective-may</span>
+            <span class="impact-chip changed">#hire-loop-jordan</span>
+            <span class="impact-chip changed">+ 9 more</span>
+          </div>
+
+          <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 22px; padding-top: 18px; border-top: 1px solid var(--divider-color);">
+            <button class="btn">Cancel</button>
+            <button class="btn">Start in dry-run instead</button>
+            <button class="btn cta">Apply rule</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ Option 24: Conflict resolver ============ -->
+    <section id="opt-24" class="option">
+      <div class="option-header">
+        <div class="option-eyebrow">Advanced rule composition · Option 24</div>
+        <h2 class="option-title">Conflict resolver</h2>
+        <p class="option-desc">When two or more rules target the same tag (especially at equal priority), the user needs a place to understand the conflict and pick a winner. This view lists every tag affected by &gt;1 rule, shows the per-rule attribution, and lets the user adjust priorities inline to make resolution explicit. Pairs with the Option 19 conflict warning - that surfaces the problem, this is where you fix it.</p>
+        <div class="tradeoffs">
+          <div class="tradeoff pro"><strong>Pros</strong>Turns invisible last-match-wins behavior into an explicit decision surface. Priority sliders make ordering tactile. Reuses <code>getRuleAttribution</code>'s <code>allMatches</code> array directly.</div>
+          <div class="tradeoff con"><strong>Cons</strong>Visible only when conflicts exist - hide otherwise to avoid clutter. Priority is a single number; conflicts at the same priority require either explicit ordering or an "even split" UI choice.</div>
+        </div>
+      </div>
+
+      <div class="mockup">
+        <div class="mockup-titlebar">
+          <div class="traffic"><span></span><span></span><span></span></div>
+          <div class="mockup-title">Conflict resolver</div>
+          <div style="width: 50px;"></div>
+        </div>
+        <div class="mockup-body" style="flex-direction: column; padding: 22px;">
+          <div class="conflict-summary">
+            <strong>3 tags are matched by more than one rule.</strong>
+            Under last-match-wins, the highest-priority rule decides each tag's action. Set distinct priorities below to make resolution explicit. Equal-priority ties resolve by rule creation order, which is implicit and harder to reason about.
+          </div>
+
+          <div style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-faint); font-weight: 600; margin-bottom: 8px;">Conflict: #FFAA00</div>
+          <div class="conflict-matrix" style="margin-bottom: 18px;">
+            <div class="conflict-row header">
+              <div>Rule</div>
+              <div>Priority</div>
+              <div>Action</div>
+              <div>Result</div>
+            </div>
+            <div class="conflict-row">
+              <div class="rule-name">Hide hex color codes <span style="color: var(--text-faint); font-size: 11px;">preset</span></div>
+              <div><input class="priority-input" value="100"></div>
+              <div style="color: var(--text-muted);">hide</div>
+              <div><span class="winner-badge loses">overridden</span></div>
+            </div>
+            <div class="conflict-row" style="background: rgba(124, 58, 237, 0.06);">
+              <div class="rule-name">Custom: Always show hex tags <span style="color: var(--text-faint); font-size: 11px;">custom</span></div>
+              <div><input class="priority-input" value="200"></div>
+              <div style="color: var(--text-muted);">show-only</div>
+              <div><span class="winner-badge wins">wins</span></div>
+            </div>
+          </div>
+
+          <div style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-faint); font-weight: 600; margin-bottom: 8px;">Conflict: #archive-q1 (2 rules tied at 100)</div>
+          <div class="conflict-matrix">
+            <div class="conflict-row header">
+              <div>Rule</div>
+              <div>Priority</div>
+              <div>Action</div>
+              <div>Result</div>
+            </div>
+            <div class="conflict-row" style="background: rgba(245, 201, 124, 0.08);">
+              <div class="rule-name">Hide archived tags <span style="color: var(--text-faint); font-size: 11px;">custom</span></div>
+              <div><input class="priority-input" value="100" style="border-color: var(--text-warning);"></div>
+              <div style="color: var(--text-muted);">hide</div>
+              <div><span class="winner-badge loses">tied</span></div>
+            </div>
+            <div class="conflict-row" style="background: rgba(245, 201, 124, 0.08);">
+              <div class="rule-name">Flag low-frequency tags <span style="color: var(--text-faint); font-size: 11px;">custom</span></div>
+              <div><input class="priority-input" value="100" style="border-color: var(--text-warning);"></div>
+              <div style="color: var(--text-muted);">flag</div>
+              <div><span class="winner-badge loses">tied (implicit)</span></div>
+            </div>
+          </div>
+
+          <div class="alert info" style="margin-top: 14px;">
+            <div class="alert-icon">i</div>
+            <div class="alert-body">
+              <strong>Recommended:</strong> Change one priority above to break the tie. Tag Curator suggests dropping "Flag low-frequency tags" to 90, so hide wins over flag (a stronger action wins over a weaker one).
+              <div class="alert-actions">
+                <button class="btn cta">Apply recommendation</button>
+                <button class="btn">Leave as is</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ Option 25: Multi-action palette ============ -->
+    <section id="opt-25" class="option">
+      <div class="option-header">
+        <div class="option-eyebrow">Advanced rule composition · Option 25</div>
+        <h2 class="option-title">Multi-action palette <span class="engine-extension-flag">engine extension</span></h2>
+        <p class="option-desc">v0.1 ships one action: hide. The <code>Action</code> type already enumerates five (<code>hide | show-only | flag | group | delegate-color</code>). This option exposes them as a visual picker in the rule editor. Each action is a tile with a one-line description, a small preview of how the tag pane looks under that action, and a v0.x scope tag. Defaults to <code>hide</code>; advanced users select <code>flag</code> for dry-run-like permanent flagging, <code>group</code> to roll a tag set into a named header, or <code>delegate-color</code> to hand visual control to Colored Tags Wrangler.</p>
+        <div class="tradeoffs">
+          <div class="tradeoff pro"><strong>Pros</strong>Action surface is already in the data model. Picker scales as new actions land. Visual previews answer "what does this DO?" without a doc read.</div>
+          <div class="tradeoff con"><strong>Cons</strong>Each new action ships with implementation cost (group requires a virtual header; delegate-color needs Colored Tags Wrangler API mapping; show-only is the inverse of hide and needs its own logic).</div>
+        </div>
+      </div>
+
+      <div class="mockup">
+        <div class="mockup-titlebar">
+          <div class="traffic"><span></span><span></span><span></span></div>
+          <div class="mockup-title">Rule editor - action picker</div>
+          <div style="width: 50px;"></div>
+        </div>
+        <div class="mockup-body" style="flex-direction: column; padding: 22px;">
+          <div style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-faint); font-weight: 600; margin-bottom: 10px;">When this rule matches, do what?</div>
+
+          <div class="action-grid">
+            <div class="action-tile selected">
+              <div class="action-icon">-</div>
+              <h4>Hide</h4>
+              <p>Remove the tag from the tag pane entirely. The default. Use for noise.</p>
+              <span class="pill">v0.1</span>
+            </div>
+
+            <div class="action-tile">
+              <div class="action-icon">!</div>
+              <h4>Flag</h4>
+              <p>Show the tag with a "needs review" badge. Use to triage without losing visibility.</p>
+              <span class="pill">v0.2</span>
+            </div>
+
+            <div class="action-tile">
+              <div class="action-icon">+</div>
+              <h4>Show only</h4>
+              <p>Inverse of hide. The tag pane shows ONLY matching tags. Useful for focus modes.</p>
+              <span class="pill">v0.2</span>
+            </div>
+
+            <div class="action-tile">
+              <div class="action-icon">[</div>
+              <h4>Group under header</h4>
+              <p>Roll all matching tags into a collapsible "Archived" section in the tag pane.</p>
+              <span class="pill">v0.3</span>
+            </div>
+
+            <div class="action-tile">
+              <div class="action-icon">o</div>
+              <h4>Delegate color</h4>
+              <p>Hand off visual control to Colored Tags Wrangler. Tag stays visible with a custom color.</p>
+              <span class="pill">v0.3</span>
+            </div>
+
+            <div class="action-tile">
+              <div class="action-icon">^</div>
+              <h4>Sort to bottom</h4>
+              <p>Tag stays visible but always sorts last in the tag pane. Demote without hiding.</p>
+              <span class="pill">v0.3</span>
+            </div>
+          </div>
+
+          <div style="margin-top: 18px; padding: 14px; background: var(--background-secondary); border-radius: 8px; font-size: 12.5px;">
+            <strong style="color: var(--text-normal);">Preview:</strong>
+            <span style="color: var(--text-muted);">Matching tags will be removed from the tag pane. You can preview the change before applying via dry-run mode, or click "Show what changes" below.</span>
+            <div style="margin-top: 10px; display: flex; gap: 8px;">
+              <button class="btn">Show what changes</button>
+              <button class="btn">Test in dry-run</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ Option 26: Hierarchy cascade ============ -->
+    <section id="opt-26" class="option">
+      <div class="option-header">
+        <div class="option-eyebrow">Tag definition &amp; lifecycle · Option 26</div>
+        <h2 class="option-title">Hierarchy cascade</h2>
+        <p class="option-desc">Obsidian supports hierarchical tags (<code>#projects/acme/discovery</code>). Rules that match a parent (<code>#projects</code>) currently do NOT automatically apply to children (<code>#projects/acme</code>). This option adds a "cascade to children" toggle per rule, with a tree preview showing exactly which descendants will be affected. Without cascade, users must duplicate rules or write regex that matches the slash-separated form.</p>
+        <div class="tradeoffs">
+          <div class="tradeoff pro"><strong>Pros</strong>Solves a real workflow: archiving a parent tag often means archiving its children too. Tree preview is honest about scope. No engine model change required - cascade is a flag on the rule plus a small evaluator branch.</div>
+          <div class="tradeoff con"><strong>Cons</strong>"What's a parent" depends on the slash convention; mixed-style vaults may confuse users. Performance: cascading rules need to walk the tag hierarchy on every evaluation. Mitigation: pre-compute a hierarchy index at scan time.</div>
+        </div>
+      </div>
+
+      <div class="mockup">
+        <div class="mockup-titlebar">
+          <div class="traffic"><span></span><span></span><span></span></div>
+          <div class="mockup-title">Rule editor - hierarchy cascade</div>
+          <div style="width: 50px;"></div>
+        </div>
+        <div class="mockup-body" style="flex-direction: column; padding: 22px;">
+          <div class="cascade-toggle">
+            <div class="copy">
+              <strong>Cascade this rule to child tags</strong>
+              <small>Apply the rule to <code>#projects</code> AND every descendant (<code>#projects/acme</code>, <code>#projects/acme/discovery</code>, etc.). Off by default to avoid surprises.</small>
+            </div>
+            <div class="toggle on"></div>
+          </div>
+
+          <div style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-faint); font-weight: 600; margin-bottom: 8px;">Cascade preview - rule matches <code>^projects$</code></div>
+          <div class="tree">
+            <div class="tree-node affected"><div class="chevron"></div><span class="tag-name">#projects</span> <span class="cascade-mark">match</span><span class="count">128</span></div>
+            <div class="tree-node depth-1 affected"><div class="chevron"></div><span class="tag-name">#projects/acme</span> <span class="cascade-mark">cascade</span><span class="count">42</span></div>
+            <div class="tree-node depth-2 affected leaf"><div class="chevron"></div><span class="tag-name">#projects/acme/discovery</span> <span class="cascade-mark">cascade</span><span class="count">18</span></div>
+            <div class="tree-node depth-2 affected leaf"><div class="chevron"></div><span class="tag-name">#projects/acme/handoff</span> <span class="cascade-mark">cascade</span><span class="count">9</span></div>
+            <div class="tree-node depth-1 affected"><div class="chevron"></div><span class="tag-name">#projects/beta</span> <span class="cascade-mark">cascade</span><span class="count">35</span></div>
+            <div class="tree-node depth-2 affected leaf"><div class="chevron"></div><span class="tag-name">#projects/beta/notes</span> <span class="cascade-mark">cascade</span><span class="count">12</span></div>
+            <div class="tree-node depth-1 affected"><div class="chevron"></div><span class="tag-name">#projects/gamma</span> <span class="cascade-mark">cascade</span><span class="count">12</span></div>
+          </div>
+
+          <div style="margin-top: 14px; padding: 12px; background: var(--background-secondary); border-radius: 8px; font-size: 12.5px; color: var(--text-muted);">
+            <strong style="color: var(--text-normal);">7 tags will be affected.</strong> 1 directly matches the rule pattern (<code>#projects</code>), 6 are descendants picked up by cascade. Without cascade, only 1 tag would be affected.
+          </div>
+        </div>
+      </div>
+      <p class="footer-note">
+        Per-tag override (Option 11's tag detail sheet) wins over cascade: a child tag can opt out of its parent's rule via "Always show this tag," producing a visible exception in the cascade preview.
+      </p>
+    </section>
+
+    <!-- ============ Option 27: Co-occurrence rules ============ -->
+    <section id="opt-27" class="option">
+      <div class="option-header">
+        <div class="option-eyebrow">Tag definition &amp; lifecycle · Option 27</div>
+        <h2 class="option-title">Co-occurrence rules <span class="engine-extension-flag">engine extension</span></h2>
+        <p class="option-desc">"Hide <code>#daily</code> if a note also has <code>#archived</code>." Co-occurrence rules let users target tags based on what they appear alongside, not just their own pattern. Two columns: "Tag to act on" and "Only when paired with." Surfaces in the rule editor as an alternative to single-tag matching. Requires per-tag co-occurrence data in <code>TagMeta</code> (currently absent).</p>
+        <div class="tradeoffs">
+          <div class="tradeoff pro"><strong>Pros</strong>Solves the "tag is fine in active notes, noise in archived notes" problem elegantly. The data needed is the same data Dataview's tag-joins use - friendly territory.</div>
+          <div class="tradeoff con"><strong>Cons</strong>Engine cost: tag metadata must track per-tag-set co-occurrence counts. Memory grows quadratically with tag count. Mitigation: compute lazily on rule-eval time, cache the result, invalidate on file change.</div>
+        </div>
+      </div>
+
+      <div class="mockup">
+        <div class="mockup-titlebar">
+          <div class="traffic"><span></span><span></span><span></span></div>
+          <div class="mockup-title">Co-occurrence rule</div>
+          <div style="width: 50px;"></div>
+        </div>
+        <div class="mockup-body" style="flex-direction: column; padding: 22px;">
+          <div style="font-size: 12.5px; color: var(--text-muted); margin-bottom: 16px;">A co-occurrence rule hides a tag <em>only</em> when it appears in a note that also has one of the paired tags.</div>
+
+          <div class="co-builder">
+            <div class="co-block">
+              <h4>Hide this tag</h4>
+              <div class="co-tags">
+                <span class="co-tag">#daily <span class="x">x</span></span>
+              </div>
+            </div>
+            <div class="co-block">
+              <h4>Only when the note also has</h4>
+              <div class="co-tags">
+                <span class="co-tag">#archived <span class="x">x</span></span>
+                <span class="co-tag">#cold-storage <span class="x">x</span></span>
+                <span class="co-tag add-pill">+ add tag</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="co-result">
+            <span class="result-count">42</span> <strong>notes</strong> have <code>#daily</code> paired with <code>#archived</code> or <code>#cold-storage</code>. In those notes, <code>#daily</code> will be hidden from the tag pane. <strong>189 notes</strong> with <code>#daily</code> NOT paired with these tags are unaffected.
+          </div>
+
+          <div class="alert info" style="margin-top: 16px;">
+            <div class="alert-icon">i</div>
+            <div class="alert-body">
+              <strong>Per-note vs per-tag scope.</strong> This rule operates per-note: <code>#daily</code> stays visible in the tag pane overall (because other notes still use it), but the tag pane row's count reflects only the unarchived occurrences. To remove the tag pane row entirely, use a plain frequency or list rule instead.
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ Option 28: Review workflow ============ -->
+    <section id="opt-28" class="option">
+      <div class="option-header">
+        <div class="option-eyebrow">Tag definition &amp; lifecycle · Option 28</div>
+        <h2 class="option-title">Tag review workflow</h2>
+        <p class="option-desc">A three-state workflow per tag: <strong>pending</strong> (newly seen, awaiting decision), <strong>decided</strong> (user actively chose to keep or curate), <strong>ignored</strong> (user dismissed without action). The plan's <code>TagMeta.reviewed</code> boolean is already the seed of this. Surfaces in the tag list as pills users can filter by; provides a triage workflow for vaults with hundreds of unreviewed tags. New tags from web clippings or imports land in <strong>pending</strong>; the user can sweep through and decide.</p>
+        <div class="tradeoffs">
+          <div class="tradeoff pro"><strong>Pros</strong>Turns "look at all my tags one day" into a finite triage queue. Pairs naturally with the bulk-action toolbar (Option 10). <code>TagMeta.reviewed</code> exists; this proposal just adds two more states.</div>
+          <div class="tradeoff con"><strong>Cons</strong>Three-state machines are easy to mis-implement. Need clear rules: when does "decided" revert to "pending"? When tag count crosses a threshold? Never? Default: never automatic.</div>
+        </div>
+      </div>
+
+      <div class="mockup">
+        <div class="mockup-titlebar">
+          <div class="traffic"><span></span><span></span><span></span></div>
+          <div class="mockup-title">Tag list - review workflow</div>
+          <div style="width: 50px;"></div>
+        </div>
+        <div class="mockup-body" style="flex-direction: column; padding: 22px;">
+          <div class="review-pills">
+            <div class="review-pill active pending">Pending <span class="count">47</span></div>
+            <div class="review-pill">Decided <span class="count">1,200</span></div>
+            <div class="review-pill">Ignored <span class="count">94</span></div>
+          </div>
+
+          <div style="font-size: 11.5px; color: var(--text-muted); margin-bottom: 12px;">
+            47 tags appeared in the past 30 days that you haven't categorized yet. Decide each one to clean up the queue.
+          </div>
+
+          <div class="review-card">
+            <div>
+              <div class="review-tag">#proj-acme</div>
+              <div class="review-meta">12 notes · first seen 2026-03-04 · inline + frontmatter</div>
+            </div>
+            <div class="review-actions">
+              <button class="btn">Keep visible</button>
+              <button class="btn">Build rule</button>
+              <button class="btn">Ignore</button>
+            </div>
+          </div>
+
+          <div class="review-card">
+            <div>
+              <div class="review-tag">#FFAA00</div>
+              <div class="review-meta">3 notes · imported via MarkDownload · matches "Hide hex" preset</div>
+            </div>
+            <div class="review-actions">
+              <button class="btn cta">Confirm hide</button>
+              <button class="btn">Override</button>
+              <button class="btn">Ignore</button>
+            </div>
+          </div>
+
+          <div class="review-card">
+            <div>
+              <div class="review-tag">#interview-jordan-2026-05-12</div>
+              <div class="review-meta">1 note · first seen 2026-05-12 · matches "Hide orphans" preset</div>
+            </div>
+            <div class="review-actions">
+              <button class="btn">Keep visible</button>
+              <button class="btn">Hide</button>
+              <button class="btn">Ignore</button>
+            </div>
+          </div>
+
+          <div class="review-card">
+            <div>
+              <div class="review-tag">#section-3</div>
+              <div class="review-meta">8 notes · imported · matches "Hide URL anchors" preset</div>
+            </div>
+            <div class="review-actions">
+              <button class="btn cta">Confirm hide</button>
+              <button class="btn">Override</button>
+              <button class="btn">Ignore</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <p class="footer-note">
+        <strong>Bulk decisions:</strong> the review queue pairs with the bulk-action toolbar (Option 10). Select multiple pending tags; the toolbar offers "Confirm all (matches preset)," "Build rule from all," or "Move all to ignored."
+      </p>
+    </section>
+
+    <!-- ============ Option 29: Rule library / preset gallery ============ -->
+    <section id="opt-29" class="option">
+      <div class="option-header">
+        <div class="option-eyebrow">Potential experience · Option 29</div>
+        <h2 class="option-title">Rule library / preset gallery</h2>
+        <p class="option-desc">A browseable gallery of community-contributed rule packs. Users filter by category (web clippings, academic notes, project management, journaling), preview the rule before installing, and install with one click. The plan's spec roadmap defers this to v0.3-v0.4; this mockup commits to a shape so the infrastructure can be designed earlier. Rule packs are plain JSON files following the <code>Rule[]</code> schema; sharing happens via vault-local files first, then a community-hosted index later.</p>
+        <div class="tradeoffs">
+          <div class="tradeoff pro"><strong>Pros</strong>Network effect: each user's rule pack becomes another user's preset. Curators (people who know regex) help non-engineers without 1:1 support. Same shape as Obsidian's community plugin directory.</div>
+          <div class="tradeoff con"><strong>Cons</strong>Requires a community index (hosted somewhere). Trust model: who reviews packs? Mitigation: ship the import-from-file path first (no index), let community packs propagate via gists and forum links. Add the hosted index later if demand warrants.</div>
+        </div>
+      </div>
+
+      <div class="mockup">
+        <div class="mockup-titlebar">
+          <div class="traffic"><span></span><span></span><span></span></div>
+          <div class="mockup-title">Rule library</div>
+          <div style="width: 50px;"></div>
+        </div>
+        <div class="mockup-body" style="flex-direction: column; padding: 22px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+            <div>
+              <div style="font-size: 18px; font-weight: 600; color: var(--text-normal);">Rule library</div>
+              <div style="font-size: 12px; color: var(--text-muted);">Browse community-contributed rule packs. Install one to add its rules to your vault.</div>
+            </div>
+            <div style="display: flex; gap: 8px;">
+              <button class="btn">Import from file</button>
+              <button class="btn">Share my rules</button>
+            </div>
+          </div>
+
+          <div class="library-filter-bar">
+            <span class="library-chip active">All</span>
+            <span class="library-chip">Web clippings</span>
+            <span class="library-chip">Academic</span>
+            <span class="library-chip">Projects</span>
+            <span class="library-chip">Journaling</span>
+            <span class="library-chip">Dev notes</span>
+            <span class="library-chip">Cleanup</span>
+            <input class="input" placeholder="Search packs..." style="flex: 1; min-width: 200px;">
+          </div>
+
+          <div class="library-grid">
+            <div class="library-card">
+              <span class="library-eyebrow">Web clippings</span>
+              <h4>MarkDownload cleanup</h4>
+              <p>Hides hex codes, URL fragments, breadcrumb tags, and analytics artifacts from MarkDownload imports.</p>
+              <div class="library-meta">
+                <span class="author">by @kepano · 4.2k installs</span>
+                <button class="install-btn">Install</button>
+              </div>
+            </div>
+
+            <div class="library-card">
+              <span class="library-eyebrow">Academic</span>
+              <h4>Zotero import filter</h4>
+              <p>Hides the tag noise from Zotero's PDF annotation imports: highlight, citation, footnote.</p>
+              <div class="library-meta">
+                <span class="author">by @argentum · 2.1k installs</span>
+                <button class="install-btn">Install</button>
+              </div>
+            </div>
+
+            <div class="library-card">
+              <span class="library-eyebrow">Projects</span>
+              <h4>Project lifecycle states</h4>
+              <p>Groups archived projects under a header; flags stale projects (no activity in 90 days).</p>
+              <div class="library-meta">
+                <span class="author">by @bryan · 1.8k installs</span>
+                <button class="install-btn installed">Installed</button>
+              </div>
+            </div>
+
+            <div class="library-card">
+              <span class="library-eyebrow">Journaling</span>
+              <h4>Daily-note tag noise</h4>
+              <p>Common journaling artifacts: weekday names, mood tags below threshold, single-use tags.</p>
+              <div class="library-meta">
+                <span class="author">by @sara · 1.5k installs</span>
+                <button class="install-btn">Install</button>
+              </div>
+            </div>
+
+            <div class="library-card">
+              <span class="library-eyebrow">Dev notes</span>
+              <h4>Code snippet tags</h4>
+              <p>Hides language-tag noise from code clippers (js, ts, py used as content tags by accident).</p>
+              <div class="library-meta">
+                <span class="author">by @nikki · 980 installs</span>
+                <button class="install-btn">Install</button>
+              </div>
+            </div>
+
+            <div class="library-card">
+              <span class="library-eyebrow">Cleanup</span>
+              <h4>Aggressive orphan sweep</h4>
+              <p>Hides orphan tags AND tags only present in archived notes. For users who want a tidy tag pane.</p>
+              <div class="library-meta">
+                <span class="author">by @tag-curator-team · 740 installs</span>
+                <button class="install-btn">Install</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ Option 30: Tag analytics dashboard ============ -->
+    <section id="opt-30" class="option">
+      <div class="option-header">
+        <div class="option-eyebrow">Potential experience · Option 30</div>
+        <h2 class="option-title">Tag analytics dashboard</h2>
+        <p class="option-desc">A glanceable dashboard summarizing tag health across the vault: total count over time, hidden vs visible breakdown, top growth (tags adopted recently), top decay (tags falling out of use), duplicate-name candidates, and orphan trends. Becomes the home view of the tag list, with the existing table and grouped views accessible via top-tab. All data is derived from <code>TagMeta.firstSeen / lastSeen / count</code> already tracked in v0.1 - the dashboard is a derived visualization, not a new data layer.</p>
+        <div class="tradeoffs">
+          <div class="tradeoff pro"><strong>Pros</strong>Surfaces patterns users wouldn't otherwise notice. Pairs naturally with the review workflow (Option 28). Dashboard makes the plugin feel "alive" - returning to it shows new state, not just rule lists.</div>
+          <div class="tradeoff con"><strong>Cons</strong>Implementation cost for sparklines, trend lines, suggestions. Defer to v0.3 once the rule engine is mature. Risk: feature creep ("can we also show...").</div>
+        </div>
+      </div>
+
+      <div class="mockup">
+        <div class="mockup-titlebar">
+          <div class="traffic"><span></span><span></span><span></span></div>
+          <div class="mockup-title">Tag analytics dashboard</div>
+          <div style="width: 50px;"></div>
+        </div>
+        <div class="mockup-body" style="flex-direction: column; padding: 22px;">
+          <div class="top-tabs" style="margin: -22px -22px 18px;">
+            <div class="top-tab active">Dashboard</div>
+            <div class="top-tab">All tags <span class="badge">1,247</span></div>
+            <div class="top-tab">Hidden <span class="badge">318</span></div>
+            <div class="top-tab">Grouped by rule</div>
+            <div class="top-tab">Review queue <span class="badge">47</span></div>
+          </div>
+
+          <div class="analytics-row">
+            <div class="analytics-stat">
+              <div class="stat-label">Total tags</div>
+              <div class="stat-value">1,247</div>
+              <div class="stat-trend up">+ 18 this week</div>
+              <div class="sparkline">
+                <div class="bar" style="height: 30%;"></div>
+                <div class="bar" style="height: 50%;"></div>
+                <div class="bar" style="height: 40%;"></div>
+                <div class="bar" style="height: 60%;"></div>
+                <div class="bar" style="height: 75%;"></div>
+                <div class="bar" style="height: 70%;"></div>
+                <div class="bar" style="height: 95%;"></div>
+              </div>
+            </div>
+            <div class="analytics-stat">
+              <div class="stat-label">Hidden by curator</div>
+              <div class="stat-value">318</div>
+              <div class="stat-trend">25% of all tags</div>
+              <div class="sparkline">
+                <div class="bar" style="height: 80%;"></div>
+                <div class="bar" style="height: 78%;"></div>
+                <div class="bar" style="height: 82%;"></div>
+                <div class="bar" style="height: 79%;"></div>
+                <div class="bar" style="height: 84%;"></div>
+                <div class="bar" style="height: 81%;"></div>
+                <div class="bar" style="height: 85%;"></div>
+              </div>
+            </div>
+            <div class="analytics-stat">
+              <div class="stat-label">Orphans (count 1)</div>
+              <div class="stat-value">94</div>
+              <div class="stat-trend down">- 12 this week</div>
+              <div class="sparkline">
+                <div class="bar" style="height: 70%;"></div>
+                <div class="bar" style="height: 60%;"></div>
+                <div class="bar" style="height: 50%;"></div>
+                <div class="bar" style="height: 40%;"></div>
+                <div class="bar" style="height: 45%;"></div>
+                <div class="bar" style="height: 30%;"></div>
+                <div class="bar" style="height: 35%;"></div>
+              </div>
+            </div>
+            <div class="analytics-stat">
+              <div class="stat-label">Pending review</div>
+              <div class="stat-value">47</div>
+              <div class="stat-trend">last reviewed: 4 days ago</div>
+              <div class="sparkline">
+                <div class="bar" style="height: 40%;"></div>
+                <div class="bar" style="height: 50%;"></div>
+                <div class="bar" style="height: 55%;"></div>
+                <div class="bar" style="height: 65%;"></div>
+                <div class="bar" style="height: 70%;"></div>
+                <div class="bar" style="height: 72%;"></div>
+                <div class="bar" style="height: 80%;"></div>
+              </div>
+            </div>
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
+            <div class="analytics-panel">
+              <h4>Suggestions</h4>
+              <div class="panel-subtitle">Tag Curator noticed these patterns. Each suggestion is one click to apply or dismiss.</div>
+
+              <div class="suggestion-row">
+                <span class="icon-orb">!</span>
+                <div class="body">
+                  <strong>Possible duplicate:</strong> <code>#proj-acme</code> and <code>#project-acme</code>
+                  <small>Both appear in your vault; consider merging via alias.</small>
+                </div>
+                <button class="btn">Review</button>
+              </div>
+
+              <div class="suggestion-row">
+                <span class="icon-orb">!</span>
+                <div class="body">
+                  <strong>14 orphans created in past 7 days.</strong>
+                  <small>Likely typos or one-off tags. Sweep them in the review queue.</small>
+                </div>
+                <button class="btn">Open queue</button>
+              </div>
+
+              <div class="suggestion-row">
+                <span class="icon-orb">!</span>
+                <div class="body">
+                  <strong>Hex preset hides 217 tags.</strong>
+                  <small>Disproportionate impact - your vault may have a clipping source needing a custom filter.</small>
+                </div>
+                <button class="btn">Investigate</button>
+              </div>
+            </div>
+
+            <div class="analytics-panel">
+              <h4>Top growth (past 30 days)</h4>
+              <div class="panel-subtitle">Tags you adopted recently. Worth deciding whether they should stay.</div>
+
+              <div class="suggestion-row">
+                <div class="body">
+                  <strong>#interview</strong> <small>+ 23 notes in 30 days</small>
+                </div>
+                <span style="color: var(--text-success); font-size: 12px;">+ 350%</span>
+              </div>
+              <div class="suggestion-row">
+                <div class="body">
+                  <strong>#retrospective</strong> <small>+ 8 notes in 30 days</small>
+                </div>
+                <span style="color: var(--text-success); font-size: 12px;">+ 140%</span>
+              </div>
+              <div class="suggestion-row">
+                <div class="body">
+                  <strong>#hiring-loop</strong> <small>+ 6 notes in 30 days</small>
+                </div>
+                <span style="color: var(--text-success); font-size: 12px;">+ 100%</span>
+              </div>
+              <div class="suggestion-row">
+                <div class="body">
+                  <strong>#proj-vega</strong> <small>+ 5 notes in 30 days</small>
+                </div>
+                <span style="color: var(--text-success); font-size: 12px;">new</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ Option 31: Merge & alias workflow ============ -->
+    <section id="opt-31" class="option">
+      <div class="option-header">
+        <div class="option-eyebrow">Potential experience · Option 31</div>
+        <h2 class="option-title">Merge &amp; alias workflow <span class="engine-extension-flag">spec v0.3 scope</span></h2>
+        <p class="option-desc">A canonical tag with aliases that fold into it for display purposes. Without modifying any note content (file-safe contract intact), Tag Curator can present <code>#proj-acme</code>, <code>#proj.acme</code>, and <code>#project-acme</code> as a single row in the tag pane. The spec defers this to v0.3 because the aliasing data needs careful design. This mockup commits to the UX: a target tag, a list of folded aliases, and an impact summary showing what changes. Tag Wrangler integration: the actual rename (file content modification) happens via Tag Wrangler; Tag Curator only handles the display-side alias mapping.</p>
+        <div class="tradeoffs">
+          <div class="tradeoff pro"><strong>Pros</strong>Solves the "I have the same tag five different ways" problem without touching files. Pairs with the analytics dashboard's duplicate-detection (Option 30). Composes with Tag Wrangler for the actual rename when the user decides to consolidate.</div>
+          <div class="tradeoff con"><strong>Cons</strong>Engine extension: <code>TagMeta</code> needs an <code>aliases</code> field (already in the type!) and the observer must collapse alias rows into a single display row. Mobile UX for picking aliases needs care.</div>
+        </div>
+      </div>
+
+      <div class="mockup">
+        <div class="mockup-titlebar">
+          <div class="traffic"><span></span><span></span><span></span></div>
+          <div class="mockup-title">Merge tags</div>
+          <div style="width: 50px;"></div>
+        </div>
+        <div class="mockup-body" style="flex-direction: column; padding: 22px;">
+          <div style="font-size: 12.5px; color: var(--text-muted); margin-bottom: 16px;">
+            Pick a canonical tag (target) and the aliases that should fold into it. Tag Curator will display them as one row in the tag pane. <strong style="color: var(--text-normal);">Your notes are not modified.</strong> Use Tag Wrangler if you want to rename the actual tags in your notes.
+          </div>
+
+          <div class="merge-canvas">
+            <div class="merge-side">
+              <h4>Aliases (3)</h4>
+              <div class="merge-aliases-list">
+                <div class="alias-row"><span class="strike">#proj.acme</span><span class="count">8</span></div>
+                <div class="alias-row"><span class="strike">#project-acme</span><span class="count">5</span></div>
+                <div class="alias-row"><span class="strike">#projects/acme</span><span class="count">12</span></div>
+              </div>
+            </div>
+
+            <div class="merge-arrow">-&gt;</div>
+
+            <div class="merge-side target">
+              <h4>Canonical (1)</h4>
+              <div class="merge-tag-large target">#proj-acme</div>
+              <div style="font-size: 12px; color: var(--text-muted);">12 notes use this exact spelling already. After merging, the tag pane will show this row with the combined count.</div>
+            </div>
+          </div>
+
+          <div class="merge-impact">
+            <strong>Impact summary:</strong>
+            <br>
+            <span class="impact-num">25 notes</span> currently use one of the alias tags. After this merge, the tag pane shows one row labeled <code>#proj-acme</code> with a combined count of <span class="impact-num">37</span>.
+            <br>
+            <strong style="color: var(--text-normal);">Your notes are not modified.</strong> The aliases continue to exist in note bodies; they just display as one row.
+            <br>
+            <span style="color: var(--text-muted); margin-top: 6px; display: block;">Tip: If you want to actually rename the aliases in your notes, install Tag Wrangler and run "Rename tag" from the context menu on each alias. Tag Curator and Tag Wrangler are compatible.</span>
+          </div>
+
+          <div class="merge-confirm-row">
+            <button class="btn">Cancel</button>
+            <button class="btn">Preview in dry-run</button>
+            <button class="btn cta">Save alias mapping</button>
+          </div>
+        </div>
+      </div>
+      <p class="footer-note">
+        Implementation: <code>TagMeta.aliases</code> is already in the type. The observer needs an alias-resolution pass: for each tag row in the tag pane, look up if it appears as an alias in any canonical, and if so, hide the row (its count rolls into the canonical's row). Engine work: about 30 lines plus tests. UX work: this mockup plus the duplicate-detection suggestion path in Option 30.
       </p>
     </section>
 

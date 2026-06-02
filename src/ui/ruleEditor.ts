@@ -1,251 +1,799 @@
 /**
- * Rule editor UI for creating and editing custom rules
+ * Rule editor (D-010 - card view + right-docked preview, supersedes D-001).
+ *
+ * Two modes share one surface (no wizard, per D-002 closed):
+ *   - "cards": each rule rendered as a full-width row with toggle + name +
+ *     Type pill + match summary + "N tags affected" + chevron. A dashed
+ *     "+ New rule" card opens edit mode with defaults.
+ *   - "edit": replaces the cards with a sectioned editor (Type / Identity /
+ *     Match / Then), header with the rule name as a proper h2 + enable
+ *     toggle + back-to-cards crumb.
+ *
+ * A right-docked preview panel stays visible across both modes:
+ *   - cards mode: shows every tag any rule is currently affecting
+ *   - edit mode: filtered to the selected rule, with a stats row
+ *     (Unique tags / Total instances)
+ *
+ * Priority is hidden from the UI (D-009). New custom rules default to 50.
  */
-
-import { Modal, App, Setting } from 'obsidian';
-import { Rule, MatchCriteria } from '../types';
-import { RuleEngine } from '../engine/ruleEngine';
+import { App, Modal, Notice } from 'obsidian';
 import TagCuratorPlugin from '../main';
+import {
+  Action,
+  MatchCriteria,
+  MatchType,
+  Rule,
+  Scope,
+  TagMeta,
+} from '../types';
+import { RuleEngine } from '../engine/ruleEngine';
+import { resolveActiveRules } from '../engine/presets';
+import { compileSafeRegex } from '../util/safeRegex';
 
-export class RuleEditorModal extends Modal {
-  plugin: TagCuratorPlugin;
-  rule: Rule;
-  onSave: (rule: Rule) => Promise<void>;
-  isNew: boolean;
+type Mode = 'cards' | 'edit';
 
-  constructor(
-    app: App,
-    plugin: TagCuratorPlugin,
-    rule?: Rule,
-    onSave?: (rule: Rule) => Promise<void>
-  ) {
-    super(app);
-    this.plugin = plugin;
-    this.isNew = !rule;
-    this.rule = rule || this.createNewRule();
-    this.onSave = onSave || (async () => { return; });
+const DEFAULT_PRIORITY = 50; // D-009: hidden in UI; engine uses this default.
+
+export class RuleEditor {
+  private root: HTMLElement;
+  private mainEl!: HTMLElement;
+  private previewEl!: HTMLElement;
+  private mode: Mode = 'cards';
+  private draft: Rule | null = null;
+  private isNew = false;
+
+  // Tags whose preview detail accordion is expanded. Tracked on the instance so
+  // an override toggle (which re-renders the whole editor via settings.onChange)
+  // keeps the open panel open instead of collapsing it.
+  private openPreviewTags = new Set<string>();
+
+  // Unsubscribe handle from settingsManager.onChange; released in destroy() so
+  // a mounted-then-unmounted editor (e.g. switching workspace modes) does not
+  // leak a listener that keeps rendering into a detached root.
+  private unsubscribeSettings: (() => void) | null = null;
+
+  constructor(container: HTMLElement, private plugin: TagCuratorPlugin) {
+    this.root = container.createDiv({ cls: 'tcr-workspace' });
+    this.mainEl = this.root.createDiv({ cls: 'tcr-main' });
+    this.previewEl = this.root.createDiv({ cls: 'tcr-preview-dock' });
+    this.render();
+    this.unsubscribeSettings = this.plugin.settingsManager.onChange(() =>
+      this.render(),
+    );
   }
 
-  private createNewRule(): Rule {
+  destroy(): void {
+    this.unsubscribeSettings?.();
+    this.unsubscribeSettings = null;
+    this.root.remove();
+  }
+
+  // -----------------------------------------------------------------
+  // Top-level render
+  // -----------------------------------------------------------------
+
+  private render(): void {
+    this.mainEl.empty();
+    this.previewEl.empty();
+    if (this.mode === 'cards') {
+      this.renderCards();
+      this.renderPreviewVaultWide();
+    } else {
+      this.renderEdit();
+      this.renderPreviewForRule(this.draft);
+    }
+  }
+
+  // -----------------------------------------------------------------
+  // Card view
+  // -----------------------------------------------------------------
+
+  private renderCards(): void {
+    const s = this.plugin.settingsManager.get();
+    const rules = s.customRules;
+
+    const toolbar = this.mainEl.createDiv({ cls: 'tcr-toolbar' });
+    toolbar.createDiv({
+      cls: 'tcr-toolbar-title',
+      text: `Custom rules · ${rules.length}`,
+    });
+    const newBtn = toolbar.createEl('button', {
+      cls: 'tcr-btn tcr-btn-accent tcr-new-btn',
+      text: '+ New rule',
+    });
+    newBtn.addEventListener('click', () => this.openEdit(null));
+
+    const cards = this.mainEl.createDiv({ cls: 'tcr-cards' });
+    for (const rule of rules) {
+      this.renderCard(cards, rule);
+    }
+    if (rules.length === 0) this.renderNewCard(cards);
+  }
+
+  private renderCard(parent: HTMLElement, rule: Rule): void {
+    const card = parent.createDiv({ cls: 'tcr-card' });
+    if (!rule.enabled) card.addClass('tcr-card-off');
+
+    const toggleWrap = card.createDiv({ cls: 'tcr-card-toggle' });
+    this.makeToggle(toggleWrap, rule.enabled, async (next) => {
+      await this.plugin.settingsManager.updateCustomRule(rule.id, {
+        enabled: next,
+      });
+    });
+
+    const info = card.createDiv({ cls: 'tcr-card-info' });
+    info.createDiv({ cls: 'tcr-card-name', text: rule.name });
+    const sub = info.createDiv({ cls: 'tcr-card-sub' });
+    sub.createSpan({ cls: 'tcr-card-type', text: rule.match.type });
+    sub.appendText(' · ' + matchSummaryString(rule.match));
+
+    const affectedCount = this.countAffectedForRule(rule);
+    const affectedEl = card.createDiv({
+      cls: 'tcr-card-affected',
+      text: rule.enabled ? `${affectedCount} tags ›` : 'off',
+    });
+    if (!rule.enabled) affectedEl.addClass('tcr-card-affected-zero');
+
+    card.addEventListener('click', (e) => {
+      const tgt = e.target as HTMLElement;
+      if (tgt.closest('.tcr-card-toggle')) return;
+      this.openEdit(rule);
+    });
+  }
+
+  private renderNewCard(parent: HTMLElement): void {
+    const card = parent.createDiv({ cls: 'tcr-card tcr-card-new' });
+    card.createDiv({ cls: 'tcr-card-new-title', text: '+ New rule' });
+    card.createDiv({
+      cls: 'tcr-card-new-sub',
+      text: 'Opens the editor with defaults. No separate wizard.',
+    });
+    card.addEventListener('click', () => this.openEdit(null));
+  }
+
+  private openEdit(rule: Rule | null): void {
+    if (rule) {
+      this.draft = { ...rule, match: { ...rule.match } };
+      this.isNew = false;
+    } else {
+      this.draft = this.makeDefaultRule();
+      this.isNew = true;
+    }
+    this.mode = 'edit';
+    this.render();
+  }
+
+  private makeDefaultRule(): Rule {
     return {
-      id: `rule-${Date.now()}`,
-      name: 'New Rule',
+      id: `r-${Date.now().toString(36)}-${Math.random()
+        .toString(36)
+        .slice(2, 7)}`,
+      name: 'Untitled rule',
       enabled: true,
-      priority: 50,
-      match: {
-        type: 'regex',
-        pattern: '',
-      },
+      priority: DEFAULT_PRIORITY,
+      match: { type: 'regex', pattern: '' },
       action: 'hide',
       scopes: ['tag-pane'],
     };
   }
 
-  onOpen() {
-    const { contentEl } = this;
-    contentEl.empty();
+  // -----------------------------------------------------------------
+  // Edit mode
+  // -----------------------------------------------------------------
 
-    contentEl.createEl('h2', {
-      text: this.isNew ? 'Create Rule' : 'Edit Rule',
+  private renderEdit(): void {
+    const draft = this.draft;
+    if (!draft) {
+      this.exitEdit();
+      return;
+    }
+    const edit = this.mainEl.createDiv({ cls: 'tcr-edit' });
+
+    const head = edit.createDiv({ cls: 'tcr-edit-head' });
+    const crumbs = head.createDiv({ cls: 'tcr-edit-crumbs' });
+    const back = crumbs.createEl('button', {
+      cls: 'tcr-edit-back',
+      text: '← Back to rules',
+    });
+    back.addEventListener('click', () => this.exitEdit());
+    crumbs.createSpan({ cls: 'tcr-edit-crumb-sep', text: '/' });
+    crumbs.createSpan({ text: 'Custom rules' });
+    crumbs.createSpan({ cls: 'tcr-edit-crumb-sep', text: '/' });
+    crumbs.createSpan({ text: this.isNew ? 'New rule' : 'Edit rule' });
+
+    const title = head.createDiv({ cls: 'tcr-edit-title-row' });
+    this.makeToggle(title, draft.enabled, (next) => {
+      draft.enabled = next;
+    });
+    const nameInput = title.createEl('input', { cls: 'tcr-edit-title-input' });
+    nameInput.value = draft.name;
+    nameInput.placeholder = 'Untitled rule';
+    nameInput.addEventListener('input', () => {
+      draft.name = nameInput.value;
     });
 
-    this.buildForm(contentEl);
-  }
-
-  private buildForm(contentEl: HTMLElement) {
-    const form = contentEl.createDiv({ cls: 'tag-curator-rule-form' });
-
-    // Name
-    new Setting(form)
-      .setName('Rule Name')
-      .setDesc('A descriptive name for this rule')
-      .addText(text => {
-        text
-          .setValue(this.rule.name)
-          .onChange(value => {
-            this.rule.name = value;
-          });
-      });
-
-    // Priority
-    new Setting(form)
-      .setName('Priority')
-      .setDesc('Higher priority rules are evaluated last (last match wins)')
-      .addSlider(slider => {
-        slider
-          .setLimits(0, 100, 5)
-          .setValue(this.rule.priority)
-          .onChange(value => {
-            this.rule.priority = value;
-          });
-      });
-
-    // Match type
-    new Setting(form)
-      .setName('Match Type')
-      .setDesc('How to identify tags to apply this rule to')
-      .addDropdown(dropdown => {
-        dropdown
-          .addOption('regex', 'Regex Pattern')
-          .addOption('frequency', 'Frequency (count)')
-          .addOption('list', 'Explicit List')
-          .setValue(this.rule.match.type)
-          .onChange(value => {
-            this.rule.match.type = value as any;
-            this.onOpen(); // Rebuild form to show appropriate inputs
-          });
-      });
-
-    // Match criteria - dynamic based on type
-    this.buildMatchCriteria(form);
-
-    // Notes
-    new Setting(form)
-      .setName('Notes')
-      .setDesc('Optional comment about this rule')
-      .addTextArea(text => {
-        text
-          .setValue(this.rule.notes || '')
-          .onChange(value => {
-            this.rule.notes = value;
-          });
-      });
-
-    // Test field
-    new Setting(form)
-      .setName('Test Tag')
-      .setDesc('Type a tag to see if this rule would match')
-      .addText(text => {
-        text
-          .setPlaceholder('#my-tag')
-          .onChange(value => {
-            const tag = value.startsWith('#') ? value.slice(1) : value;
-            const matches = RuleEngine.testTag(tag, this.rule);
-            const result = form.querySelector('.test-result');
-            if (result) {
-              result.textContent = matches ? 'Would match!' : 'No match';
-              result.className = `test-result ${matches ? 'match' : 'no-match'}`;
-            }
-          });
-      });
-
-    form.createDiv({
-      cls: 'test-result no-match',
-      text: 'No match',
+    this.section(edit, 'Type', (sec) => {
+      const cards = sec.createDiv({ cls: 'tcr-type-cards' });
+      const types: Array<[MatchType, string, string]> = [
+        ['regex', 'Pattern match', 'A regex against the tag name'],
+        ['frequency', 'Count threshold', "Compare the tag's note-count"],
+        ['list', 'Specific tags', 'An explicit list of tags'],
+      ];
+      for (const [t, cardTitle, desc] of types) {
+        const c = cards.createDiv({ cls: 'tcr-type-card' });
+        if (draft.match.type === t) c.addClass('on');
+        c.createDiv({ cls: 'tcr-type-card-title', text: cardTitle });
+        c.createDiv({ cls: 'tcr-type-card-desc', text: desc });
+        c.addEventListener('click', () => {
+          if (draft.match.type === t) return;
+          draft.match = blankCriteriaFor(t);
+          this.render();
+        });
+      }
     });
 
-    // Enabled toggle
-    new Setting(form)
-      .setName('Enabled')
-      .setDesc('Turn this rule on or off')
-      .addToggle(toggle => {
-        toggle
-          .setValue(this.rule.enabled)
-          .onChange(value => {
-            this.rule.enabled = value;
-          });
+    this.section(edit, 'Match', (sec) => {
+      this.renderMatchSection(sec, draft);
+    });
+
+    this.section(edit, 'Then', (sec) => {
+      const actionRow = this.row(sec);
+      this.label(actionRow, 'Action');
+      const ctl = this.control(actionRow);
+      const sel = ctl.createEl('select', { cls: 'tcr-select tight' });
+      for (const a of ['hide', 'flag', 'show-only', 'group'] as Action[]) {
+        const opt = sel.createEl('option', { value: a, text: a });
+        if (draft.action === a) opt.selected = true;
+      }
+      sel.addEventListener('change', () => {
+        draft.action = sel.value as Action;
       });
 
-    // Save button
-    new Setting(form)
-      .addButton(btn =>
-        btn
-          .setButtonText('Save Rule')
-          .setCta()
-          .onClick(async () => {
-            await this.onSave(this.rule);
-            this.close();
-          })
-      )
-      .addButton(btn =>
-        btn
-          .setButtonText('Cancel')
-          .onClick(() => this.close())
+      const scopeRow = this.row(sec);
+      const scopeLabel = this.label(scopeRow, 'Scope');
+      this.attachHelp(
+        scopeLabel,
+        'Where the rule applies. v0.1 supports tag-pane only; graph view, autocomplete, and properties chips arrive in v0.2.',
       );
+      const sctl = this.control(scopeRow);
+      const ssel = sctl.createEl('select', { cls: 'tcr-select' });
+      const opts: Array<{
+        value: Scope[];
+        label: string;
+        disabled?: boolean;
+      }> = [
+        { value: ['tag-pane'], label: 'tag-pane' },
+        {
+          value: ['tag-pane', 'graph'],
+          label: 'tag-pane + graph (v0.2)',
+          disabled: true,
+        },
+      ];
+      for (const o of opts) {
+        const opt = ssel.createEl('option', {
+          value: o.value.join(','),
+          text: o.label,
+        });
+        if (o.disabled) opt.disabled = true;
+        if (draft.scopes.join(',') === o.value.join(',')) opt.selected = true;
+      }
+      ssel.addEventListener('change', () => {
+        draft.scopes = ssel.value.split(',') as Scope[];
+      });
+    });
+
+    const foot = edit.createDiv({ cls: 'tcr-edit-foot' });
+    if (!this.isNew) {
+      const del = foot.createEl('button', {
+        cls: 'tcr-btn tcr-btn-warning',
+        text: 'Delete rule',
+      });
+      del.addEventListener('click', () => void this.deleteDraft());
+    }
+    const cancel = foot.createEl('button', {
+      cls: 'tcr-btn tcr-btn-ghost',
+      text: 'Cancel',
+    });
+    cancel.addEventListener('click', () => this.exitEdit());
+    const save = foot.createEl('button', {
+      cls: 'tcr-btn tcr-btn-accent',
+      text: 'Save',
+    });
+    save.addEventListener('click', () => void this.saveDraft());
   }
 
-  private buildMatchCriteria(form: HTMLElement) {
-    const section = form.createDiv({ cls: 'match-criteria-section' });
-    section.createEl('h3', { text: 'Match Criteria' });
+  private renderMatchSection(sec: HTMLElement, draft: Rule): void {
+    const wrap = sec.createDiv({ cls: 'tcr-match-sentence' });
+    wrap.createSpan({ cls: 'tcr-match-lead', text: "When a tag's name" });
 
-    switch (this.rule.match.type) {
-      case 'regex':
-        this.buildRegexCriteria(section);
+    switch (draft.match.type) {
+      case 'regex': {
+        wrap.createSpan({
+          cls: 'tcr-match-lead',
+          text: ' matches the regex ',
+        });
+        const input = wrap.createEl('input', { cls: 'tcr-input wide' });
+        input.value = draft.match.pattern ?? '';
+        input.placeholder = '^draft(-|$)';
+        const status = wrap.createSpan({ cls: 'tcr-regex-status' });
+        const update = (): void => {
+          status.empty();
+          if (!input.value) return;
+          try {
+            compileSafeRegex(input.value);
+            status.removeClass('tcr-regex-err');
+            status.addClass('tcr-regex-ok');
+            status.setText(' ✓ valid');
+          } catch (e) {
+            status.removeClass('tcr-regex-ok');
+            status.addClass('tcr-regex-err');
+            status.setText(' ✗ ' + (e as Error).message);
+          }
+        };
+        input.addEventListener('input', () => {
+          draft.match = { ...draft.match, pattern: input.value };
+          update();
+          this.renderPreviewForRule(draft);
+        });
+        update();
         break;
-      case 'frequency':
-        this.buildFrequencyCriteria(section);
+      }
+      case 'frequency': {
+        wrap.createSpan({
+          cls: 'tcr-match-lead',
+          text: ' has a count that ',
+        });
+        const opSel = wrap.createEl('select', { cls: 'tcr-select inline' });
+        for (const op of ['<', '<=', '=', '>=', '>']) {
+          const opt = opSel.createEl('option', { value: op, text: op });
+          if ((draft.match.operator ?? '<=') === op) opt.selected = true;
+        }
+        const valInput = wrap.createEl('input', {
+          cls: 'tcr-input narrow',
+          type: 'number',
+        });
+        valInput.value = String(draft.match.value ?? 1);
+        const update = (): void => {
+          draft.match = {
+            type: 'frequency',
+            operator: opSel.value as MatchCriteria['operator'],
+            value: Number(valInput.value),
+          };
+          this.renderPreviewForRule(draft);
+        };
+        opSel.addEventListener('change', update);
+        valInput.addEventListener('input', update);
         break;
-      case 'list':
-        this.buildListCriteria(section);
+      }
+      case 'list': {
+        wrap.createSpan({ cls: 'tcr-match-lead', text: ' is one of ' });
+        const input = wrap.createEl('input', { cls: 'tcr-input wide' });
+        input.value = (draft.match.list ?? []).join(', ');
+        input.placeholder = 'wip, todo, fixme';
+        input.addEventListener('input', () => {
+          const list = input.value
+            .split(',')
+            .map((s) => s.trim())
+            .filter(Boolean);
+          draft.match = { type: 'list', list };
+          this.renderPreviewForRule(draft);
+        });
         break;
+      }
     }
   }
 
-  private buildRegexCriteria(section: HTMLElement) {
-    new Setting(section)
-      .setName('Regex Pattern')
-      .setDesc('JavaScript-compatible regular expression')
-      .addText(text => {
-        text
-          .setPlaceholder('^#[0-9A-Fa-f]{3,8}$')
-          .setValue(this.rule.match.pattern || '')
-          .onChange(value => {
-            this.rule.match.pattern = value;
-          });
-      });
+  // -----------------------------------------------------------------
+  // Save / delete / cancel
+  // -----------------------------------------------------------------
+
+  private async saveDraft(): Promise<void> {
+    const draft = this.draft;
+    if (!draft) return;
+    if (!draft.name.trim()) {
+      new Notice('Rule needs a name.');
+      return;
+    }
+    if (draft.match.type === 'regex' && draft.match.pattern) {
+      try {
+        compileSafeRegex(draft.match.pattern);
+      } catch (e) {
+        new Notice('Invalid regex: ' + (e as Error).message);
+        return;
+      }
+    }
+    if (this.isNew) {
+      await this.plugin.settingsManager.addCustomRule(draft);
+      new Notice(`Rule "${draft.name}" created.`);
+    } else {
+      await this.plugin.settingsManager.updateCustomRule(draft.id, draft);
+      new Notice(`Rule "${draft.name}" saved.`);
+    }
+    this.exitEdit();
   }
 
-  private buildFrequencyCriteria(section: HTMLElement) {
-    new Setting(section)
-      .setName('Operator')
-      .setDesc('How to compare tag count')
-      .addDropdown(dropdown => {
-        dropdown
-          .addOption('<', 'Less than')
-          .addOption('<=', 'Less than or equal')
-          .addOption('=', 'Equal to')
-          .addOption('>=', 'Greater than or equal')
-          .addOption('>', 'Greater than')
-          .setValue(this.rule.match.operator || '<=')
-          .onChange(value => {
-            this.rule.match.operator = value as MatchCriteria['operator'];
-          });
-      });
-
-    new Setting(section)
-      .setName('Count Value')
-      .setDesc('Number of times tag appears')
-      .addText(text => {
-        text
-          .setPlaceholder('1')
-          .setValue(String(this.rule.match.value || 1))
-          .onChange(value => {
-            this.rule.match.value = parseInt(value) || 0;
-          });
-      });
+  private async deleteDraft(): Promise<void> {
+    const draft = this.draft;
+    if (!draft || this.isNew) return;
+    const ok = await confirmModal(
+      this.plugin.app,
+      'Delete rule?',
+      `"${draft.name}" will be removed. This cannot be undone.`,
+    );
+    if (!ok) return;
+    await this.plugin.settingsManager.deleteCustomRule(draft.id);
+    new Notice(`Rule "${draft.name}" deleted.`);
+    this.exitEdit();
   }
 
-  private buildListCriteria(section: HTMLElement) {
-    new Setting(section)
-      .setName('Tags (one per line)')
-      .setDesc('List of specific tags to match')
-      .addTextArea(text => {
-        const listStr = (this.rule.match.list || []).join('\n');
-        text
-          .setPlaceholder('#tag1\n#tag2\n#tag3')
-          .setValue(listStr)
-          .onChange(value => {
-            this.rule.match.list = value
-              .split('\n')
-              .map(t => t.trim())
-              .filter(t => t.length > 0)
-              .map(t => (t.startsWith('#') ? t.slice(1) : t));
-          });
-      });
+  private exitEdit(): void {
+    this.mode = 'cards';
+    this.draft = null;
+    this.isNew = false;
+    this.render();
   }
 
-  onClose() {
-    const { contentEl } = this;
-    contentEl.empty();
+  // -----------------------------------------------------------------
+  // Right-docked preview
+  // -----------------------------------------------------------------
+
+  private renderPreviewVaultWide(): void {
+    const s = this.plugin.settingsManager.get();
+    const meta = this.plugin.tagMetaManager.all();
+    const activeRules = resolveActiveRules(s);
+
+    const head = this.previewEl.createDiv({ cls: 'tcr-pd-head' });
+    head.createDiv({ cls: 'tcr-pd-eyebrow', text: 'Preview · vault-wide' });
+    head.createDiv({
+      cls: 'tcr-pd-title',
+      text: 'Every tag any rule is affecting',
+    });
+
+    const affected: Array<{ m: TagMeta; ruleName: string }> = [];
+    for (const m of meta.values()) {
+      const attr = RuleEngine.getRuleAttribution(m.tag, m, activeRules);
+      if (attr.effective) {
+        affected.push({ m, ruleName: attr.effective.ruleName });
+      }
+    }
+    affected.sort((a, b) => b.m.count - a.m.count);
+
+    const totalInstances = affected.reduce((s, a) => s + a.m.count, 0);
+    this.renderStatRow(head, affected.length, totalInstances);
+    head.createDiv({
+      cls: 'tcr-pd-sub',
+      text: 'Scrollable. In edit mode this list filters to the selected rule.',
+    });
+
+    const body = this.previewEl.createDiv({ cls: 'tcr-pd-body' });
+    if (affected.length === 0) {
+      body.createDiv({
+        cls: 'tcr-pd-empty',
+        text: 'No tags currently affected by any rule.',
+      });
+      return;
+    }
+    for (const a of affected) {
+      this.previewRow(body, a.m, a.ruleName);
+    }
   }
+
+  private renderPreviewForRule(rule: Rule | null): void {
+    this.previewEl.empty();
+    const head = this.previewEl.createDiv({ cls: 'tcr-pd-head' });
+    head.createDiv({ cls: 'tcr-pd-eyebrow', text: 'Preview · filtered to' });
+
+    if (!rule) {
+      head.createDiv({ cls: 'tcr-pd-title', text: 'No rule selected' });
+      return;
+    }
+
+    const titleRow = head.createDiv({ cls: 'tcr-pd-title-row' });
+    titleRow.createSpan({ cls: 'tcr-pd-dot' });
+    titleRow.createSpan({ text: rule.name || 'Untitled rule' });
+
+    const meta = this.plugin.tagMetaManager.all();
+    const matching: TagMeta[] = [];
+    for (const m of meta.values()) {
+      if (this.testCriteriaOnTag(rule.match, m)) matching.push(m);
+    }
+    matching.sort((a, b) => b.count - a.count);
+
+    const totalInstances = matching.reduce((s, m) => s + m.count, 0);
+    this.renderStatRow(head, matching.length, totalInstances);
+
+    head.createDiv({
+      cls: 'tcr-pd-sub',
+      text: 'Scrollable. Updates as you edit the rule.',
+    });
+
+    const body = this.previewEl.createDiv({ cls: 'tcr-pd-body' });
+    if (matching.length === 0) {
+      body.createDiv({
+        cls: 'tcr-pd-empty',
+        text: 'No tags match this rule yet.',
+      });
+      return;
+    }
+    for (const m of matching) {
+      this.previewRow(body, m, null);
+    }
+  }
+
+  // A single preview row with an info-icon accordion. The collapsed row shows
+  // tag + count; expanding reveals a key/value detail panel plus per-tag
+  // "Always show / Always hide" override pins (D-015). Used by both the
+  // vault-wide and rule-filtered previews; ruleLabel is null in edit mode where
+  // the list is already filtered to one rule.
+  private previewRow(
+    body: HTMLElement,
+    m: TagMeta,
+    ruleLabel: string | null,
+  ): void {
+    const item = body.createDiv({ cls: 'tcr-pd-item' });
+    const row = item.createDiv({ cls: 'tcr-pd-row' });
+    row.createSpan({ cls: 'tcr-pd-tag', text: m.tag });
+    row.createSpan({ cls: 'tcr-pd-count', text: String(m.count) });
+    const info = row.createSpan({ cls: 'tcr-pd-info', text: 'ⓘ' });
+    info.setAttribute('role', 'button');
+    info.setAttribute('aria-label', `Details for ${m.tag}`);
+
+    const open = this.openPreviewTags.has(m.tag);
+    const detail = item.createDiv({ cls: 'tcr-pd-detail' });
+    if (!open) detail.addClass('tcr-pd-detail-collapsed');
+    if (open) info.addClass('open');
+
+    const kv = detail.createDiv({ cls: 'tcr-pd-kv' });
+    if (ruleLabel) this.kvRow(kv, 'Affected by', ruleLabel);
+    this.kvRow(kv, 'Notes', String(m.count));
+    this.kvRow(kv, 'First seen', formatPreviewDate(m.firstSeen));
+    this.kvRow(kv, 'Last used', formatPreviewDate(m.lastSeen));
+    this.renderOverrideActions(detail, m.tag);
+
+    info.addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (this.openPreviewTags.has(m.tag)) {
+        this.openPreviewTags.delete(m.tag);
+        detail.addClass('tcr-pd-detail-collapsed');
+        info.removeClass('open');
+      } else {
+        this.openPreviewTags.add(m.tag);
+        detail.removeClass('tcr-pd-detail-collapsed');
+        info.addClass('open');
+      }
+    });
+  }
+
+  private kvRow(parent: HTMLElement, key: string, value: string): void {
+    const r = parent.createDiv({ cls: 'tcr-pd-kv-row' });
+    r.createSpan({ cls: 'tcr-pd-kv-key', text: key });
+    r.createSpan({ cls: 'tcr-pd-kv-val', text: value });
+  }
+
+  private renderOverrideActions(parent: HTMLElement, tag: string): void {
+    const current = this.plugin.settingsManager.get().overrides[tag];
+    const wrap = parent.createDiv({ cls: 'tcr-pd-ov' });
+    wrap.createSpan({ cls: 'tcr-pd-kv-key', text: 'Override' });
+    const btns = wrap.createDiv({ cls: 'tcr-pd-ov-btns' });
+
+    const showBtn = btns.createEl('button', {
+      cls: 'tcr-pd-ov-btn',
+      text: 'Always show',
+    });
+    if (current === 'show') showBtn.addClass('on');
+    showBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      void this.plugin.settingsManager.setOverride(
+        tag,
+        current === 'show' ? null : 'show',
+      );
+    });
+
+    const hideBtn = btns.createEl('button', {
+      cls: 'tcr-pd-ov-btn',
+      text: 'Always hide',
+    });
+    if (current === 'hide') hideBtn.addClass('on');
+    hideBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      void this.plugin.settingsManager.setOverride(
+        tag,
+        current === 'hide' ? null : 'hide',
+      );
+    });
+  }
+
+  private renderStatRow(
+    parent: HTMLElement,
+    unique: number,
+    totalInstances: number,
+  ): void {
+    const stats = parent.createDiv({ cls: 'tcr-pd-stats' });
+    this.statCard(stats, 'Unique tags', unique);
+    this.statCard(stats, 'Total instances', totalInstances);
+  }
+
+  private statCard(parent: HTMLElement, label: string, value: number): void {
+    const c = parent.createDiv({ cls: 'tcr-pd-stat' });
+    c.createDiv({ cls: 'tcr-pd-stat-label', text: label });
+    c.createDiv({ cls: 'tcr-pd-stat-value', text: value.toLocaleString() });
+  }
+
+  // -----------------------------------------------------------------
+  // Affected-tag computation
+  // -----------------------------------------------------------------
+
+  private countAffectedForRule(rule: Rule): number {
+    if (!rule.enabled) return 0;
+    let count = 0;
+    for (const m of this.plugin.tagMetaManager.all().values()) {
+      if (this.testCriteriaOnTag(rule.match, m)) count += 1;
+    }
+    return count;
+  }
+
+  private testCriteriaOnTag(criteria: MatchCriteria, m: TagMeta): boolean {
+    if (criteria.type === 'frequency') {
+      return frequencyMatchesMeta(criteria, m);
+    }
+    const synthetic: Rule = {
+      id: 'preview',
+      name: 'preview',
+      enabled: true,
+      priority: 0,
+      match: criteria,
+      action: 'hide',
+      scopes: ['tag-pane'],
+    };
+    try {
+      return RuleEngine.testTag(m.tag, synthetic);
+    } catch {
+      return false;
+    }
+  }
+
+  // -----------------------------------------------------------------
+  // Tiny DOM helpers
+  // -----------------------------------------------------------------
+
+  private section(
+    parent: HTMLElement,
+    label: string,
+    build: (sec: HTMLElement) => void,
+  ): void {
+    const sec = parent.createDiv({ cls: 'tcr-section' });
+    sec.createDiv({ cls: 'tcr-section-label', text: label });
+    build(sec);
+  }
+
+  private row(sec: HTMLElement): HTMLElement {
+    return sec.createDiv({ cls: 'tcr-row' });
+  }
+
+  private label(row: HTMLElement, text: string): HTMLElement {
+    return row.createDiv({ cls: 'tcr-label', text });
+  }
+
+  private control(row: HTMLElement): HTMLElement {
+    return row.createDiv({ cls: 'tcr-control' });
+  }
+
+  private attachHelp(parent: HTMLElement, text: string): void {
+    const ic = parent.createSpan({ cls: 'tcr-help-ic', text: '?' });
+    const tip = ic.createDiv({ cls: 'tcr-tip' });
+    tip.setText(text);
+  }
+
+  private makeToggle(
+    parent: HTMLElement,
+    initial: boolean,
+    onChange: (next: boolean) => Promise<void> | void,
+  ): HTMLElement {
+    const t = parent.createDiv({ cls: 'tcr-toggle' });
+    t.toggleClass('on', initial);
+    t.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const next = !t.hasClass('on');
+      t.toggleClass('on', next);
+      void onChange(next);
+    });
+    return t;
+  }
+}
+
+// =================================================================
+// Helpers
+// =================================================================
+
+function matchSummaryString(match: MatchCriteria): string {
+  switch (match.type) {
+    case 'regex':
+      return match.pattern ? `matches /${match.pattern}/` : '(no pattern set)';
+    case 'frequency': {
+      const op = match.operator ?? '=';
+      return `when count ${op} ${match.value ?? 0}`;
+    }
+    case 'list': {
+      const list = match.list ?? [];
+      if (list.length === 0) return '(no tags listed)';
+      if (list.length <= 3) return list.map((t) => `\`${t}\``).join(', ');
+      return `${list.length} tags: ${list
+        .slice(0, 3)
+        .map((t) => `\`${t}\``)
+        .join(', ')}...`;
+    }
+  }
+}
+
+function blankCriteriaFor(type: MatchType): MatchCriteria {
+  switch (type) {
+    case 'regex':
+      return { type: 'regex', pattern: '' };
+    case 'frequency':
+      return { type: 'frequency', operator: '<=', value: 1 };
+    case 'list':
+      return { type: 'list', list: [] };
+  }
+}
+
+function formatPreviewDate(ms: number): string {
+  if (!ms) return 'n/a';
+  const d = new Date(ms);
+  return d.toLocaleDateString(undefined, {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+  });
+}
+
+function frequencyMatchesMeta(criteria: MatchCriteria, m: TagMeta): boolean {
+  if (criteria.type !== 'frequency') return false;
+  const op = criteria.operator ?? '=';
+  const v = criteria.value ?? 0;
+  switch (op) {
+    case '<':
+      return m.count < v;
+    case '<=':
+      return m.count <= v;
+    case '=':
+      return m.count === v;
+    case '>=':
+      return m.count >= v;
+    case '>':
+      return m.count > v;
+  }
+}
+
+async function confirmModal(
+  app: App,
+  title: string,
+  message: string,
+): Promise<boolean> {
+  return new Promise((resolve) => {
+    const modal = new (class extends Modal {
+      onOpen(): void {
+        this.titleEl.setText(title);
+        const body = this.contentEl.createDiv();
+        body.createDiv({ text: message });
+        const foot = this.contentEl.createDiv({ cls: 'tcr-confirm-foot' });
+        const cancel = foot.createEl('button', { text: 'Cancel' });
+        cancel.addEventListener('click', () => {
+          resolve(false);
+          this.close();
+        });
+        const ok = foot.createEl('button', {
+          text: 'Delete',
+          cls: 'mod-warning',
+        });
+        ok.addEventListener('click', () => {
+          resolve(true);
+          this.close();
+        });
+      }
+      onClose(): void {
+        this.contentEl.empty();
+      }
+    })(app);
+    modal.open();
+  });
 }

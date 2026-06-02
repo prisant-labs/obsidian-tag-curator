@@ -1,0 +1,1124 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tag Curator v0.1.0 - Converged Design</title>
+<style>
+  :root[data-theme="dark"] {
+    --background-primary: #1e1e1e;
+    --background-primary-alt: #1a1a1a;
+    --background-secondary: #252525;
+    --background-secondary-alt: #2a2a2a;
+    --background-tertiary: #151515;
+    --background-modifier-hover: #2f2f2f;
+    --background-modifier-border: #333;
+    --background-modifier-border-hover: #444;
+    --background-modifier-error: #5b2828;
+    --background-modifier-success: #25522a;
+    --background-modifier-form-field: #1a1a1a;
+    --text-normal: #dcddde;
+    --text-muted: #999;
+    --text-faint: #6e6e6e;
+    --text-on-accent: #ffffff;
+    --text-accent: #a78bfa;
+    --text-error: #ff7878;
+    --text-success: #67d391;
+    --text-warning: #f5c97c;
+    --interactive-accent: #7c3aed;
+    --interactive-accent-hover: #8b5cf6;
+    --interactive-normal: #2a2a2a;
+    --interactive-hover: #353535;
+    --divider-color: #2a2a2a;
+    --shadow-s: 0 1px 2px rgba(0,0,0,0.4);
+    --shadow-m: 0 4px 12px rgba(0,0,0,0.4);
+    --shadow-l: 0 12px 28px rgba(0,0,0,0.5);
+    --code-bg: #161616;
+    --selection: rgba(124, 58, 237, 0.35);
+  }
+  :root[data-theme="light"] {
+    --background-primary: #ffffff;
+    --background-primary-alt: #fafafa;
+    --background-secondary: #f5f6f8;
+    --background-secondary-alt: #ebedf0;
+    --background-tertiary: #e6e8eb;
+    --background-modifier-hover: #eef0f3;
+    --background-modifier-border: #d9dce0;
+    --background-modifier-border-hover: #c2c6cb;
+    --background-modifier-error: #fee2e2;
+    --background-modifier-success: #d1fae5;
+    --background-modifier-form-field: #ffffff;
+    --text-normal: #1f2328;
+    --text-muted: #5b6168;
+    --text-faint: #8a9098;
+    --text-on-accent: #ffffff;
+    --text-accent: #6d28d9;
+    --text-error: #b91c1c;
+    --text-success: #047857;
+    --text-warning: #b45309;
+    --interactive-accent: #7c3aed;
+    --interactive-accent-hover: #6d28d9;
+    --interactive-normal: #f1f3f5;
+    --interactive-hover: #e6e9ec;
+    --divider-color: #e6e8eb;
+    --shadow-s: 0 1px 2px rgba(0,0,0,0.08);
+    --shadow-m: 0 4px 12px rgba(0,0,0,0.08);
+    --shadow-l: 0 12px 28px rgba(0,0,0,0.12);
+    --code-bg: #f5f6f8;
+    --selection: rgba(124, 58, 237, 0.18);
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: var(--background-tertiary);
+    color: var(--text-normal);
+    font-family: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    font-size: 14px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+  ::selection { background: var(--selection); }
+  code { background: var(--code-bg); padding: 1px 5px; border-radius: 4px; font-size: 0.92em; font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace; }
+
+  /* Page shell */
+  .page { display: grid; grid-template-columns: 270px 1fr; min-height: 100vh; }
+
+  .sidebar {
+    position: sticky; top: 0; height: 100vh;
+    background: var(--background-secondary);
+    border-right: 1px solid var(--divider-color);
+    padding: 24px 18px; overflow-y: auto;
+  }
+  .sidebar h1 { margin: 0 0 4px; font-size: 17px; font-weight: 700; letter-spacing: -0.01em; }
+  .sidebar .subtitle { margin: 0 0 20px; font-size: 12px; color: var(--text-muted); }
+  .sidebar .section-label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-faint); margin: 18px 6px 6px; font-weight: 600; }
+  .sidebar nav { display: flex; flex-direction: column; gap: 2px; }
+  .sidebar nav a {
+    display: flex; align-items: center; gap: 10px; padding: 7px 10px; border-radius: 6px;
+    color: var(--text-muted); text-decoration: none; font-size: 13px;
+    transition: background 0.12s ease, color 0.12s ease;
+  }
+  .sidebar nav a:hover { background: var(--background-modifier-hover); color: var(--text-normal); }
+  .sidebar nav a.active { background: var(--interactive-accent); color: var(--text-on-accent); }
+  .sidebar nav a.active .nav-num { color: var(--text-on-accent); opacity: 0.7; }
+  .sidebar nav .nav-num { color: var(--text-faint); font-variant-numeric: tabular-nums; width: 18px; text-align: right; font-size: 11px; }
+  .theme-toggle { margin-top: 22px; display: flex; background: var(--background-tertiary); border-radius: 6px; padding: 3px; gap: 2px; }
+  .theme-toggle button { flex: 1; background: transparent; border: 0; color: var(--text-muted); font: inherit; font-size: 12px; padding: 6px 10px; border-radius: 4px; cursor: pointer; }
+  .theme-toggle button.is-active { background: var(--background-primary); color: var(--text-normal); box-shadow: var(--shadow-s); }
+  .meta { margin-top: 22px; padding: 12px; background: var(--background-tertiary); border-radius: 6px; font-size: 11px; color: var(--text-muted); line-height: 1.6; }
+  .meta strong { color: var(--text-normal); }
+
+  /* Main canvas */
+  .canvas { padding: 44px 56px 120px; max-width: 1180px; }
+  .lede { max-width: 780px; margin-bottom: 56px; }
+  .lede h2 { font-size: 28px; margin: 0 0 12px; letter-spacing: -0.01em; }
+  .lede p { color: var(--text-muted); font-size: 15px; }
+  .legend { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 18px; }
+  .legend .chip { font-size: 11px; padding: 4px 10px; border-radius: 999px; border: 1px solid var(--divider-color); background: var(--background-secondary); color: var(--text-muted); }
+
+  section.block { padding-top: 18px; margin-bottom: 72px; scroll-margin-top: 24px; }
+  .block-header { margin-bottom: 22px; }
+  .block-eyebrow { font-size: 11px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-faint); margin-bottom: 6px; }
+  .block-title { margin: 0 0 8px; font-size: 24px; font-weight: 700; letter-spacing: -0.01em; }
+  .block-desc { color: var(--text-muted); max-width: 800px; font-size: 14px; }
+  .from-review { display: inline-block; font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-accent); background: rgba(124,58,237,0.12); border: 1px solid rgba(124,58,237,0.3); border-radius: 5px; padding: 2px 7px; margin-left: 8px; vertical-align: middle; }
+
+  /* Mockup frame */
+  .mockup { background: var(--background-primary); border: 1px solid var(--background-modifier-border); border-radius: 12px; overflow: hidden; box-shadow: var(--shadow-l); }
+  .mockup-titlebar { display: flex; align-items: center; gap: 8px; padding: 10px 14px; background: var(--background-secondary); border-bottom: 1px solid var(--divider-color); font-size: 12px; color: var(--text-muted); }
+  .traffic { display: flex; gap: 6px; }
+  .traffic span { width: 11px; height: 11px; border-radius: 50%; display: inline-block; background: var(--background-modifier-border); }
+  .traffic span:nth-child(1){ background:#ff5f57; } .traffic span:nth-child(2){ background:#febc2e; } .traffic span:nth-child(3){ background:#28c840; }
+  .mockup-title { flex: 1; text-align: center; font-weight: 500; color: var(--text-normal); font-size: 12px; }
+  .mockup-body { padding: 0; }
+
+  /* Top tabs (liked: review pin 2) */
+  .top-tabs { display: flex; gap: 2px; padding: 10px 16px 0; background: var(--background-secondary); border-bottom: 1px solid var(--divider-color); overflow-x: auto; }
+  .top-tab { padding: 8px 14px; font-size: 13px; color: var(--text-muted); cursor: pointer; border-bottom: 2px solid transparent; white-space: nowrap; display: flex; align-items: center; gap: 6px; }
+  .top-tab:hover { color: var(--text-normal); }
+  .top-tab.active { color: var(--text-normal); border-bottom-color: var(--interactive-accent); }
+  .badge { font-size: 10px; background: var(--background-modifier-border); color: var(--text-muted); border-radius: 999px; padding: 1px 6px; font-variant-numeric: tabular-nums; }
+  .badge.accent { background: rgba(124,58,237,0.18); color: var(--text-accent); }
+  .badge.soon { background: transparent; border: 1px dashed var(--background-modifier-border); color: var(--text-faint); }
+
+  .panel { padding: 22px 24px 28px; }
+  .panel[hidden] { display: none; }
+
+  /* Stats header (liked: review pin 3) */
+  .stat-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 20px; }
+  .stat-card { background: var(--background-secondary); border: 1px solid var(--divider-color); border-radius: 9px; padding: 14px 16px; }
+  .stat-card .label { font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; }
+  .stat-card .value { font-size: 26px; font-weight: 700; margin-top: 4px; font-variant-numeric: tabular-nums; }
+  .stat-card .value.hidden-v { color: var(--text-accent); }
+
+  .setting-heading { margin: 24px 0 6px; padding-bottom: 6px; border-bottom: 1px solid var(--divider-color); font-size: 13px; font-weight: 600; }
+  .setting-sub { font-size: 12px; color: var(--text-muted); margin: 0 0 12px; }
+  .setting-item { display: flex; align-items: center; justify-content: space-between; gap: 24px; padding: 13px 0; border-bottom: 1px solid var(--divider-color); }
+  .setting-info { min-width: 0; }
+  .setting-name { font-size: 14px; font-weight: 500; }
+  .setting-desc { font-size: 12px; color: var(--text-muted); margin-top: 3px; max-width: 520px; }
+  .setting-control { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+
+  /* Toggle */
+  .toggle { width: 38px; height: 22px; border-radius: 999px; background: var(--background-modifier-border); position: relative; cursor: pointer; transition: background 0.15s ease; flex-shrink: 0; }
+  .toggle::after { content: ""; position: absolute; width: 16px; height: 16px; border-radius: 50%; background: #fff; top: 3px; left: 3px; transition: left 0.15s ease; box-shadow: var(--shadow-s); }
+  .toggle.on { background: var(--interactive-accent); }
+  .toggle.on::after { left: 19px; }
+  /* Smaller variant for tight rows (rule-master, table rows). */
+  .toggle.small { width: 28px; height: 16px; }
+  .toggle.small::after { width: 12px; height: 12px; top: 2px; left: 2px; }
+  .toggle.small.on::after { left: 14px; }
+
+  /* Help icon with hover tooltip. Used in column headers and form labels in place of
+     inline help text (round-3 feedback: prefer icon + tooltip over wrapped helpers). */
+  .help-ic { display: inline-flex; align-items: center; justify-content: center; width: 14px; height: 14px; margin-left: 5px; border-radius: 50%; border: 1px solid var(--background-modifier-border); color: var(--text-muted); font-size: 9.5px; font-weight: 700; cursor: help; position: relative; vertical-align: middle; }
+  .help-ic:hover { color: var(--text-normal); border-color: var(--background-modifier-border-hover); }
+  .help-ic::before { content: "?"; line-height: 1; }
+  .help-ic .tip { position: absolute; left: 50%; transform: translateX(-50%); bottom: calc(100% + 8px); background: var(--background-secondary); border: 1px solid var(--background-modifier-border); border-radius: 7px; padding: 9px 11px; font-size: 11.5px; font-weight: 400; line-height: 1.5; color: var(--text-normal); width: 280px; text-align: left; box-shadow: var(--shadow-m); opacity: 0; pointer-events: none; transition: opacity 0.12s ease; z-index: 10; text-transform: none; letter-spacing: 0; }
+  .help-ic .tip::after { content: ""; position: absolute; left: 50%; top: 100%; transform: translateX(-50%); border: 5px solid transparent; border-top-color: var(--background-modifier-border); }
+  .help-ic:hover .tip { opacity: 1; }
+  .help-ic .tip code { font-size: 11px; }
+
+  /* Buttons */
+  .btn { font: inherit; font-size: 12.5px; padding: 6px 12px; border-radius: 6px; border: 1px solid var(--background-modifier-border); background: var(--interactive-normal); color: var(--text-normal); cursor: pointer; }
+  .btn:hover { background: var(--interactive-hover); }
+  .btn.accent { background: var(--interactive-accent); border-color: var(--interactive-accent); color: var(--text-on-accent); }
+  .btn.accent:hover { background: var(--interactive-accent-hover); }
+  .btn.warning { background: var(--background-modifier-error); border-color: var(--background-modifier-error); color: var(--text-error); }
+  .btn.small { padding: 4px 9px; font-size: 11.5px; }
+  .btn.ghost { background: transparent; }
+
+  .pill { font-size: 11px; padding: 2px 8px; border-radius: 999px; background: var(--background-secondary); border: 1px solid var(--divider-color); color: var(--text-muted); }
+  .pill.builtin { color: var(--text-accent); border-color: rgba(124,58,237,0.3); }
+  .pill.on { color: var(--text-success); border-color: rgba(103,211,145,0.3); }
+
+  /* Preset rows */
+  .preset { display: flex; align-items: center; gap: 14px; padding: 12px 14px; border: 1px solid var(--divider-color); border-radius: 9px; margin-bottom: 8px; background: var(--background-secondary); }
+  .preset .body { flex: 1; min-width: 0; }
+  .preset .nm { font-size: 13.5px; font-weight: 600; display: flex; align-items: center; gap: 8px; }
+  .preset .dsc { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+  .preset .pat { font-size: 11px; color: var(--text-faint); margin-top: 4px; }
+
+  /* Callouts */
+  .callout { display: flex; gap: 10px; border-radius: 9px; padding: 12px 14px; font-size: 12.5px; line-height: 1.55; margin: 14px 0; }
+  .callout .ic { width: 20px; height: 20px; border-radius: 50%; flex-shrink: 0; display: grid; place-items: center; font-weight: 700; font-size: 12px; }
+  .callout.warn { background: rgba(245,201,124,0.1); border: 1px solid rgba(245,201,124,0.3); }
+  .callout.warn .ic { background: var(--text-warning); color: #1a1a1a; }
+  .callout.info { background: rgba(124,58,237,0.08); border: 1px solid rgba(124,58,237,0.25); }
+  .callout.info .ic { background: var(--interactive-accent); color: #fff; }
+  .callout.safe { background: rgba(103,211,145,0.08); border: 1px solid rgba(103,211,145,0.28); }
+  .callout.safe .ic { background: var(--text-success); color: #14321f; }
+  .callout strong { color: var(--text-normal); }
+
+  /* State banner - persistent top-docked callout shown anywhere Tag Curator surfaces appear,
+     whenever the plugin is in a non-default state (Preview mode on, or plugin disabled).
+     Makes the action -> state link visible so panic disable, preview toggle, etc. never
+     leave the user wondering "what state am I in?" */
+  .state-banner { display: flex; align-items: center; gap: 12px; padding: 9px 16px; font-size: 12.5px; border-bottom: 1px solid var(--divider-color); }
+  .state-banner .sb-ic { width: 18px; height: 18px; border-radius: 50%; display: grid; place-items: center; font-size: 11px; font-weight: 700; flex-shrink: 0; }
+  .state-banner .sb-msg { flex: 1; line-height: 1.4; }
+  .state-banner .sb-msg strong { color: var(--text-normal); }
+  .state-banner.preview { background: rgba(245,201,124,0.1); }
+  .state-banner.preview .sb-ic { background: var(--text-warning); color: #1a1a1a; }
+  .state-banner.preview .sb-msg { color: var(--text-warning); }
+  .state-banner.off { background: var(--background-secondary); }
+  .state-banner.off .sb-ic { background: var(--text-faint); color: var(--background-primary); }
+  .state-banner.off .sb-msg { color: var(--text-muted); }
+  .state-banner .sb-action { background: transparent; border: 1px solid currentColor; color: inherit; font: inherit; font-size: 11.5px; padding: 4px 10px; border-radius: 5px; cursor: pointer; opacity: 0.85; }
+  .state-banner .sb-action:hover { opacity: 1; }
+
+  /* Tag list table (row-based, sortable - review pins 6,7,11,23) */
+  .toolbar { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 12px; }
+  .search { flex: 1; min-width: 180px; display: flex; align-items: center; gap: 8px; background: var(--background-modifier-form-field); border: 1px solid var(--background-modifier-border); border-radius: 7px; padding: 7px 11px; color: var(--text-faint); font-size: 13px; }
+  .filter-chip { font-size: 12px; padding: 5px 11px; border-radius: 999px; border: 1px solid var(--background-modifier-border); background: var(--background-secondary); color: var(--text-muted); cursor: pointer; }
+  .filter-chip.active { background: rgba(124,58,237,0.16); border-color: rgba(124,58,237,0.4); color: var(--text-accent); }
+
+  /* Bulk bar (review pin 11) */
+  .bulk-bar { display: flex; align-items: center; gap: 12px; padding: 10px 14px; background: rgba(124,58,237,0.1); border: 1px solid rgba(124,58,237,0.3); border-radius: 9px; margin-bottom: 12px; font-size: 13px; }
+  .bulk-bar .count { font-weight: 600; color: var(--text-accent); }
+  .bulk-bar .spacer { flex: 1; }
+
+  table.tags { width: 100%; border-collapse: collapse; font-size: 13px; }
+  table.tags th { text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-faint); font-weight: 600; padding: 8px 10px; border-bottom: 1px solid var(--background-modifier-border); cursor: pointer; white-space: nowrap; }
+  table.tags th .sort { color: var(--text-accent); margin-left: 4px; }
+  table.tags td { padding: 9px 10px; border-bottom: 1px solid var(--divider-color); vertical-align: middle; }
+  table.tags tr:hover td { background: var(--background-modifier-hover); }
+  table.tags tr.is-hidden td .tagname { color: var(--text-faint); text-decoration: line-through; }
+  .tagname { font-weight: 500; }
+  .src { font-size: 10.5px; color: var(--text-faint); border: 1px solid var(--divider-color); border-radius: 4px; padding: 1px 5px; }
+  .vis { font-size: 11px; }
+  .vis.hidden { color: var(--text-accent); }
+  .vis.shown { color: var(--text-success); }
+  .rule-link { color: var(--text-accent); font-size: 12px; cursor: pointer; }
+  .rule-link.none { color: var(--text-faint); }
+  input[type=checkbox].cb { width: 15px; height: 15px; accent-color: var(--interactive-accent); cursor: pointer; }
+  .selall { position: relative; }
+  .selall-menu { position: absolute; top: 24px; left: 0; background: var(--background-secondary); border: 1px solid var(--background-modifier-border); border-radius: 8px; box-shadow: var(--shadow-m); padding: 4px; width: 230px; z-index: 5; }
+  .selall-menu div { padding: 7px 10px; border-radius: 5px; font-size: 12.5px; cursor: pointer; }
+  .selall-menu div:hover { background: var(--background-modifier-hover); }
+
+  /* Rule editor inline (review pin 14) */
+  .rule-row { border: 1px solid var(--divider-color); border-radius: 9px; margin-bottom: 8px; background: var(--background-secondary); overflow: hidden; }
+  .rule-row .head { display: flex; align-items: center; gap: 12px; padding: 12px 14px; }
+  .rule-row .head .nm { font-weight: 600; font-size: 13.5px; flex: 1; }
+  .rule-row .editor { border-top: 1px dashed var(--background-modifier-border); padding: 16px; background: var(--background-primary-alt); display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .field label { display: block; font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-faint); margin-bottom: 5px; }
+  .input, .select { width: 100%; background: var(--background-modifier-form-field); border: 1px solid var(--background-modifier-border); border-radius: 6px; padding: 7px 10px; color: var(--text-normal); font: inherit; font-size: 13px; }
+  .field.full { grid-column: 1 / -1; }
+  .live-preview { grid-column: 1/-1; background: var(--background-secondary); border: 1px solid var(--divider-color); border-radius: 8px; padding: 12px; }
+  .live-preview .lp-head { font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-faint); margin-bottom: 8px; }
+  .tag-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+  .tag-chip { font-size: 12px; padding: 3px 9px; border-radius: 999px; background: var(--background-modifier-form-field); border: 1px solid var(--divider-color); color: var(--text-muted); }
+
+  /* Rule editor - card view + right-docked preview (D-010, supersedes D-001).
+     Main area: rule cards (grid). Right-docked panel: live preview (always visible).
+     Clicking a card swaps the main area to edit mode; preview stays docked.
+     Same surface used for both edit and create (no wizard - see D-002). */
+  .rule-workspace { display: grid; grid-template-columns: 1fr 300px; min-height: 580px; }
+  .rule-main { padding: 18px 20px; display: flex; flex-direction: column; gap: 14px; }
+  .rule-main .main-toolbar { display: flex; align-items: center; gap: 10px; }
+  .rule-main .main-toolbar .ttl { font-size: 11px; text-transform: uppercase; letter-spacing: 0.07em; color: var(--text-faint); font-weight: 600; }
+  .rule-main .main-toolbar .spacer { flex: 1; }
+
+  /* Card list - full width rows (round-4 pin 25), substantial header (pin 12 follow-up). */
+  .rule-cards { display: flex; flex-direction: column; gap: 10px; }
+  .rule-card { border: 1px solid var(--divider-color); border-radius: 10px; background: var(--background-secondary); padding: 14px 18px; cursor: pointer; transition: border-color 0.12s ease, transform 0.12s ease; display: grid; grid-template-columns: auto 1fr auto auto; align-items: center; gap: 18px; }
+  .rule-card:hover { border-color: var(--background-modifier-border-hover); }
+  .rule-card.off { opacity: 0.6; }
+  .rule-card .rc-toggle-col { display: flex; align-items: center; }
+  .rule-card .rc-info { min-width: 0; }
+  .rule-card .rc-name { font-size: 16px; font-weight: 700; line-height: 1.3; letter-spacing: -0.005em; }
+  .rule-card .rc-meta { font-size: 12px; color: var(--text-muted); margin-top: 4px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .rule-card .rc-type-pill { font-size: 10.5px; padding: 2px 8px; border-radius: 999px; background: var(--background-modifier-form-field); border: 1px solid var(--divider-color); color: var(--text-muted); text-transform: none; letter-spacing: 0; }
+  .rule-card .rc-affected { color: var(--text-accent); font-weight: 600; font-size: 13px; white-space: nowrap; }
+  .rule-card .rc-affected.zero { color: var(--text-faint); }
+  .rule-card .rc-chevron { color: var(--text-faint); font-size: 18px; }
+  .rule-card.new-card { border-style: dashed; background: transparent; grid-template-columns: 1fr; text-align: center; padding: 18px; color: var(--text-muted); font-weight: 600; }
+  .rule-card.new-card:hover { border-color: var(--interactive-accent); color: var(--text-accent); }
+  .rule-card.new-card .new-sub { font-size: 11.5px; font-weight: 400; color: var(--text-faint); margin-top: 4px; }
+
+  /* Edit mode (in place of card grid) */
+  .rule-edit { border: 1px solid var(--divider-color); border-radius: 10px; background: var(--background-secondary); padding: 18px 22px; }
+  .rule-edit .e-head { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; padding-bottom: 12px; border-bottom: 1px solid var(--divider-color); }
+  .rule-edit .e-head .crumbs { color: var(--text-muted); font-size: 12px; }
+  .rule-edit .e-head .crumbs strong { color: var(--text-normal); }
+  .rule-edit .e-head .spacer { flex: 1; }
+
+  /* Right-docked preview panel */
+  .rule-preview-dock { border-left: 1px solid var(--divider-color); background: var(--background-primary-alt); display: flex; flex-direction: column; overflow: hidden; }
+  .rule-preview-dock .pd-head { padding: 12px 14px; border-bottom: 1px solid var(--divider-color); }
+  .rule-preview-dock .pd-eyebrow { font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-faint); }
+  .rule-preview-dock .pd-title { font-size: 13.5px; font-weight: 600; margin-top: 2px; }
+  .rule-preview-dock .pd-sub { font-size: 11px; color: var(--text-muted); margin-top: 3px; }
+  .rule-preview-dock .pd-body { flex: 1; overflow-y: auto; padding: 6px 0; }
+  .rule-preview-dock .pd-row { display: flex; align-items: center; gap: 10px; padding: 7px 14px; font-size: 12.5px; }
+  .rule-preview-dock .pd-row:hover { background: var(--background-modifier-hover); }
+  .rule-preview-dock .pd-row + .pd-row { border-top: 1px solid var(--divider-color); }
+  .rule-preview-dock .pd-tag { flex: 1; font-weight: 500; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .rule-preview-dock .pd-count { color: var(--text-muted); font-variant-numeric: tabular-nums; font-size: 11.5px; }
+  .rule-preview-dock .pd-rule { font-size: 11px; color: var(--text-accent); margin-left: 6px; }
+
+  /* Rule editor - master-detail layout (D-001 - legacy, kept for variants section).
+     Left: rule list with single-select. Right: sectioned editor for the selected rule.
+     No layout shift, no inline expand/collapse, no pill cloud. */
+  .rule-md { display: grid; grid-template-columns: 280px 1fr; min-height: 540px; }
+  .rule-master { border-right: 1px solid var(--divider-color); padding: 14px 12px; background: var(--background-secondary); display: flex; flex-direction: column; gap: 4px; }
+  .rule-master .master-head { display: flex; align-items: center; justify-content: space-between; font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-faint); margin: 0 4px 6px; }
+  .rule-master .m-item { display: flex; align-items: center; gap: 8px; padding: 8px 10px; border-radius: 7px; cursor: pointer; font-size: 13px; }
+  .rule-master .m-item:hover { background: var(--background-modifier-hover); }
+  .rule-master .m-item.sel { background: var(--interactive-accent); color: var(--text-on-accent); }
+  .rule-master .m-item.sel .m-meta { color: var(--text-on-accent); opacity: 0.85; }
+  .rule-master .m-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 500; }
+  .rule-master .m-meta { font-size: 11px; color: var(--text-faint); font-variant-numeric: tabular-nums; }
+  .rule-master .m-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--text-success); flex-shrink: 0; }
+  .rule-master .m-item.off .m-dot { background: var(--text-faint); }
+  .rule-master .m-new { margin-top: 6px; }
+
+  .rule-detail { padding: 20px 26px; overflow-y: auto; }
+  .rule-detail .d-section { margin-bottom: 24px; }
+  .rule-detail .d-section-label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-faint); font-weight: 600; margin-bottom: 10px; padding-bottom: 6px; border-bottom: 1px solid var(--divider-color); }
+  .rule-detail .d-row { display: flex; align-items: center; gap: 14px; padding: 9px 0; }
+  .rule-detail .d-row + .d-row { border-top: 1px solid var(--divider-color); }
+  .rule-detail .d-label { width: 110px; font-size: 12.5px; color: var(--text-muted); flex-shrink: 0; }
+  .rule-detail .d-label-help { font-size: 11px; color: var(--text-faint); margin-top: 2px; }
+  .rule-detail .d-control { flex: 1; display: flex; align-items: center; gap: 8px; }
+  .rule-detail .d-control .input, .rule-detail .d-control .select { flex: 1; }
+  .rule-detail .d-control .input.tight, .rule-detail .d-control .select.tight { flex: 0 0 130px; }
+
+  /* Match-as-sentence: reads as a single readable line with inline inputs. */
+  .match-sentence { background: var(--background-secondary); border: 1px solid var(--divider-color); border-radius: 9px; padding: 14px 16px; font-size: 14px; line-height: 1.9; }
+  .match-sentence .lead { color: var(--text-muted); }
+  .match-sentence .input, .match-sentence .select { display: inline-block; width: auto; min-width: 110px; vertical-align: baseline; padding: 4px 9px; margin: 0 2px; }
+  .match-sentence .input.wide { min-width: 220px; }
+
+  /* Scannable preview list - one row per affected tag, count + visibility dot. */
+  .preview-list { border: 1px solid var(--divider-color); border-radius: 9px; background: var(--background-secondary); }
+  .preview-list .pl-head { display: flex; align-items: center; justify-content: space-between; padding: 9px 14px; border-bottom: 1px solid var(--divider-color); font-size: 12px; color: var(--text-muted); }
+  .preview-list .pl-head strong { color: var(--text-normal); }
+  .preview-list .pl-row { display: flex; align-items: center; gap: 14px; padding: 7px 14px; font-size: 13px; }
+  .preview-list .pl-row + .pl-row { border-top: 1px solid var(--divider-color); }
+  .preview-list .pl-row:hover { background: var(--background-modifier-hover); }
+  .preview-list .pl-tag { flex: 1; font-weight: 500; }
+  .preview-list .pl-count { width: 50px; text-align: right; color: var(--text-muted); font-variant-numeric: tabular-nums; }
+  .preview-list .pl-status { width: 88px; display: flex; align-items: center; gap: 6px; font-size: 11.5px; color: var(--text-accent); }
+  .preview-list .pl-status .pl-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--text-accent); }
+  .preview-list .pl-more { padding: 9px 14px; font-size: 12px; color: var(--text-muted); border-top: 1px solid var(--divider-color); cursor: pointer; }
+  .preview-list .pl-more:hover { color: var(--text-normal); }
+
+  /* Wizard (review pin 15) */
+  .wizard-steps { display: flex; gap: 8px; margin-bottom: 18px; }
+  .wstep { flex: 1; padding: 10px 12px; border-radius: 8px; border: 1px solid var(--divider-color); font-size: 12px; color: var(--text-muted); background: var(--background-secondary); }
+  .wstep.active { border-color: var(--interactive-accent); color: var(--text-normal); }
+  .wstep .n { display: inline-grid; place-items: center; width: 18px; height: 18px; border-radius: 50%; background: var(--background-modifier-border); font-size: 11px; margin-right: 7px; }
+  .wstep.active .n { background: var(--interactive-accent); color: #fff; }
+  .choice { border: 1px solid var(--divider-color); border-radius: 9px; padding: 14px; margin-bottom: 8px; cursor: pointer; background: var(--background-secondary); }
+  .choice:hover { border-color: var(--background-modifier-border-hover); }
+  .choice.sel { border-color: var(--interactive-accent); background: rgba(124,58,237,0.08); }
+  .choice .ttl { font-weight: 600; font-size: 13.5px; }
+  .choice .sub { font-size: 12px; color: var(--text-muted); margin-top: 3px; }
+
+  /* Modal (review pins 19, 27, 28) */
+  .modal-scrim { background: rgba(0,0,0,0.45); padding: 40px; display: grid; place-items: center; }
+  .modal { width: 100%; max-width: 520px; background: var(--background-primary); border: 1px solid var(--background-modifier-border); border-radius: 14px; box-shadow: var(--shadow-l); overflow: hidden; }
+  .modal.wide { max-width: 640px; }
+  .modal-head { padding: 22px 26px 6px; }
+  .modal-head .eyebrow { font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-accent); }
+  .modal-head h3 { margin: 6px 0 4px; font-size: 22px; letter-spacing: -0.01em; }
+  .modal-head .subhead { font-size: 13px; color: var(--text-muted); }
+  .modal-body { padding: 14px 26px 22px; max-height: 70vh; overflow-y: auto; }
+
+  /* Promises - left-aligned check rows, not centered chunky cards (welcome pin 8). */
+  .promises { background: rgba(103,211,145,0.06); border: 1px solid rgba(103,211,145,0.25); border-radius: 10px; padding: 12px 14px; margin: 14px 0 18px; }
+  .promises .p-row { display: flex; align-items: flex-start; gap: 10px; padding: 4px 0; font-size: 13px; }
+  .promises .p-check { color: var(--text-success); font-weight: 700; font-size: 14px; line-height: 1.5; flex-shrink: 0; width: 16px; }
+  .promises .p-row strong { color: var(--text-normal); }
+  .promises .p-row span { color: var(--text-muted); }
+
+  .modal-section-label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.07em; color: var(--text-faint); font-weight: 600; margin: 18px 0 10px; }
+
+  /* Preset cards inside the welcome modal (pin 7) - prominent with toggles. */
+  .wm-preset { display: flex; align-items: center; gap: 12px; padding: 11px 13px; border: 1px solid var(--divider-color); border-radius: 9px; background: var(--background-secondary); margin-bottom: 8px; }
+  .wm-preset .wp-body { flex: 1; min-width: 0; }
+  .wm-preset .wp-nm { font-size: 13.5px; font-weight: 600; }
+  .wm-preset .wp-dc { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+  .wm-preset .wp-pat { font-size: 11px; color: var(--text-faint); margin-top: 3px; font-family: "SFMono-Regular", Consolas, monospace; }
+
+  /* Integration cards (pin 6) - per-plugin block with name + state pill + bullet points,
+     no wrapped paragraph + disjointed left alignment. */
+  .integ-card { border: 1px solid var(--divider-color); border-radius: 9px; background: var(--background-secondary); padding: 12px 14px; margin-bottom: 8px; }
+  .integ-card.muted { opacity: 0.7; }
+  .integ-card .ic-head { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; }
+  .integ-card .ic-name { font-weight: 600; font-size: 13.5px; flex: 1; }
+  .integ-card .ic-pill { font-size: 10.5px; padding: 2px 8px; border-radius: 999px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; }
+  .integ-card .ic-pill.enabled { background: rgba(103,211,145,0.15); color: var(--text-success); }
+  .integ-card .ic-pill.installed { background: rgba(124,58,237,0.15); color: var(--text-accent); }
+  .integ-card .ic-pill.missing { background: var(--background-modifier-border); color: var(--text-faint); }
+  .integ-card ul { margin: 4px 0 0; padding-left: 18px; font-size: 12.5px; color: var(--text-muted); line-height: 1.55; }
+  .integ-card ul li { padding: 2px 0; }
+
+  /* Welcome modal footer - primary + secondary CTAs (pin 5). */
+  .modal-foot { display: flex; gap: 10px; justify-content: flex-end; padding: 14px 26px 20px; border-top: 1px solid var(--divider-color); background: var(--background-primary-alt); align-items: center; }
+  .modal-foot .foot-explainer { flex: 1; font-size: 11.5px; color: var(--text-muted); line-height: 1.5; max-width: 320px; }
+
+  /* Status bar (review pin 8) */
+  .statusbar { display: flex; align-items: center; gap: 8px; padding: 6px 14px; background: var(--background-secondary); border-top: 1px solid var(--divider-color); font-size: 12px; color: var(--text-muted); }
+  .statusbar .sb-item { display: flex; align-items: center; gap: 6px; cursor: pointer; padding: 2px 7px; border-radius: 5px; }
+  .statusbar .sb-item:hover { background: var(--background-modifier-hover); color: var(--text-normal); }
+  .statusbar .dot-accent { width: 7px; height: 7px; border-radius: 50%; background: var(--interactive-accent); }
+
+  /* Variants + deferred */
+  .variant-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+  .variant { border: 1px solid var(--divider-color); border-radius: 11px; overflow: hidden; background: var(--background-primary); }
+  .variant .vh { padding: 12px 16px; border-bottom: 1px solid var(--divider-color); background: var(--background-secondary); }
+  .variant .vh .vt { font-weight: 700; font-size: 14px; }
+  .variant .vh .vs { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+  .variant .vbody { padding: 16px; }
+  .recommend { display: inline-block; font-size: 10px; text-transform: uppercase; letter-spacing: 0.06em; background: var(--background-modifier-success); color: var(--text-success); border-radius: 5px; padding: 2px 7px; margin-left: 8px; }
+
+  .deferred-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; }
+  .dcard { border: 1px solid var(--divider-color); border-radius: 11px; padding: 16px 18px; background: var(--background-secondary); }
+  .dcard .dt { font-weight: 700; font-size: 14px; display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+  .dcard .target { font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-faint); border: 1px solid var(--divider-color); border-radius: 5px; padding: 2px 7px; }
+  .dcard .target.liked { color: var(--text-accent); border-color: rgba(124,58,237,0.3); }
+  .dcard .dd { font-size: 12.5px; color: var(--text-muted); margin-top: 8px; line-height: 1.55; }
+
+  @media (max-width: 1000px) {
+    .page { grid-template-columns: 1fr; }
+    .sidebar { position: static; height: auto; }
+    .stat-row { grid-template-columns: repeat(2,1fr); }
+    .rule-row .editor, .variant-grid, .deferred-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+  <aside class="sidebar">
+    <h1>Tag Curator</h1>
+    <p class="subtitle">v0.1.0 - converged design (iteration 2)</p>
+    <div class="section-label">Primary design</div>
+    <nav id="nav">
+      <a href="#settings" class="active"><span class="nav-num">1</span> Settings &amp; General</a>
+      <a href="#taglist"><span class="nav-num">2</span> Tag list view</a>
+      <a href="#ruleeditor"><span class="nav-num">3</span> Rule editor</a>
+      <a href="#welcome"><span class="nav-num">4</span> Welcome modal</a>
+    </nav>
+    <div class="section-label">Alternative considered</div>
+    <nav>
+      <a href="#variants"><span class="nav-num">5</span> Master-detail (the other UX)</a>
+    </nav>
+    <div class="section-label">Deferred</div>
+    <nav>
+      <a href="#deferred"><span class="nav-num">6</span> v0.2 / v0.3 ideas</a>
+    </nav>
+    <div class="theme-toggle">
+      <button data-theme-set="dark" class="is-active">Dark</button>
+      <button data-theme-set="light">Light</button>
+    </div>
+    <div class="meta">
+      <strong>Source:</strong> 31-option review (28 May).<br>
+      Assimilates the patterns marked "liked" and resolves the concerns. Every field shown maps to a real type in <code>src/types.ts</code>.
+    </div>
+  </aside>
+
+  <main class="canvas">
+    <div class="lede">
+      <h2>One coherent v0.1, not 31 options</h2>
+      <p>This iteration commits to a single direction per surface, pulling together the patterns you liked in the option review: top tabs, a stats header, toggleable presets, multi-select with bulk actions, a row-based scannable tag list, the welcome modal, and the command-palette reference. The one genuinely close call - inline edit vs. wizard for the rule editor - lives in a variants appendix. Everything judged too heavy for v1 is parked in a deferred appendix with its release target.</p>
+      <div class="legend">
+        <span class="chip">Tags shown sans <code>#</code> (matcher strips it)</span>
+        <span class="chip">"Hidden" = display-only, files untouched</span>
+        <span class="chip">First/last seen = plugin sidecar, not file dates</span>
+      </div>
+    </div>
+
+    <!-- ============ 1. SETTINGS ============ -->
+    <section class="block" id="settings">
+      <div class="block-header">
+        <div class="block-eyebrow">Primary design</div>
+        <h2 class="block-title">1 &middot; Settings &amp; General tab</h2>
+        <p class="block-desc">Top-tab layout (your pin 2). The General tab opens with a stats header (pin 3), then preset management (pin 5), then the safety controls. Preview mode replaces the "dry-run" label (pin 16). Panic disable now states exactly what it does before you press it (pin 4).</p>
+      </div>
+      <div class="mockup">
+        <div class="mockup-titlebar"><div class="traffic"><span></span><span></span><span></span></div><div class="mockup-title">Settings - Tag Curator</div></div>
+        <div class="top-tabs">
+          <div class="top-tab active" data-tab="general">General</div>
+          <div class="top-tab" data-tab="taglist">Tag list <span class="badge">1,542</span></div>
+          <div class="top-tab" data-tab="presets">Presets <span class="badge">5</span></div>
+          <div class="top-tab" data-tab="rules">Custom rules <span class="badge">3</span></div>
+          <div class="top-tab" data-tab="cmds">Commands</div>
+          <div class="top-tab" data-tab="adv">Advanced</div>
+          <div class="top-tab" data-tab="profiles">Profiles <span class="badge soon">v0.2</span></div>
+          <div class="top-tab" data-tab="aliases">Aliases <span class="badge soon">v0.3</span></div>
+        </div>
+
+        <!-- General -->
+        <div class="panel" data-panel="general">
+          <div class="state-banner preview">
+            <div class="sb-ic">!</div>
+            <div class="sb-msg"><strong>Preview mode is on.</strong> Matched tags are flagged in place, not hidden. The same banner shows above the Tag list view and inside the rule editor whenever this state is active.</div>
+            <button class="sb-action">Turn off preview</button>
+          </div>
+          <div class="stat-row">
+            <div class="stat-card"><div class="label">Total tags</div><div class="value">1,542</div></div>
+            <div class="stat-card"><div class="label">Hidden now</div><div class="value hidden-v">318</div></div>
+            <div class="stat-card"><div class="label">Active rules</div><div class="value">5</div></div>
+            <div class="stat-card"><div class="label">Orphans</div><div class="value">204</div></div>
+          </div>
+
+          <div class="setting-item">
+            <div class="setting-info"><div class="setting-name">Enable Tag Curator</div><div class="setting-desc">Master switch. When off, every tag shows normally and no DOM is touched.</div></div>
+            <div class="setting-control"><div class="toggle on" data-toggle></div></div>
+          </div>
+          <div class="setting-item">
+            <div class="setting-info"><div class="setting-name">Preview mode</div><div class="setting-desc">Instead of hiding matched tags, flag them so you can see exactly what a rule <em>would</em> hide before committing.</div></div>
+            <div class="setting-control"><div class="toggle" data-toggle></div></div>
+          </div>
+
+          <div class="setting-heading">If something looks wrong</div>
+          <div class="setting-item" style="border-bottom:none; align-items:flex-start;">
+            <div class="setting-info">
+              <div class="setting-name">Run panic disable</div>
+              <div class="setting-desc">One-shot action that instantly removes every DOM effect (un-hides all tags), turns the plugin off, and runs cleanup. Works even if these settings fail to load. Fully reversible: nothing in your notes is touched. The result is a "Tag Curator is off" state - shown as a persistent banner above every Tag Curator surface until you re-enable. Also available as the command "Tag Curator: Panic disable".</div>
+            </div>
+            <div class="setting-control"><button class="btn warning">Run panic disable</button></div>
+          </div>
+        </div>
+
+        <!-- Tag list (per D-011: same component as the sidebar leaf, hosted here too) -->
+        <div class="panel" data-panel="taglist" hidden>
+          <div class="callout info" style="margin-top:0;"><div class="ic">i</div><div>The Tag list shown here is the same component rendered in <a href="#taglist" style="color:var(--text-accent);">section 2 of this design</a> and in the sidebar leaf opened by <code>Tag Curator: Open tag list view</code>. State is the plugin's source of truth - selection, filter, and sort survive switching between containers (D-011).</div></div>
+        </div>
+
+        <!-- Presets -->
+        <div class="panel" data-panel="presets" hidden>
+          <p class="setting-sub">Built-in presets are toggleable but not editable - to change one, copy it into a custom rule. The two enabled by default catch the most common web-clipping noise.</p>
+          <div class="preset">
+            <div class="toggle on" data-toggle></div>
+            <div class="body">
+              <div class="nm">Hide hex color codes <span class="pill builtin">built-in</span> <span class="pill on">on by default</span></div>
+              <div class="dsc">Hides tags that look like CSS hex codes from web clippings (esp. MarkDownload).</div>
+              <div style="display:flex; align-items:center; gap:10px; margin-top:5px; font-size:11.5px;"><span class="rc-affected" style="color:var(--text-accent); font-weight:600; cursor:pointer;">42 tags affected &rarr;</span><a style="color:var(--text-muted); cursor:pointer;">More details</a></div>
+            </div>
+            <button class="btn small ghost">Copy to custom</button>
+          </div>
+          <div class="preset">
+            <div class="toggle on" data-toggle></div>
+            <div class="body">
+              <div class="nm">Hide URL anchor fragments <span class="pill builtin">built-in</span> <span class="pill on">on by default</span></div>
+              <div class="dsc">Hides common URL fragment patterns left over from clippings.</div>
+              <div style="display:flex; align-items:center; gap:10px; margin-top:5px; font-size:11.5px;"><span class="rc-affected" style="color:var(--text-accent); font-weight:600; cursor:pointer;">17 tags affected &rarr;</span><a style="color:var(--text-muted); cursor:pointer;">More details</a></div>
+            </div>
+            <button class="btn small ghost">Copy to custom</button>
+          </div>
+          <div class="preset">
+            <div class="toggle" data-toggle></div>
+            <div class="body">
+              <div class="nm">Hide single-character tags <span class="pill builtin">built-in</span></div>
+              <div class="dsc">Likely typos or shortcuts (<code>#a</code>, <code>#x</code>).</div>
+              <div style="display:flex; align-items:center; gap:10px; margin-top:5px; font-size:11.5px;"><span style="color:var(--text-faint); font-weight:600;">0 tags affected (off)</span><a style="color:var(--text-muted); cursor:pointer;">More details</a></div>
+            </div>
+            <button class="btn small ghost">Copy to custom</button>
+          </div>
+          <div class="preset">
+            <div class="toggle" data-toggle></div>
+            <div class="body">
+              <div class="nm">Hide purely numeric tags <span class="pill builtin">built-in</span></div>
+              <div class="dsc">Obsidian usually strips these; catchall for the edge cases.</div>
+              <div style="display:flex; align-items:center; gap:10px; margin-top:5px; font-size:11.5px;"><span style="color:var(--text-faint); font-weight:600;">0 tags affected (off)</span><a style="color:var(--text-muted); cursor:pointer;">More details</a></div>
+            </div>
+            <button class="btn small ghost">Copy to custom</button>
+          </div>
+          <div class="preset">
+            <div class="toggle" data-toggle></div>
+            <div class="body">
+              <div class="nm">Hide orphan tags (count &lt;= 1) <span class="pill builtin">built-in</span></div>
+              <div class="dsc">Tags appearing in one or fewer notes.</div>
+              <div style="display:flex; align-items:center; gap:10px; margin-top:5px; font-size:11.5px;"><span style="color:var(--text-faint); font-weight:600;">0 tags affected (off)</span><a style="color:var(--text-muted); cursor:pointer;">More details</a></div>
+            </div>
+            <button class="btn small ghost">Copy to custom</button>
+          </div>
+          <p style="font-size:11px; color:var(--text-faint); margin: 6px 2px 0;"><strong>More details</strong> reveals match pattern (regex / frequency criteria), action, and scope. <strong>N tags affected &rarr;</strong> opens a right-docked panel listing those tags (same pattern as the rule editor's preview dock).</p>
+          <div class="callout info"><div class="ic">i</div><div>More presets (stale tags, clipping-folder tags, near-duplicate flagging) are <strong>deferred to v0.2+</strong> because they need match types the v0.1 engine does not compute yet.</div></div>
+        </div>
+
+        <!-- Custom rules -->
+        <div class="panel" data-panel="rules" hidden>
+          <p class="setting-sub">Your own rules, evaluated by priority (highest first). Last match wins. See section 3 for the editor.</p>
+          <div class="rule-row"><div class="head"><div class="toggle on" data-toggle></div><div class="nm">Hide draft tags</div><span class="pill">priority 60</span><span class="pill">regex</span><button class="btn small">Edit</button></div></div>
+          <div class="rule-row"><div class="head"><div class="toggle on" data-toggle></div><div class="nm">Flag work-in-progress</div><span class="pill">priority 50</span><span class="pill">list</span><button class="btn small">Edit</button></div></div>
+          <div class="rule-row"><div class="head"><div class="toggle" data-toggle></div><div class="nm">Hide rare tags</div><span class="pill">priority 40</span><span class="pill">frequency</span><button class="btn small">Edit</button></div></div>
+          <button class="btn accent" style="margin-top:10px;">+ New rule</button>
+        </div>
+
+        <!-- Commands -->
+        <div class="panel" data-panel="cmds" hidden>
+          <p class="setting-sub">All 6 commands appear in Obsidian's palette (Cmd/Ctrl+P) prefixed "Tag Curator:". Bind hotkeys in Obsidian's own hotkey settings - no defaults shipped.</p>
+          <div class="setting-item"><div class="setting-info"><div class="setting-name">Toggle enable</div><div class="setting-desc">Master kill switch on/off.</div></div></div>
+          <div class="setting-item"><div class="setting-info"><div class="setting-name">Panic disable</div><div class="setting-desc">Remove all DOM effects now &amp; disable.</div></div></div>
+          <div class="setting-item"><div class="setting-info"><div class="setting-name">Toggle dry-run mode</div><div class="setting-desc">Flip Preview mode.</div></div></div>
+          <div class="setting-item"><div class="setting-info"><div class="setting-name">Open tag list view</div><div class="setting-desc">Open / reveal the tag list in the right sidebar.</div></div></div>
+          <div class="setting-item"><div class="setting-info"><div class="setting-name">Open tag list (hidden only)</div><div class="setting-desc">Pre-filtered to currently-hidden tags. Same as clicking the status bar.</div></div></div>
+          <div class="setting-item"><div class="setting-info"><div class="setting-name">Rescan vault tags</div><div class="setting-desc">Rebuild the tag sidecar across all notes.</div></div></div>
+        </div>
+
+        <div class="panel" data-panel="adv" hidden>
+          <div class="setting-heading">Index maintenance</div>
+          <div class="setting-item">
+            <div class="setting-info">
+              <div class="setting-name">Reindex vault tags</div>
+              <div class="setting-desc">Re-scan every markdown file and rebuild the tag sidecar (<code>tags.json</code>). Run after restoring a vault from backup, syncing across devices, or if the tag list looks out of date. Same as the command "Tag Curator: Rescan vault tags".</div>
+            </div>
+            <div class="setting-control"><button class="btn">Reindex now</button></div>
+          </div>
+          <div class="setting-item">
+            <div class="setting-info">
+              <div class="setting-name">Last full reindex</div>
+              <div class="setting-desc">Tag count and timestamp from the most recent full scan.</div>
+            </div>
+            <div class="setting-control"><div style="font-size:12px; color:var(--text-muted);">1,542 tags &middot; 2 hours ago</div></div>
+          </div>
+
+          <div class="setting-heading">Performance</div>
+          <div class="setting-item"><div class="setting-info"><div class="setting-name">Sidecar save debounce (ms)</div><div class="setting-desc">How long to batch tag-index writes before persisting <code>tags.json</code>. Default 5000.</div></div><div class="setting-control"><input class="input" style="width:90px;" value="5000"></div></div>
+
+          <div class="setting-heading">Troubleshooting</div>
+          <div class="setting-item"><div class="setting-info"><div class="setting-name">Debug logging</div><div class="setting-desc">Verbose console output for troubleshooting.</div></div><div class="setting-control"><div class="toggle" data-toggle></div></div></div>
+        </div>
+
+        <div class="panel" data-panel="profiles" hidden><div class="callout info"><div class="ic">i</div><div>Profiles (swap whole rule sets per context) are planned for v0.2.</div></div></div>
+        <div class="panel" data-panel="aliases" hidden><div class="callout info"><div class="ic">i</div><div>Display-only alias folding is planned for v0.3. See the deferred appendix.</div></div></div>
+
+        <div class="statusbar">
+          <div class="sb-item"><span class="dot-accent"></span> Tag Curator: 318 tags hidden</div>
+          <div style="flex:1;"></div>
+          <div class="sb-item">click to see hidden &rarr;</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 2. TAG LIST ============ -->
+    <section class="block" id="taglist">
+      <div class="block-header">
+        <div class="block-eyebrow">Primary design</div>
+        <h2 class="block-title">2 &middot; Tag list view</h2>
+        <p class="block-desc">Row-based and click-sortable for fast scanning, not a drag-drop canvas. Multi-select with a select-all that distinguishes "this page" from "all matches" when paginated, and a bulk-actions bar. Built to stay responsive at thousands of tags via windowed rendering. The "Rule" column links to the effective rule - a tag matched by several rules shows its highest-priority winner (after the Q-005 fix), with the rest one click away. <strong>The same state banner from section 1 docks at the top of this view</strong> whenever Preview mode is on or Tag Curator is off, so the state is never hidden.</p>
+      </div>
+      <div class="mockup">
+        <div class="mockup-titlebar"><div class="traffic"><span></span><span></span><span></span></div><div class="mockup-title">Tag list - Tag Curator</div></div>
+        <div class="panel">
+          <div class="toolbar">
+            <div class="search">&#128269; Filter tags...</div>
+            <div class="filter-chip active">All</div>
+            <div class="filter-chip">Hidden</div>
+            <div class="filter-chip">Orphans</div>
+            <div class="filter-chip">Frontmatter</div>
+            <div class="filter-chip">Unreviewed</div>
+          </div>
+
+          <div class="bulk-bar">
+            <span class="count">12 selected</span>
+            <span style="color:var(--text-muted);">of 1,542</span>
+            <div class="spacer"></div>
+            <button class="btn small">Hide</button>
+            <button class="btn small">Unhide</button>
+            <button class="btn small">Add description</button>
+            <button class="btn small">Send to Tag Wrangler</button>
+            <button class="btn small ghost">Clear</button>
+          </div>
+
+          <table class="tags">
+            <thead>
+              <tr>
+                <th style="width:34px;">
+                  <span class="selall" id="selall">
+                    <input type="checkbox" class="cb" checked>
+                    <div class="selall-menu" id="selallMenu" hidden>
+                      <div>Select all on this page (50)</div>
+                      <div>Select all matches (1,542)</div>
+                      <div>Select none</div>
+                    </div>
+                  </span>
+                </th>
+                <th>Tag <span class="sort">&darr;</span></th>
+                <th>Count<span class="help-ic"><span class="tip">Number of notes (markdown files) in which this tag currently appears. From `TagMeta.count` in the sidecar.</span></span></th>
+                <th>First seen<span class="help-ic"><span class="tip">Date the plugin first indexed this tag. This is <strong>not</strong> the note's created date - it's when Tag Curator first saw the tag (typically install date for existing tags, or first edit for new tags). Stored in `TagMeta.firstSeen`.</span></span></th>
+                <th>Last used<span class="help-ic"><span class="tip">Most recent indexing touch - the last time the tag was seen in any indexed note. Stored in `TagMeta.lastSeen`. Used by the (deferred) "hide stale tags" preset.</span></span></th>
+                <th>Source<span class="help-ic"><span class="tip">Where the tag is written: <code>frontmatter</code> (in YAML), <code>inline</code> (in body text), or <code>both</code>. Lets you spot archive-style vs writer-style tags and is the seed for v0.3 frontmatter-only rules. Sourced from Obsidian's <code>metadataCache.getFileCache()</code>.</span></span></th>
+                <th>Visible?<span class="help-ic"><span class="tip"><code>shown</code> = no rule hides this tag. <code>hidden</code> = a rule is hiding it (struck through in this view). <code>flagged</code> = Preview mode is on and a rule would hide it. Click the row to see why.</span></span></th>
+                <th>Rule</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td><input type="checkbox" class="cb" checked></td><td><span class="tagname">project/acme</span></td><td>142</td><td>Mar 04, 2026</td><td>2 days ago</td><td><span class="src">both</span></td><td><span class="vis shown">shown</span></td><td><span class="rule-link none">none</span></td></tr>
+              <tr class="is-hidden"><td><input type="checkbox" class="cb" checked></td><td><span class="tagname">ffaa00</span></td><td>3</td><td>Apr 12, 2026</td><td>Apr 18, 2026</td><td><span class="src">inline</span></td><td><span class="vis hidden">hidden</span></td><td><span class="rule-link">Hide hex codes</span></td></tr>
+              <tr class="is-hidden"><td><input type="checkbox" class="cb" checked></td><td><span class="tagname">section-3</span></td><td>1</td><td>May 01, 2026</td><td>May 01, 2026</td><td><span class="src">inline</span></td><td><span class="vis hidden">hidden</span></td><td><span class="rule-link">Hide URL anchors</span></td></tr>
+              <tr><td><input type="checkbox" class="cb"></td><td><span class="tagname">reading</span></td><td>67</td><td>Jan 18, 2026</td><td>yesterday</td><td><span class="src">frontmatter</span></td><td><span class="vis shown">shown</span></td><td><span class="rule-link none">none</span></td></tr>
+              <tr class="is-hidden"><td><input type="checkbox" class="cb" checked></td><td><span class="tagname">x</span></td><td>1</td><td>May 20, 2026</td><td>May 20, 2026</td><td><span class="src">inline</span></td><td><span class="vis hidden">hidden</span></td><td style="line-height:1.5;"><div><span class="rule-link">Hide orphans</span></div><div><span class="rule-link">Hide single-character tags</span></div></td></tr>
+              <tr><td><input type="checkbox" class="cb"></td><td><span class="tagname">meeting/weekly</span></td><td>38</td><td>Feb 02, 2026</td><td>3 days ago</td><td><span class="src">both</span></td><td><span class="vis shown">shown</span></td><td><span class="rule-link none">none</span></td></tr>
+            </tbody>
+          </table>
+          <div class="callout info" style="margin-top:14px;"><div class="ic">i</div><div><strong>Scales to large vaults:</strong> rows are virtualized (only visible rows render), so a 10,000-tag vault scrolls smoothly. Sorting and filtering run on the in-memory sidecar map, not the DOM.</div></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 3. RULE EDITOR ============ -->
+    <section class="block" id="ruleeditor">
+      <div class="block-header">
+        <div class="block-eyebrow">Primary design &middot; D-010 (supersedes D-001)</div>
+        <h2 class="block-title">3 &middot; Rule editor (card view + right-docked preview)</h2>
+        <p class="block-desc">Round-3 pin 12 asked for a card view with a right-docked preview instead of a left-docked master pane; pin 17 asked to drop the formal wizard and use the same IA for create + edit. Both addressed. The main area shows rules as <strong>cards</strong> (name, type, enabled toggle, "N tags affected" chip). Clicking a card swaps the main area to <strong>edit mode</strong>; clicking the "New rule" card opens edit mode with sensible defaults - no separate wizard. A <strong>right-docked scrollable preview</strong> stays visible across both views: vault-wide affected tags in card view, filtered to the selected rule in edit mode. <strong>Per D-009, priority is hidden from the UI</strong> (custom rules default to 50; presets keep their values). v0.2 lights up drag-to-reorder (B012).</p>
+      </div>
+      <div class="mockup">
+        <div class="mockup-titlebar"><div class="traffic"><span></span><span></span><span></span></div><div class="mockup-title">Custom rules - Tag Curator</div></div>
+        <div class="rule-workspace">
+          <!-- Main area: card view (default) -->
+          <div class="rule-main">
+            <div class="main-toolbar">
+              <div class="ttl">Custom rules &middot; 3</div>
+              <div class="spacer"></div>
+              <button class="btn small">Filter: All &darr;</button>
+              <button class="btn small">Sort: Name &darr;</button>
+            </div>
+            <div class="rule-cards">
+              <div class="rule-card">
+                <div class="rc-toggle-col"><div class="toggle on" data-toggle></div></div>
+                <div class="rc-info">
+                  <div class="rc-name">Hide draft tags</div>
+                  <div class="rc-meta">
+                    <span class="rc-type-pill">Pattern match (regex)</span>
+                    <span>matches <code>^draft(-|$)</code></span>
+                  </div>
+                </div>
+                <div class="rc-affected">14 tags affected</div>
+                <div class="rc-chevron">&rsaquo;</div>
+              </div>
+              <div class="rule-card">
+                <div class="rc-toggle-col"><div class="toggle on" data-toggle></div></div>
+                <div class="rc-info">
+                  <div class="rc-name">Flag work-in-progress</div>
+                  <div class="rc-meta">
+                    <span class="rc-type-pill">Specific tags (list)</span>
+                    <span>3 tags: <code>wip</code>, <code>todo</code>, <code>fixme</code></span>
+                  </div>
+                </div>
+                <div class="rc-affected">8 tags affected</div>
+                <div class="rc-chevron">&rsaquo;</div>
+              </div>
+              <div class="rule-card off">
+                <div class="rc-toggle-col"><div class="toggle" data-toggle></div></div>
+                <div class="rc-info">
+                  <div class="rc-name">Hide rare tags</div>
+                  <div class="rc-meta">
+                    <span class="rc-type-pill">Count threshold (frequency)</span>
+                    <span>when <code>count &lt;= 2</code></span>
+                  </div>
+                </div>
+                <div class="rc-affected zero">off</div>
+                <div class="rc-chevron">&rsaquo;</div>
+              </div>
+              <div class="rule-card new-card">
+                <div>+ New rule</div>
+                <div class="new-sub">Opens the editor with defaults. No separate wizard.</div>
+              </div>
+            </div>
+
+            <!-- Edit mode example, shown beside the card grid for reference -->
+            <div style="margin-top:24px; font-size:11px; text-transform:uppercase; letter-spacing:0.07em; color:var(--text-faint); font-weight:600;">Edit mode (replaces the card grid when a card is clicked)</div>
+            <div class="rule-edit">
+              <!-- Edit-mode view header: separate breadcrumb row + prominent title row.
+                   The rule name is the page title for this view, not a chip in a breadcrumb. -->
+              <div class="e-head" style="flex-direction: column; align-items: stretch; gap: 14px; padding-bottom: 18px;">
+                <div style="display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--text-muted);">
+                  <button class="btn small ghost" style="padding: 3px 9px;">&larr; Back to rules</button>
+                  <span style="opacity: 0.4;">/</span>
+                  <span>Custom rules</span>
+                  <span style="opacity: 0.4;">/</span>
+                  <span>Edit rule</span>
+                </div>
+                <div style="display: flex; align-items: center; gap: 14px;">
+                  <div class="toggle on" data-toggle title="Enable/disable rule"></div>
+                  <h2 style="margin: 0; font-size: 24px; font-weight: 700; letter-spacing: -0.01em; line-height: 1.2;">Hide draft tags</h2>
+                  <div class="spacer"></div>
+                  <span style="font-size: 12px; color: var(--text-faint);">Last edited 2 hours ago</span>
+                </div>
+              </div>
+
+              <div class="d-section">
+                <div class="d-section-label">Type</div>
+                <div class="d-row">
+                  <div class="d-label">Match by<span class="help-ic"><span class="tip">Choose how this rule decides which tags match. <code>regex</code> matches the tag name. <code>frequency</code> matches a count threshold. <code>list</code> matches an explicit set of tags.</span></span></div>
+                  <div class="d-control"><select class="select tight"><option>regex</option><option>frequency</option><option>list</option></select></div>
+                </div>
+              </div>
+
+              <div class="d-section">
+                <div class="d-section-label">Identity</div>
+                <div class="d-row">
+                  <div class="d-label">Name</div>
+                  <div class="d-control"><input class="input" value="Hide draft tags"></div>
+                </div>
+                <div style="font-size:11.5px; color:var(--text-faint); margin: -4px 0 0 124px;">Toggle in the header above (or on the card) enables/disables this rule. Priority is architected in the engine (default 50, see D-009) but hidden from the UI for v0.1.</div>
+              </div>
+
+              <div class="d-section">
+                <div class="d-section-label">Match</div>
+                <div class="match-sentence">
+                  <span class="lead">When a tag's name</span>
+                  <select class="select"><option>matches the regex</option></select>
+                  <input class="input wide" value="^draft(-|$)">
+                </div>
+              </div>
+
+              <div class="d-section">
+                <div class="d-section-label">Then</div>
+                <div class="d-row">
+                  <div class="d-label">Action</div>
+                  <div class="d-control"><select class="select tight"><option>hide</option><option>flag</option><option>show-only</option><option>group</option></select></div>
+                </div>
+                <div class="d-row">
+                  <div class="d-label">Scope<span class="help-ic"><span class="tip">Where the rule applies. v0.1 supports tag-pane only; graph view, autocomplete, and properties chips arrive in v0.2.</span></span></div>
+                  <div class="d-control"><select class="select"><option>tag-pane</option><option>tag-pane + graph (v0.2)</option><option>all surfaces (v0.2)</option></select></div>
+                </div>
+              </div>
+
+              <div style="display:flex; gap:10px; justify-content:flex-end; margin-top: 6px;">
+                <button class="btn ghost">Delete rule</button>
+                <button class="btn accent">Save</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Right-docked preview panel: persistent across card / edit modes.
+               Header makes the active rule association unmistakable; small stats row mirrors the
+               General-tab stats pattern. Pane is scrollable; no collapse/expand. -->
+          <aside class="rule-preview-dock">
+            <div class="pd-head">
+              <div class="pd-eyebrow">Preview &middot; filtered to</div>
+              <div class="pd-title" style="display:flex; align-items:center; gap:8px;"><span style="width:6px; height:6px; border-radius:50%; background:var(--interactive-accent); flex-shrink:0;"></span> Hide draft tags</div>
+              <div style="display:flex; gap:6px; margin-top:10px;">
+                <div style="flex:1; background:var(--background-secondary); border:1px solid var(--divider-color); border-radius:7px; padding:7px 9px;">
+                  <div style="font-size:10px; color:var(--text-faint); text-transform:uppercase; letter-spacing:0.05em;">Unique tags</div>
+                  <div style="font-size:17px; font-weight:700; font-variant-numeric:tabular-nums;">14</div>
+                </div>
+                <div style="flex:1; background:var(--background-secondary); border:1px solid var(--divider-color); border-radius:7px; padding:7px 9px;">
+                  <div style="font-size:10px; color:var(--text-faint); text-transform:uppercase; letter-spacing:0.05em;">Total instances</div>
+                  <div style="font-size:17px; font-weight:700; font-variant-numeric:tabular-nums;">36</div>
+                </div>
+                <div style="flex:1; background:var(--background-secondary); border:1px solid var(--divider-color); border-radius:7px; padding:7px 9px;">
+                  <div style="font-size:10px; color:var(--text-faint); text-transform:uppercase; letter-spacing:0.05em;">Notes touched</div>
+                  <div style="font-size:17px; font-weight:700; font-variant-numeric:tabular-nums;">22</div>
+                </div>
+              </div>
+              <div class="pd-sub" style="margin-top:10px;">Scrollable. In card view (no rule selected), this lists every tag any rule is acting on, vault-wide.</div>
+            </div>
+            <div class="pd-body">
+              <div class="pd-row"><span class="pd-tag">draft</span><span class="pd-count">18</span></div>
+              <div class="pd-row"><span class="pd-tag">draft-2026</span><span class="pd-count">6</span></div>
+              <div class="pd-row"><span class="pd-tag">draft/idea</span><span class="pd-count">4</span></div>
+              <div class="pd-row"><span class="pd-tag">draft-post</span><span class="pd-count">2</span></div>
+              <div class="pd-row"><span class="pd-tag">drafting</span><span class="pd-count">2</span></div>
+              <div class="pd-row"><span class="pd-tag">draft-archived</span><span class="pd-count">1</span></div>
+              <div class="pd-row"><span class="pd-tag">draft.fy26</span><span class="pd-count">1</span></div>
+              <div class="pd-row"><span class="pd-tag">draft/template</span><span class="pd-count">1</span></div>
+              <div class="pd-row"><span class="pd-tag">draft-snapshot</span><span class="pd-count">1</span></div>
+              <div class="pd-row"><span class="pd-tag">draft-rfc</span><span class="pd-count">1</span></div>
+              <div class="pd-row"><span class="pd-tag">draft-q4</span><span class="pd-count">1</span></div>
+              <div class="pd-row"><span class="pd-tag">draft-old</span><span class="pd-count">1</span></div>
+              <div class="pd-row"><span class="pd-tag">draft-merge</span><span class="pd-count">1</span></div>
+              <div class="pd-row"><span class="pd-tag">draft-2024</span><span class="pd-count">1</span></div>
+            </div>
+          </aside>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 5 reframed: master-detail kept as the alternative the reviewer was curious about (pin 12). -->
+    <section class="block" id="variants">
+      <div class="block-header">
+        <div class="block-eyebrow">Alternative considered</div>
+        <h2 class="block-title">5 &middot; Master-detail (the other experience)</h2>
+        <p class="block-desc">Round-3 pin 12: "I'm curious about another experience for this." Here is the master-detail layout that was the round-2/3 direction before D-010 superseded it. Strengths: persistent rule list visible while editing; standard pattern. Weaknesses: left-docked rule list competes with the preview, and the preview lived at the bottom of the editor rather than always-on. Card view + right-docked preview won on those two tradeoffs.</p>
+      </div>
+      <div class="mockup">
+        <div class="mockup-titlebar"><div class="traffic"><span></span><span></span><span></span></div><div class="mockup-title">Master-detail (superseded)</div></div>
+        <div class="rule-md">
+          <aside class="rule-master">
+            <div class="master-head"><span>Custom rules</span><span>3</span></div>
+            <div class="m-item sel">
+              <div class="toggle small on" data-toggle></div>
+              <span class="m-name">Hide draft tags</span>
+              <span class="m-meta">P60</span>
+            </div>
+            <div class="m-item">
+              <div class="toggle small on" data-toggle></div>
+              <span class="m-name">Flag work-in-progress</span>
+              <span class="m-meta">P50</span>
+            </div>
+            <div class="m-item off">
+              <div class="toggle small" data-toggle></div>
+              <span class="m-name">Hide rare tags</span>
+              <span class="m-meta">P40</span>
+            </div>
+            <button class="btn accent m-new">+ New rule</button>
+            <div style="margin-top:auto; font-size:11px; color:var(--text-faint); padding:8px 4px 0;">Toggle a rule on or off without entering the editor. Click + New to start the guided wizard, or duplicate any rule above as a template.</div>
+          </aside>
+
+          <div class="rule-detail">
+            <div class="d-section">
+              <div class="d-section-label">Identity</div>
+              <div class="d-row">
+                <div class="d-label">Name</div>
+                <div class="d-control"><input class="input" value="Hide draft tags"></div>
+              </div>
+              <div class="d-row">
+                <div class="d-label">Priority<span class="help-ic"><span class="tip">Higher wins. When two rules match the same tag, the one with the larger number is applied. Q-006 (open) asks whether to replace this with drag-to-reorder.</span></span></div>
+                <div class="d-control"><input class="input tight" value="60"></div>
+              </div>
+              <div style="font-size:11.5px; color:var(--text-faint); margin: -4px 0 4px 124px;">Enabled state is toggled in the master pane on the left - no need to enter the editor.</div>
+            </div>
+
+            <div class="d-section">
+              <div class="d-section-label">Match</div>
+              <div class="match-sentence">
+                <span class="lead">When a tag's name</span>
+                <select class="select"><option>matches the regex</option><option>has a count that</option><option>is one of</option></select>
+                <input class="input wide" value="^draft(-|$)">
+              </div>
+            </div>
+
+            <div class="d-section">
+              <div class="d-section-label">Then</div>
+              <div class="d-row">
+                <div class="d-label">Action</div>
+                <div class="d-control"><select class="select tight"><option>hide</option><option>flag</option><option>show-only</option><option>group</option></select></div>
+              </div>
+              <div class="d-row">
+                <div class="d-label">Scope<span class="help-ic"><span class="tip">Where the rule applies. v0.1 supports tag-pane only; graph view, autocomplete, and properties chips arrive in v0.2.</span></span></div>
+                <div class="d-control"><select class="select"><option>tag-pane</option><option>tag-pane + graph (v0.2)</option><option>all surfaces (v0.2)</option></select></div>
+              </div>
+            </div>
+
+            <div class="d-section">
+              <div class="d-section-label">Preview &middot; 14 tags affected</div>
+              <div class="preview-list">
+                <div class="pl-head"><strong>Currently hidden by this rule</strong><span>sort: <span style="color:var(--text-normal);">count &darr;</span></span></div>
+                <div class="pl-row"><span class="pl-tag">draft</span><span class="pl-count">18</span><span class="pl-status"><span class="pl-dot"></span>hidden</span></div>
+                <div class="pl-row"><span class="pl-tag">draft-2026</span><span class="pl-count">6</span><span class="pl-status"><span class="pl-dot"></span>hidden</span></div>
+                <div class="pl-row"><span class="pl-tag">draft/idea</span><span class="pl-count">4</span><span class="pl-status"><span class="pl-dot"></span>hidden</span></div>
+                <div class="pl-row"><span class="pl-tag">draft-post</span><span class="pl-count">2</span><span class="pl-status"><span class="pl-dot"></span>hidden</span></div>
+                <div class="pl-row"><span class="pl-tag">drafting</span><span class="pl-count">2</span><span class="pl-status"><span class="pl-dot"></span>hidden</span></div>
+                <div class="pl-more">Show all 14 affected tags &rarr;</div>
+              </div>
+            </div>
+
+            <div style="display:flex; gap:10px; justify-content:flex-end; margin-top: 8px;">
+              <button class="btn ghost">Delete rule</button>
+              <button class="btn accent">Save</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 4. WELCOME MODAL ============ -->
+    <section class="block" id="welcome">
+      <div class="block-header">
+        <div class="block-eyebrow">Primary design - redesigned from round-2 review</div>
+        <h2 class="block-title">4 &middot; First-run welcome modal</h2>
+        <p class="block-desc">Fires once on first enable. Round-2 feedback drove the rebuild: the buttons used to imply the plugin wasn't enabled yet (it is), the contract cards were centered chunks that read awkwardly, integrations were wrapped-paragraph rows with disjointed alignment, and the two-presets section was buried as a one-liner. New structure: acknowledges current state in the header, makes the safety promises a single left-aligned check group, surfaces the two default presets as toggleable cards (so the user can change them before committing), and renders integrations as per-plugin cards with name + state pill + bulleted "what changes" items. Footer offers a clear binary: start curating, or start in preview mode - with a one-sentence explainer so preview mode is not a mystery.</p>
+      </div>
+      <div class="mockup">
+        <div class="mockup-titlebar"><div class="traffic"><span></span><span></span><span></span></div><div class="mockup-title">Obsidian</div></div>
+        <div class="modal-scrim">
+          <div class="modal wide">
+            <div class="modal-head">
+              <div class="eyebrow">Tag Curator is now enabled</div>
+              <h3>Choose how to start</h3>
+              <div class="subhead">Before any tag is curated, here is what you can expect.</div>
+            </div>
+            <div class="modal-body">
+              <!-- Safety promises - left aligned, single highlighted strip -->
+              <div class="modal-section-label">Our safety promise</div>
+              <div class="promises">
+                <div class="p-row"><span class="p-check">&check;</span><div><strong>Display-only.</strong> <span>It never edits your notes.</span></div></div>
+                <div class="p-row"><span class="p-check">&check;</span><div><strong>File-safe.</strong> <span>No content is written to markdown.</span></div></div>
+                <div class="p-row"><span class="p-check">&check;</span><div><strong>Fully reversible.</strong> <span>Disable Tag Curator and everything returns.</span></div></div>
+              </div>
+
+              <!-- Preset cards with toggles -->
+              <div class="modal-section-label">Tag Curator will start by hiding these noisy tags</div>
+              <div class="wm-preset">
+                <div class="toggle on" data-toggle></div>
+                <div class="wp-body">
+                  <div class="wp-nm">Hide hex color codes</div>
+                  <div class="wp-dc">Filters tags like <code>#ffaa00</code> left over from CSS in web clippings.</div>
+                </div>
+              </div>
+              <div class="wm-preset">
+                <div class="toggle on" data-toggle></div>
+                <div class="wp-body">
+                  <div class="wp-nm">Hide URL anchor fragments</div>
+                  <div class="wp-dc">Filters tags like <code>#section-3</code> or <code>#top</code> from URL fragments in clippings.</div>
+                </div>
+              </div>
+              <p style="font-size:11.5px; color:var(--text-faint); margin: 6px 2px 0;">Toggle off any preset you don't want to enable now. Change these any time in Settings &gt; Presets.</p>
+
+              <!-- Per-plugin integration cards (round-2 pin 6) -->
+              <div class="modal-section-label">Integrations we detected</div>
+              <div class="integ-card">
+                <div class="ic-head"><div class="ic-name">Tag Wrangler</div><span class="ic-pill enabled">Enabled</span></div>
+                <ul>
+                  <li>Right-click renames appear alongside Tag Curator actions in the tag pane.</li>
+                  <li>Tag Wrangler menus stay visible on tags Tag Curator flags in preview mode.</li>
+                </ul>
+              </div>
+              <div class="integ-card">
+                <div class="ic-head"><div class="ic-name">Notebook Navigator</div><span class="ic-pill enabled">Enabled</span></div>
+                <ul>
+                  <li>Hidden tags stay hidden in the Notebook Navigator tag tree too.</li>
+                  <li>Cascade-respect: filters set there honor Tag Curator's hide rules.</li>
+                </ul>
+              </div>
+              <div class="integ-card muted">
+                <div class="ic-head"><div class="ic-name">Colored Tags Wrangler</div><span class="ic-pill missing">Not installed</span></div>
+                <ul>
+                  <li>If you install it, Tag Curator will defer color decisions to it (v0.2).</li>
+                </ul>
+              </div>
+            </div>
+            <div class="modal-foot">
+              <div class="foot-explainer"><strong>Preview mode</strong> flags matched tags so you can see what would be hidden, without anything actually disappearing. Recommended for the first 24 hours.</div>
+              <button class="btn ghost">Start in preview mode</button>
+              <button class="btn accent">Start curating</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 6. DEFERRED ============ -->
+    <section class="block" id="deferred">
+      <div class="block-header">
+        <div class="block-eyebrow">Parked with a target</div>
+        <h2 class="block-title">6 &middot; Deferred to v0.2 / v0.3</h2>
+        <p class="block-desc">Ideas from the review that are real but out of v0.1 scope. Each maps to an entry in <code>docs/internal/backlog.md</code> (B001-B010); the IDs below match. Status: all 10 are <strong>tracked in the backlog</strong>. They can also be promoted to GitHub issues with one bulk command (one issue per backlog ID, labels for <code>v0.2</code>/<code>v0.3</code>, body lifted from the backlog row) - say the word and I'll create them. The analytics dashboard is flagged "liked" - it defers only to avoid feature creep, since all its data already exists in <code>TagMeta</code>.</p>
+      </div>
+      <div class="deferred-grid">
+        <div class="dcard"><div class="dt">Compound criteria builder <span class="target">v0.2</span></div><div class="dd">AND/OR/NOT criterion tree. Drag-drop judged too complex for v1; revisit once the single-criterion contract is stable. (pins 23, B001/B002)</div></div>
+        <div class="dcard"><div class="dt">Conflict resolver <span class="target">v0.2</span></div><div class="dd">List tags matched by &gt;1 rule, edit priorities inline. Reuses <code>RuleAttribution.allMatches</code>. Hidden when no conflicts exist. (pin 25, B008)</div></div>
+        <div class="dcard"><div class="dt">Tag detail sheet <span class="target">v0.2</span></div><div class="dd">Full per-tag page: metadata, attribution chain, occurrences, overrides. Powerful but rarely opened; concern about click cost noted. (pins 12, 14, B009)</div></div>
+        <div class="dcard"><div class="dt">Hierarchy cascade <span class="target">v0.2</span></div><div class="dd">"Apply to children" toggle with in-use detection (we have per-tag <code>count</code>). Needs a hierarchy index to stay fast. (pin 26, B010)</div></div>
+        <div class="dcard"><div class="dt">Density toggle <span class="target">v0.2</span></div><div class="dd">Compact / comfortable / spacious rows. Nice-to-have, not v1. (pin 22, B003)</div></div>
+        <div class="dcard"><div class="dt">Plugin-integration detection <span class="target">v0.2</span></div><div class="dd">Welcome modal detects integrable plugins via <code>app.plugins.enabledPlugins</code> and explains each. (pin 28, B004)</div></div>
+        <div class="dcard"><div class="dt">Rule library / preset gallery <span class="target">v0.3</span></div><div class="dd">Two-step: import a pack (rules added, disabled) then enable. Ship file-import first, hosted index later. (pin 30, B005)</div></div>
+        <div class="dcard"><div class="dt">Tag analytics dashboard <span class="target liked">liked &middot; v0.3</span></div><div class="dd">Growth/decay/orphan trends, duplicate candidates. Derived entirely from existing <code>TagMeta.firstSeen/lastSeen/count</code> - no new data layer. (pin 29, B007)</div></div>
+        <div class="dcard"><div class="dt">Merge &amp; alias workflow <span class="target">v0.3</span></div><div class="dd"><strong>Display-only:</strong> folds alias rows into one canonical row, never touches files. Actual rename delegated to Tag Wrangler. <code>TagMeta.aliases</code> already exists. (pin 31, B006)</div></div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<script>
+  // Theme toggle
+  document.querySelectorAll('[data-theme-set]').forEach(function (b) {
+    b.addEventListener('click', function () {
+      document.documentElement.setAttribute('data-theme', b.dataset.themeSet);
+      document.querySelectorAll('[data-theme-set]').forEach(function (x) { x.classList.toggle('is-active', x === b); });
+    });
+  });
+  // Demo toggles
+  document.querySelectorAll('[data-toggle]').forEach(function (t) {
+    t.addEventListener('click', function () { t.classList.toggle('on'); });
+  });
+  // Settings top-tabs
+  document.querySelectorAll('.top-tab').forEach(function (tab) {
+    tab.addEventListener('click', function () {
+      var name = tab.dataset.tab;
+      var root = tab.closest('.mockup');
+      root.querySelectorAll('.top-tab').forEach(function (x) { x.classList.toggle('active', x === tab); });
+      root.querySelectorAll('[data-panel]').forEach(function (p) { p.hidden = p.dataset.panel !== name; });
+    });
+  });
+  // Select-all menu
+  var selall = document.getElementById('selall');
+  if (selall) {
+    var menu = document.getElementById('selallMenu');
+    selall.querySelector('.cb').addEventListener('click', function (e) { e.preventDefault(); menu.hidden = !menu.hidden; });
+    document.addEventListener('click', function (e) { if (!selall.contains(e.target)) menu.hidden = true; });
+  }
+  // Scrollspy
+  var links = Array.prototype.slice.call(document.querySelectorAll('#nav a, .sidebar nav a'));
+  var sections = links.map(function (a) { return document.querySelector(a.getAttribute('href')); }).filter(Boolean);
+  var obs = new IntersectionObserver(function (entries) {
+    entries.forEach(function (en) {
+      if (en.isIntersecting) {
+        links.forEach(function (a) { a.classList.toggle('active', a.getAttribute('href') === '#' + en.target.id); });
+      }
+    });
+  }, { rootMargin: '-20% 0px -70% 0px' });
+  sections.forEach(function (s) { obs.observe(s); });
+</script>
+</body>
+</html>

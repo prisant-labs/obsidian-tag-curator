@@ -2,6 +2,63 @@
  * Tag Curator Plugin Styles
  */
 
+/* =========================================================
+ * Themeable variables (Style Settings, D-016, optional).
+ *
+ * Every Tag-Curator-owned themeable value gets a :root default here so the
+ * plugin styles correctly with NO dependency on Style Settings. The settings
+ * block below (a CSS comment whose body starts with the literal at-settings
+ * keyword) is auto-discovered by the Style Settings plugin (if installed) and
+ * renders a GUI that overrides these same variables; absent Style Settings the
+ * defaults stand and the GUI block is just an inert CSS comment.
+ *
+ * Defaults are derived from the prior hardcoded appearance (the flagged
+ * highlight previously used --text-warning directly), so there is no visual
+ * regression when Style Settings is not installed.
+ * ========================================================= */
+:root {
+  /* Flagged tag highlight color (preview mode + flagged rows/pills/suggestions).
+   * Was --text-warning inline; now a Tag-Curator-owned, themeable alias. */
+  --tag-curator-flag-color: var(--text-warning);
+  /* Background wash behind a flagged row / pill / suggestion. */
+  --tag-curator-flag-bg: var(--background-modifier-hover);
+  /* Font weight applied to flagged tag names. The "Bold flagged tag names"
+   * class-toggle swaps this to 700 by adding the tag-curator-flag-bold body
+   * class; the default leaves flagged names at their normal weight. */
+  --tag-curator-flag-weight: inherit;
+}
+
+/* The tag-curator-flag-bold body class is added by Style Settings' class-toggle
+ * (see the @settings block). It is a no-op unless the user enables it. */
+body.tag-curator-flag-bold {
+  --tag-curator-flag-weight: 700;
+}
+
+/* @settings
+
+name: Tag Curator
+id: tag-curator
+settings:
+  - id: tag-curator-flag-color
+    title: Flagged tag color
+    description: Color used to highlight flagged tags in preview mode (tag list, tag tree, property pills, and tag suggestions).
+    type: variable-color
+    format: hex
+    default: '#e0ac00'
+  - id: tag-curator-flag-bg
+    title: Flagged tag background
+    description: Background wash behind a flagged row, pill, or suggestion.
+    type: variable-color
+    format: hex
+    default: '#3a3a3a'
+  - id: tag-curator-flag-bold
+    title: Bold flagged tag names
+    description: Render flagged tag names in bold for extra emphasis in preview mode.
+    type: class-toggle
+    default: false
+
+*/
+
 /* Tag List View */
 .tag-curator-list-header {
   padding: 1rem;
@@ -131,4 +188,1903 @@
 
 .tag-curator-links a:hover {
   text-decoration: underline;
+}
+
+/* =========================================================
+ * State banner (D-007) - persistent above Tag Curator surfaces
+ * whenever the plugin is in a non-default state.
+ * ========================================================= */
+.tag-curator-state-banner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 9px 16px;
+  font-size: 12.5px;
+  border-bottom: 1px solid var(--divider-color);
+}
+.tag-curator-state-banner[data-variant="preview"] {
+  background: rgba(245, 201, 124, 0.1);
+}
+.tag-curator-state-banner[data-variant="preview"] .sb-ic {
+  background: var(--text-warning);
+  color: var(--background-primary);
+}
+.tag-curator-state-banner[data-variant="preview"] .sb-msg {
+  color: var(--text-warning);
+}
+.tag-curator-state-banner[data-variant="off"] {
+  background: var(--background-secondary);
+}
+.tag-curator-state-banner[data-variant="off"] .sb-ic {
+  background: var(--text-faint);
+  color: var(--background-primary);
+}
+.tag-curator-state-banner[data-variant="off"] .sb-msg {
+  color: var(--text-muted);
+}
+.tag-curator-state-banner .sb-ic {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-size: 11px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+.tag-curator-state-banner .sb-msg {
+  flex: 1;
+  line-height: 1.4;
+}
+.tag-curator-state-banner .sb-msg strong {
+  color: var(--text-normal);
+}
+.tag-curator-state-banner .sb-action {
+  background: transparent;
+  border: 1px solid currentColor;
+  color: inherit;
+  font: inherit;
+  font-size: 11.5px;
+  padding: 4px 10px;
+  border-radius: 5px;
+  cursor: pointer;
+  opacity: 0.85;
+}
+.tag-curator-state-banner .sb-action:hover {
+  opacity: 1;
+}
+
+/* =========================================================
+ * Welcome modal (D-008)
+ * ========================================================= */
+.tag-curator-welcome-modal .modal-content {
+  max-width: 640px;
+}
+.tcw-head {
+  padding: 4px 0 6px;
+}
+.tcw-eyebrow {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-accent);
+}
+.tcw-title {
+  margin: 6px 0 4px;
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+.tcw-subhead {
+  font-size: 13px;
+  color: var(--text-muted);
+}
+.tcw-status {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-weight: 600;
+  color: var(--text-success);
+}
+.tcw-intro {
+  font-size: 13.5px;
+  color: var(--text-normal);
+  line-height: 1.55;
+  margin-top: 12px;
+}
+.tcw-integ-head {
+  cursor: pointer;
+}
+.tcw-integ-chev {
+  color: var(--text-faint);
+  margin-left: 2px;
+}
+.tcw-integ-collapsed ul.tcw-integ-bullets {
+  display: none;
+}
+.tcw-section-label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--text-faint);
+  font-weight: 600;
+  margin: 18px 0 10px;
+}
+.tcw-section-caption {
+  font-size: 11.5px;
+  color: var(--text-faint);
+  margin: 6px 2px 0;
+}
+
+/* Safety promises strip */
+.tcw-promises {
+  padding: 8px 0 4px;
+  margin: 10px 0 4px;
+}
+.tcw-promise-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 4px 0;
+  font-size: 13px;
+}
+.tcw-promise-check {
+  color: var(--text-success);
+  font-weight: 700;
+  font-size: 14px;
+  line-height: 1.5;
+  flex-shrink: 0;
+  width: 16px;
+}
+.tcw-promise-row strong {
+  color: var(--text-normal);
+}
+
+/* Preset cards in modal */
+.tcw-preset {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 11px 13px;
+  border: 1px solid var(--divider-color);
+  border-radius: 9px;
+  background: var(--background-secondary);
+  margin-bottom: 8px;
+}
+.tcw-preset-body {
+  flex: 1;
+  min-width: 0;
+}
+.tcw-preset-name {
+  font-size: 13.5px;
+  font-weight: 600;
+}
+.tcw-preset-desc {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+.tcw-toggle {
+  width: 38px;
+  height: 22px;
+  border-radius: 999px;
+  background: var(--background-modifier-border);
+  position: relative;
+  cursor: pointer;
+  transition: background 0.15s ease;
+  flex-shrink: 0;
+}
+.tcw-toggle::after {
+  content: "";
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #fff;
+  top: 3px;
+  left: 3px;
+  transition: left 0.15s ease;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+.tcw-toggle.on {
+  background: var(--interactive-accent);
+}
+.tcw-toggle.on::after {
+  left: 19px;
+}
+
+/* Integration cards */
+.tcw-integ {
+  border: 1px solid var(--divider-color);
+  border-radius: 9px;
+  background: var(--background-secondary);
+  padding: 12px 14px;
+  margin-bottom: 8px;
+}
+.tcw-integ-muted {
+  opacity: 0.7;
+}
+.tcw-integ-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 6px;
+}
+.tcw-integ-name {
+  font-weight: 600;
+  font-size: 13.5px;
+  flex: 1;
+}
+.tcw-integ-pill {
+  font-size: 10.5px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.tcw-integ-pill-enabled {
+  background: rgba(103, 211, 145, 0.15);
+  color: var(--text-success);
+}
+.tcw-integ-pill-installed {
+  background: rgba(124, 58, 237, 0.15);
+  color: var(--text-accent);
+}
+.tcw-integ-pill-missing {
+  background: var(--background-modifier-border);
+  color: var(--text-faint);
+}
+.tcw-integ ul {
+  margin: 4px 0 0;
+  padding-left: 18px;
+  font-size: 12.5px;
+  color: var(--text-muted);
+  line-height: 1.55;
+}
+.tcw-integ ul li {
+  padding: 2px 0;
+}
+
+/* Modal footer */
+.tcw-foot {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  align-items: center;
+  padding: 18px 0 0;
+  margin-top: 18px;
+  border-top: 1px solid var(--divider-color);
+}
+.tcw-foot-explainer {
+  flex: 1;
+  font-size: 11.5px;
+  color: var(--text-muted);
+  line-height: 1.5;
+  max-width: 320px;
+}
+.tcw-foot-explainer strong {
+  color: var(--text-normal);
+}
+.tcw-btn {
+  font: inherit;
+  font-size: 12.5px;
+  padding: 6px 12px;
+  border-radius: 6px;
+  border: 1px solid var(--background-modifier-border);
+  background: var(--interactive-normal);
+  color: var(--text-normal);
+  cursor: pointer;
+}
+.tcw-btn:hover {
+  background: var(--interactive-hover);
+}
+.tcw-btn-accent {
+  background: var(--interactive-accent);
+  border-color: var(--interactive-accent);
+  color: var(--text-on-accent);
+}
+.tcw-btn-accent:hover {
+  background: var(--interactive-accent-hover);
+}
+
+/* =========================================================
+ * Settings tab (top-tab layout, D-007/D-009/D-011)
+ * ========================================================= */
+.tag-curator-settings .tag-curator-state-banner {
+  margin: -16px -16px 12px -16px;
+  border-radius: 0;
+}
+.tag-curator-top-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px;
+  border-bottom: 1px solid var(--divider-color);
+  margin-bottom: 18px;
+}
+.tcst-tab {
+  padding: 8px 14px;
+  font-size: 13px;
+  color: var(--text-muted);
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.tcst-tab:hover {
+  color: var(--text-normal);
+}
+.tcst-tab.active {
+  color: var(--text-normal);
+  border-bottom-color: var(--interactive-accent);
+}
+.tcst-badge {
+  font-size: 10px;
+  background: var(--background-modifier-border);
+  color: var(--text-muted);
+  border-radius: 999px;
+  padding: 1px 6px;
+  font-variant-numeric: tabular-nums;
+}
+.tcst-badge-soon {
+  background: transparent;
+  border: 1px dashed var(--background-modifier-border);
+  color: var(--text-faint);
+}
+
+.tcst-panel {
+  /* Padding handled by Obsidian Setting() rows; panel just provides layout root. */
+}
+
+/* Stats header on General */
+.tcst-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 12px;
+  margin-bottom: 20px;
+}
+.tcst-stat-card {
+  background: var(--background-secondary);
+  border: 1px solid var(--divider-color);
+  border-radius: 9px;
+  padding: 14px 16px;
+}
+.tcst-stat-label {
+  font-size: 11px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.tcst-stat-value {
+  font-size: 26px;
+  font-weight: 700;
+  margin-top: 4px;
+  font-variant-numeric: tabular-nums;
+}
+.tcst-stat-accent {
+  color: var(--text-accent);
+}
+
+/* Info callout (Tag list tab, deferred placeholders) */
+.tcst-info-callout {
+  display: flex;
+  gap: 10px;
+  background: rgba(124, 58, 237, 0.08);
+  border: 1px solid rgba(124, 58, 237, 0.25);
+  border-radius: 9px;
+  padding: 12px 14px;
+  font-size: 12.5px;
+  line-height: 1.55;
+  margin: 14px 0;
+}
+.tcst-info-callout .tcst-info-ic {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  font-weight: 700;
+  font-size: 12px;
+  background: var(--interactive-accent);
+  color: #fff;
+}
+
+.tcst-section-sub {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin: 0 0 12px;
+}
+.tcst-empty {
+  font-size: 12.5px;
+  color: var(--text-faint);
+  font-style: italic;
+  margin: 8px 0 12px;
+}
+
+/* Preset cards */
+.tcst-preset {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 12px 14px;
+  border: 1px solid var(--divider-color);
+  border-radius: 9px;
+  margin-bottom: 8px;
+  background: var(--background-secondary);
+}
+.tcst-preset-body {
+  flex: 1;
+  min-width: 0;
+}
+.tcst-preset-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.tcst-preset-nm {
+  font-size: 13.5px;
+  font-weight: 600;
+}
+.tcst-preset-dsc {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+.tcst-preset-meta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 6px;
+  font-size: 11.5px;
+}
+.tcst-pill {
+  font-size: 10px;
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: rgba(124, 58, 237, 0.15);
+  color: var(--text-accent);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-weight: 600;
+}
+.tcst-affected {
+  color: var(--text-accent);
+  font-weight: 600;
+  cursor: pointer;
+}
+.tcst-affected-zero {
+  color: var(--text-faint);
+  cursor: default;
+}
+.tcst-more-link {
+  color: var(--text-muted);
+  cursor: pointer;
+}
+.tc-pill {
+  font-size: 10px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-weight: 600;
+  margin-left: 8px;
+  vertical-align: middle;
+}
+.tc-pill-active {
+  background: rgba(103, 211, 145, 0.15);
+  color: var(--text-success);
+}
+.tc-pill-warn {
+  background: rgba(245, 201, 124, 0.16);
+  color: var(--text-warning);
+}
+.tc-pill-muted {
+  background: var(--background-modifier-border);
+  color: var(--text-faint);
+}
+.tc-action-link {
+  font-size: 11.5px;
+  margin-left: 8px;
+  color: var(--text-accent);
+  cursor: pointer;
+}
+.tc-action-link:hover {
+  text-decoration: underline;
+}
+/* Rule editor (E1-E4) */
+.tcr-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.tcr-new-btn {
+  margin-left: auto;
+}
+.tcr-card-sub {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+.tcr-card-sub .tcr-card-type {
+  color: var(--text-faint);
+}
+.tcr-edit-title-input {
+  font-size: 18px;
+  font-weight: 700;
+  background: transparent;
+  border: none;
+  border-bottom: 1px dashed var(--background-modifier-border-hover);
+  color: var(--text-normal);
+  padding: 2px 2px 4px;
+  flex: 1;
+  min-width: 0;
+}
+.tcr-edit-title-input:focus {
+  outline: none;
+  border-bottom-color: var(--interactive-accent);
+}
+.tcr-type-cards {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+.tcr-type-card {
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 8px;
+  padding: 9px 11px;
+  cursor: pointer;
+}
+.tcr-type-card.on {
+  border-color: var(--interactive-accent);
+  background: var(--background-modifier-hover);
+}
+.tcr-type-card-title {
+  font-weight: 600;
+  font-size: 12.5px;
+}
+.tcr-type-card-desc {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-top: 3px;
+  line-height: 1.4;
+}
+.tcst-more-link:hover {
+  color: var(--text-normal);
+  text-decoration: underline;
+}
+
+.tcst-preset-details {
+  margin-top: 10px;
+  padding-top: 8px;
+  border-top: 1px dashed var(--background-modifier-border);
+}
+.tcst-preset-dl {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 4px 12px;
+  font-size: 12px;
+  align-items: baseline;
+}
+.tcst-dl-label {
+  color: var(--text-faint);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-size: 10.5px;
+}
+.tcst-dl-value {
+  color: var(--text-normal);
+}
+.tcst-dl-value code {
+  font-size: 11px;
+}
+
+/* Toggle - small variant used in preset rows */
+.tcst-toggle {
+  width: 38px;
+  height: 22px;
+  border-radius: 999px;
+  background: var(--background-modifier-border);
+  position: relative;
+  cursor: pointer;
+  transition: background 0.15s ease;
+  flex-shrink: 0;
+}
+.tcst-toggle::after {
+  content: "";
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #fff;
+  top: 3px;
+  left: 3px;
+  transition: left 0.15s ease;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+.tcst-toggle.on {
+  background: var(--interactive-accent);
+}
+.tcst-toggle.on::after {
+  left: 19px;
+}
+
+/* =========================================================
+ * Tag list view (D-007, D-011) - row-based, sortable, multi-select.
+ * Used in both the sidebar leaf and the Settings tab.
+ * ========================================================= */
+.tag-curator-list {
+  padding: 0;
+}
+.tag-curator-list .tag-curator-state-banner {
+  margin-bottom: 12px;
+}
+
+.tcl-header {
+  padding: 14px 16px 4px;
+}
+.tcl-header h2 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.tcl-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  padding: 8px 16px 10px;
+}
+.tcl-search {
+  flex: 1;
+  min-width: 180px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--background-modifier-form-field);
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 7px;
+  padding: 6px 10px;
+}
+.tcl-search-ic {
+  color: var(--text-faint);
+  font-size: 12px;
+}
+.tcl-search input {
+  flex: 1;
+  background: transparent;
+  border: 0;
+  outline: 0;
+  color: var(--text-normal);
+  font-size: 13px;
+}
+.tcl-chip {
+  font-size: 12px;
+  padding: 5px 11px;
+  border-radius: 999px;
+  border: 1px solid var(--background-modifier-border);
+  background: var(--background-secondary);
+  color: var(--text-muted);
+  cursor: pointer;
+}
+.tcl-chip.active {
+  background: rgba(124, 58, 237, 0.16);
+  border-color: rgba(124, 58, 237, 0.4);
+  color: var(--text-accent);
+}
+
+/* Bulk-actions bar */
+.tcl-bulk-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0 16px 10px;
+  padding: 9px 12px;
+  background: rgba(124, 58, 237, 0.1);
+  border: 1px solid rgba(124, 58, 237, 0.3);
+  border-radius: 9px;
+  font-size: 13px;
+}
+.tcl-bulk-count {
+  font-weight: 600;
+  color: var(--text-accent);
+}
+.tcl-bulk-spacer {
+  flex: 1;
+}
+.tcl-bulk-btn {
+  font: inherit;
+  font-size: 11.5px;
+  padding: 4px 10px;
+  border-radius: 5px;
+  border: 1px solid var(--background-modifier-border);
+  background: var(--interactive-normal);
+  color: var(--text-normal);
+  cursor: pointer;
+}
+.tcl-bulk-btn:hover {
+  background: var(--interactive-hover);
+}
+.tcl-bulk-btn-ghost {
+  background: transparent;
+  border-color: transparent;
+}
+
+/* Table */
+.tcl-table-wrap {
+  padding: 0 16px 16px;
+  overflow-x: auto;
+}
+.tcl-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+.tcl-table th {
+  text-align: left;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-faint);
+  font-weight: 600;
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--background-modifier-border);
+  white-space: nowrap;
+}
+.tcl-table td {
+  padding: 9px 10px;
+  border-bottom: 1px solid var(--divider-color);
+  vertical-align: top;
+}
+.tcl-table tr:hover td {
+  background: var(--background-modifier-hover);
+}
+.tcl-select-col {
+  width: 34px;
+}
+.tcl-select-col input {
+  cursor: pointer;
+}
+.tcl-tagname {
+  font-weight: 500;
+}
+.tcl-row-hidden .tcl-tagname {
+  color: var(--text-faint);
+  text-decoration: line-through;
+}
+.tcl-row-flagged .tcl-tagname {
+  color: var(--tag-curator-flag-color);
+  font-weight: var(--tag-curator-flag-weight);
+}
+.tcl-src {
+  font-size: 10.5px;
+  color: var(--text-faint);
+  border: 1px solid var(--divider-color);
+  border-radius: 4px;
+  padding: 1px 5px;
+}
+.tcl-vis {
+  font-size: 11px;
+  text-transform: lowercase;
+}
+.tcl-vis-shown {
+  color: var(--text-success);
+}
+.tcl-vis-hidden {
+  color: var(--text-accent);
+}
+.tcl-vis-flagged {
+  color: var(--tag-curator-flag-color);
+}
+.tcl-rule-link {
+  color: var(--text-accent);
+  font-size: 12px;
+  line-height: 1.5;
+}
+.tcl-rule-none {
+  color: var(--text-faint);
+  font-size: 12px;
+}
+
+/* Help icon with hover tooltip on column headers */
+.tcl-help-ic {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 14px;
+  height: 14px;
+  margin-left: 5px;
+  border-radius: 50%;
+  border: 1px solid var(--background-modifier-border);
+  color: var(--text-muted);
+  font-size: 9.5px;
+  font-weight: 700;
+  cursor: help;
+  position: relative;
+  vertical-align: middle;
+  text-transform: none;
+  letter-spacing: 0;
+}
+.tcl-help-ic:hover {
+  color: var(--text-normal);
+  border-color: var(--background-modifier-border-hover);
+}
+.tcl-tip {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: calc(100% + 8px);
+  background: var(--background-secondary);
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 7px;
+  padding: 9px 11px;
+  font-size: 11.5px;
+  font-weight: 400;
+  line-height: 1.5;
+  color: var(--text-normal);
+  width: 260px;
+  text-align: left;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.18);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.12s ease;
+  z-index: 10;
+  text-transform: none;
+  letter-spacing: 0;
+  white-space: normal;
+}
+.tcl-help-ic:hover .tcl-tip {
+  opacity: 1;
+}
+
+/* =========================================================
+ * Rule editor (D-010) - card view + right-docked preview.
+ * ========================================================= */
+.tcr-workspace {
+  display: grid;
+  grid-template-columns: 1fr 300px;
+  gap: 0;
+  min-height: 540px;
+  border: 1px solid var(--divider-color);
+  border-radius: 10px;
+  overflow: hidden;
+}
+.tcr-main {
+  padding: 18px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  background: var(--background-primary);
+}
+.tcr-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.tcr-toolbar-title {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--text-faint);
+  font-weight: 600;
+}
+
+/* Card list (full-width rows) */
+.tcr-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.tcr-card {
+  border: 1px solid var(--divider-color);
+  border-radius: 10px;
+  background: var(--background-secondary);
+  padding: 14px 18px;
+  cursor: pointer;
+  transition: border-color 0.12s ease;
+  display: grid;
+  grid-template-columns: auto 1fr auto auto;
+  align-items: center;
+  gap: 18px;
+}
+.tcr-card:hover {
+  border-color: var(--background-modifier-border-hover);
+}
+.tcr-card-off {
+  opacity: 0.6;
+}
+.tcr-card-toggle {
+  display: flex;
+  align-items: center;
+}
+.tcr-card-info {
+  min-width: 0;
+}
+.tcr-card-name {
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 1.3;
+  letter-spacing: -0.005em;
+}
+.tcr-card-meta {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-top: 4px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.tcr-type-pill {
+  font-size: 10.5px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--background-modifier-form-field);
+  border: 1px solid var(--divider-color);
+  color: var(--text-muted);
+}
+.tcr-match-summary {
+  font-size: 11.5px;
+}
+.tcr-card-affected {
+  color: var(--text-accent);
+  font-weight: 600;
+  font-size: 13px;
+  white-space: nowrap;
+}
+.tcr-card-affected-zero {
+  color: var(--text-faint);
+}
+.tcr-card-chevron {
+  color: var(--text-faint);
+  font-size: 18px;
+}
+.tcr-card-new {
+  border-style: dashed;
+  background: transparent;
+  grid-template-columns: 1fr;
+  text-align: center;
+  padding: 18px;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+.tcr-card-new:hover {
+  border-color: var(--interactive-accent);
+  color: var(--text-accent);
+}
+.tcr-card-new-title {
+  font-size: 14px;
+}
+.tcr-card-new-sub {
+  font-size: 11.5px;
+  font-weight: 400;
+  color: var(--text-faint);
+  margin-top: 4px;
+}
+
+/* Edit mode */
+.tcr-edit {
+  border: 1px solid var(--divider-color);
+  border-radius: 10px;
+  background: var(--background-secondary);
+  padding: 18px 22px;
+}
+.tcr-edit-head {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding-bottom: 18px;
+  border-bottom: 1px solid var(--divider-color);
+  margin-bottom: 18px;
+}
+.tcr-edit-crumbs {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+.tcr-edit-back {
+  font: inherit;
+  font-size: 12px;
+  padding: 3px 9px;
+  border-radius: 5px;
+  border: 1px solid var(--background-modifier-border);
+  background: var(--interactive-normal);
+  color: var(--text-normal);
+  cursor: pointer;
+}
+.tcr-edit-crumb-sep {
+  opacity: 0.4;
+}
+.tcr-edit-title-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.tcr-edit-title {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  line-height: 1.2;
+}
+
+.tcr-section {
+  margin-bottom: 22px;
+}
+.tcr-section-label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-faint);
+  font-weight: 600;
+  margin-bottom: 10px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--divider-color);
+}
+.tcr-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 9px 0;
+}
+.tcr-row + .tcr-row {
+  border-top: 1px solid var(--divider-color);
+}
+.tcr-label {
+  width: 110px;
+  font-size: 12.5px;
+  color: var(--text-muted);
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+}
+.tcr-control {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.tcr-input,
+.tcr-select {
+  width: 100%;
+  background: var(--background-modifier-form-field);
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 6px;
+  padding: 7px 10px;
+  color: var(--text-normal);
+  font: inherit;
+  font-size: 13px;
+}
+.tcr-select.tight,
+.tcr-input.tight {
+  width: 200px;
+  flex: 0 0 200px;
+}
+.tcr-input.narrow {
+  width: 70px;
+  flex: 0 0 70px;
+}
+.tcr-input.wide {
+  width: 100%;
+}
+.tcr-select.inline,
+.tcr-input.inline {
+  display: inline-block;
+  width: auto;
+  min-width: 70px;
+  margin: 0 4px;
+}
+
+.tcr-edit-hint {
+  font-size: 11.5px;
+  color: var(--text-faint);
+  margin: 4px 0 0 124px;
+}
+
+/* Match sentence */
+.tcr-match-sentence {
+  background: var(--background-primary);
+  border: 1px solid var(--divider-color);
+  border-radius: 9px;
+  padding: 14px 16px;
+  font-size: 14px;
+  line-height: 1.9;
+}
+.tcr-match-lead {
+  color: var(--text-muted);
+}
+.tcr-match-sentence .tcr-input,
+.tcr-match-sentence .tcr-select {
+  display: inline-block;
+  width: auto;
+  min-width: 110px;
+  vertical-align: baseline;
+  padding: 4px 9px;
+  margin: 0 2px;
+}
+.tcr-match-sentence .tcr-input.wide {
+  min-width: 220px;
+}
+.tcr-regex-status {
+  font-size: 11.5px;
+  margin-left: 8px;
+}
+.tcr-regex-ok {
+  color: var(--text-success);
+}
+.tcr-regex-err {
+  color: var(--text-error);
+}
+
+/* Footer buttons */
+.tcr-edit-foot {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  margin-top: 6px;
+}
+.tcr-btn {
+  font: inherit;
+  font-size: 12.5px;
+  padding: 6px 14px;
+  border-radius: 6px;
+  border: 1px solid var(--background-modifier-border);
+  background: var(--interactive-normal);
+  color: var(--text-normal);
+  cursor: pointer;
+}
+.tcr-btn:hover {
+  background: var(--interactive-hover);
+}
+.tcr-btn-accent {
+  background: var(--interactive-accent);
+  border-color: var(--interactive-accent);
+  color: var(--text-on-accent);
+}
+.tcr-btn-accent:hover {
+  background: var(--interactive-accent-hover);
+}
+.tcr-btn-warning {
+  background: var(--background-modifier-error);
+  border-color: var(--background-modifier-error);
+  color: var(--text-error);
+}
+.tcr-btn-ghost {
+  background: transparent;
+  border-color: transparent;
+}
+
+/* Right-docked preview panel */
+.tcr-preview-dock {
+  border-left: 1px solid var(--divider-color);
+  background: var(--background-primary-alt);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  max-height: 700px;
+}
+.tcr-pd-head {
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--divider-color);
+}
+.tcr-pd-eyebrow {
+  font-size: 10.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-faint);
+}
+.tcr-pd-title {
+  font-size: 13.5px;
+  font-weight: 600;
+  margin-top: 2px;
+}
+.tcr-pd-title-row {
+  font-size: 13.5px;
+  font-weight: 600;
+  margin-top: 2px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.tcr-pd-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--interactive-accent);
+  flex-shrink: 0;
+}
+.tcr-pd-sub {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-top: 8px;
+}
+.tcr-pd-stats {
+  display: flex;
+  gap: 6px;
+  margin-top: 10px;
+}
+.tcr-pd-stat {
+  flex: 1;
+  background: var(--background-secondary);
+  border: 1px solid var(--divider-color);
+  border-radius: 7px;
+  padding: 7px 9px;
+}
+.tcr-pd-stat-label {
+  font-size: 10px;
+  color: var(--text-faint);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.tcr-pd-stat-value {
+  font-size: 17px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.tcr-pd-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 6px 0;
+}
+.tcr-pd-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 14px;
+  font-size: 12.5px;
+}
+.tcr-pd-row + .tcr-pd-row {
+  border-top: 1px solid var(--divider-color);
+}
+.tcr-pd-row:hover {
+  background: var(--background-modifier-hover);
+}
+.tcr-pd-tag {
+  flex: 1;
+  font-weight: 500;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.tcr-pd-count {
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+  font-size: 11.5px;
+}
+.tcr-pd-rule {
+  font-size: 11px;
+  color: var(--text-accent);
+  margin-left: 6px;
+}
+.tcr-pd-empty {
+  padding: 14px;
+  font-size: 12px;
+  color: var(--text-faint);
+  text-align: center;
+}
+/* Preview accordion (E5): info-icon row + key/value detail + override pins */
+.tcr-pd-item + .tcr-pd-item {
+  border-top: 1px solid var(--divider-color);
+}
+.tcr-pd-info {
+  cursor: pointer;
+  color: var(--text-faint);
+  font-size: 13px;
+  line-height: 1;
+}
+.tcr-pd-info:hover,
+.tcr-pd-info.open {
+  color: var(--text-accent);
+}
+.tcr-pd-detail {
+  padding: 2px 14px 10px;
+}
+.tcr-pd-detail-collapsed {
+  display: none;
+}
+.tcr-pd-kv {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 3px 14px;
+}
+.tcr-pd-kv-row {
+  display: contents;
+}
+.tcr-pd-kv-key {
+  color: var(--text-faint);
+  font-size: 11px;
+}
+.tcr-pd-kv-val {
+  color: var(--text-muted);
+  font-size: 11px;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+.tcr-pd-ov {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+}
+.tcr-pd-ov-btns {
+  display: flex;
+  gap: 6px;
+  margin-left: auto;
+}
+.tcr-pd-ov-btn {
+  font-size: 11px;
+  padding: 2px 8px;
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 5px;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+}
+.tcr-pd-ov-btn:hover {
+  background: var(--background-modifier-hover);
+}
+.tcr-pd-ov-btn.on {
+  border-color: var(--interactive-accent);
+  color: var(--text-normal);
+  background: var(--background-modifier-hover);
+}
+/* Publish-readiness (Phase 8): static styling moved off inline el.style.*.
+   .tc-hidden replaces every style.display='none' show/hide toggle so themes
+   and snippets can restyle these surfaces. */
+.tc-hidden {
+  display: none !important;
+}
+.tcl-sortable {
+  cursor: pointer;
+}
+.tcl-empty-cell {
+  text-align: center;
+  color: var(--text-faint);
+  padding: 20px;
+}
+.tcr-confirm-foot {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+  margin-top: 16px;
+}
+
+/* Help icon variant used inside the rule editor */
+.tcr-help-ic {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 14px;
+  height: 14px;
+  margin-left: 5px;
+  border-radius: 50%;
+  border: 1px solid var(--background-modifier-border);
+  color: var(--text-muted);
+  font-size: 9.5px;
+  font-weight: 700;
+  cursor: help;
+  position: relative;
+  vertical-align: middle;
+  text-transform: none;
+  letter-spacing: 0;
+}
+.tcr-help-ic:hover {
+  color: var(--text-normal);
+  border-color: var(--background-modifier-border-hover);
+}
+.tcr-tip {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: calc(100% + 8px);
+  background: var(--background-secondary);
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 7px;
+  padding: 9px 11px;
+  font-size: 11.5px;
+  font-weight: 400;
+  line-height: 1.5;
+  color: var(--text-normal);
+  width: 260px;
+  text-align: left;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.18);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.12s ease;
+  z-index: 10;
+  text-transform: none;
+  letter-spacing: 0;
+  white-space: normal;
+}
+.tcr-help-ic:hover .tcr-tip {
+  opacity: 1;
+}
+
+/* In-editor toggle (smaller variant) */
+.tcr-toggle {
+  width: 38px;
+  height: 22px;
+  border-radius: 999px;
+  background: var(--background-modifier-border);
+  position: relative;
+  cursor: pointer;
+  transition: background 0.15s ease;
+  flex-shrink: 0;
+}
+.tcr-toggle::after {
+  content: "";
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #fff;
+  top: 3px;
+  left: 3px;
+  transition: left 0.15s ease;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+.tcr-toggle.on {
+  background: var(--interactive-accent);
+}
+.tcr-toggle.on::after {
+  left: 19px;
+}
+
+@media (max-width: 900px) {
+  .tcr-workspace {
+    grid-template-columns: 1fr;
+  }
+  .tcr-preview-dock {
+    border-left: 0;
+    border-top: 1px solid var(--divider-color);
+  }
+}
+
+/* -----------------------------------------------------------------
+ * Curation Workspace tag table (Phase 3B-1).
+ * Virtualized rows + sticky header share one CSS grid template so the
+ * columns line up. Colors come from Obsidian theme variables only.
+ * ----------------------------------------------------------------- */
+.tct-root {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  padding: 0 16px 16px;
+}
+
+/* Toolbar: search + filter chips. */
+.tct-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  padding: 8px 0 10px;
+}
+.tct-search {
+  flex: 1;
+  min-width: 180px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--background-modifier-form-field);
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 7px;
+  padding: 6px 10px;
+}
+.tct-search-ic {
+  color: var(--text-faint);
+  display: inline-flex;
+}
+.tct-search input {
+  flex: 1;
+  background: transparent;
+  border: 0;
+  outline: 0;
+  color: var(--text-normal);
+  font-size: 13px;
+}
+.tct-chips {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.tct-chip {
+  font-size: 12px;
+  padding: 5px 11px;
+  border-radius: 999px;
+  border: 1px solid var(--background-modifier-border);
+  background: var(--background-secondary);
+  color: var(--text-muted);
+  cursor: pointer;
+}
+.tct-chip.active {
+  background: var(--background-modifier-active-hover);
+  border-color: var(--interactive-accent);
+  color: var(--text-accent);
+}
+
+/* Bulk-action bar: contextual, hidden when no selection. */
+.tct-bulk-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+  padding: 9px 12px;
+  background: var(--background-secondary);
+  border: 1px solid var(--interactive-accent);
+  border-radius: 9px;
+  font-size: 13px;
+}
+.tct-bulk-count {
+  font-weight: 600;
+  color: var(--text-accent);
+}
+.tct-bulk-spacer {
+  flex: 1;
+}
+.tct-bulk-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font: inherit;
+  font-size: 11.5px;
+  padding: 4px 10px;
+  border-radius: 5px;
+  border: 1px solid var(--background-modifier-border);
+  background: var(--interactive-normal);
+  color: var(--text-normal);
+  cursor: pointer;
+}
+.tct-bulk-btn:hover:not(:disabled) {
+  background: var(--interactive-hover);
+}
+.tct-bulk-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.tct-bulk-btn-ic {
+  display: inline-flex;
+}
+.tct-bulk-btn-ic svg {
+  width: 14px;
+  height: 14px;
+}
+
+/* Shared column grid for the header row and every data row. */
+.tct-head-row,
+.tct-row {
+  display: grid;
+  grid-template-columns: 34px minmax(160px, 2fr) 64px 96px 80px 56px minmax(120px, 1.5fr) 36px;
+  align-items: center;
+  gap: 0;
+}
+.tct-head-row {
+  border-bottom: 1px solid var(--background-modifier-border);
+}
+.tct-cell {
+  padding: 0 8px;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 13px;
+}
+
+/* Sortable header cells. */
+.tct-head-row .tct-cell {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-faint);
+  font-weight: 600;
+  padding-top: 8px;
+  padding-bottom: 8px;
+}
+.tct-head-sortable {
+  cursor: pointer;
+}
+.tct-head-sortable:hover {
+  color: var(--text-muted);
+}
+.tct-head-row .tct-cell.active {
+  color: var(--text-accent);
+}
+.tct-sort-arrow {
+  margin-left: 4px;
+  font-size: 9px;
+}
+
+/* Scroll viewport + spacer for virtualization. */
+.tct-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  position: relative;
+}
+.tct-spacer {
+  position: relative;
+  width: 100%;
+}
+.tct-rows {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  will-change: transform;
+}
+
+/* Data rows: fixed height so virtualization math is exact (see ROW_HEIGHT). */
+.tct-row {
+  height: 40px;
+  border-bottom: 1px solid var(--divider-color);
+}
+.tct-row:hover {
+  background: var(--background-modifier-hover);
+}
+.tct-cell-select input,
+.tct-more-btn {
+  cursor: pointer;
+}
+.tct-tagname {
+  font-weight: 500;
+}
+.tct-row-hidden .tct-tagname {
+  color: var(--text-faint);
+  text-decoration: line-through;
+}
+.tct-row-flagged .tct-tagname {
+  color: var(--tag-curator-flag-color);
+  font-weight: var(--tag-curator-flag-weight);
+}
+.tct-src {
+  font-size: 10.5px;
+  color: var(--text-faint);
+  border: 1px solid var(--divider-color);
+  border-radius: 4px;
+  padding: 1px 5px;
+}
+.tct-rule-name {
+  color: var(--text-accent);
+  font-size: 12px;
+}
+.tct-rule-none {
+  color: var(--text-faint);
+  font-size: 12px;
+}
+
+/* Visibility dot: shown = success, hidden = accent, flagged = warning. */
+.tct-vis-dot {
+  display: inline-block;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--text-faint);
+}
+.tct-vis-shown {
+  background: var(--text-success);
+}
+.tct-vis-hidden {
+  background: var(--text-accent);
+}
+.tct-vis-flagged {
+  background: var(--tag-curator-flag-color);
+}
+
+.tct-more-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border: 0;
+  border-radius: 5px;
+  background: transparent;
+  color: var(--text-muted);
+}
+.tct-more-btn:hover {
+  background: var(--background-modifier-hover);
+  color: var(--text-normal);
+}
+.tct-more-btn svg {
+  width: 16px;
+  height: 16px;
+}
+
+.tct-empty {
+  text-align: center;
+  color: var(--text-faint);
+  padding: 24px;
+}
+
+/* "Why is this affected?" popover (rowMenu). */
+.tct-why-pop {
+  position: fixed;
+  z-index: var(--layer-popover, 100);
+  max-width: 320px;
+  padding: 10px 12px;
+  background: var(--background-primary);
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 8px;
+  box-shadow: var(--shadow-s);
+  font-size: 12.5px;
+}
+.tct-why-head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 600;
+  color: var(--text-normal);
+  margin-bottom: 6px;
+}
+.tct-why-head-ic {
+  display: inline-flex;
+  color: var(--text-accent);
+}
+.tct-why-head-ic svg {
+  width: 14px;
+  height: 14px;
+}
+.tct-why-body {
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+.tct-why-line {
+  margin-top: 2px;
+}
+
+/* -----------------------------------------------------------------
+ * Curation Workspace leaf shell (Phase 3B-2).
+ * The leaf is a flex column: banner, header (title + Tags/Rules mode
+ * switch), then a single content host that mounts either the tag table
+ * or the inline rule editor. Colors come from Obsidian theme variables.
+ * ----------------------------------------------------------------- */
+.tag-curator-workspace {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  height: 100%;
+}
+.tag-curator-workspace .tcw-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 8px 16px 4px;
+}
+.tag-curator-workspace .tcw-header h2 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 700;
+}
+
+/* Segmented Tags/Rules switch in the workspace header. */
+.tag-curator-workspace .tcw-modeswitch {
+  display: inline-flex;
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 8px;
+  overflow: hidden;
+  background: var(--background-secondary);
+}
+.tag-curator-workspace .tcw-modeswitch-btn {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  color: var(--text-muted);
+  padding: 4px 14px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  box-shadow: none;
+}
+.tag-curator-workspace .tcw-modeswitch-btn:not(:last-child) {
+  border-right: 1px solid var(--background-modifier-border);
+}
+.tag-curator-workspace .tcw-modeswitch-btn:hover {
+  color: var(--text-normal);
+  background: var(--background-modifier-hover);
+}
+.tag-curator-workspace .tcw-modeswitch-btn.active {
+  color: var(--text-on-accent);
+  background: var(--interactive-accent);
+}
+
+/* Content host that the active component mounts into. */
+.tag-curator-workspace .tcw-content {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+}
+
+/* -----------------------------------------------------------------
+ * Notebook Navigator tag-tree decoration (NN compat, plan Phase 3.4).
+ * Tag-Curator-owned classes only (tc-nn-*); NN's nn-* base classes are
+ * never styled destructively. Colors come from Obsidian theme variables.
+ * Runtime interop: these target NN's rendered .nn-tag rows from the
+ * outside; no NN source is referenced.
+ * ----------------------------------------------------------------- */
+
+/* Hide: collapse the row to zero height inside NN's virtualizer. */
+.nn-tag.tc-nn-hidden {
+  display: none !important;
+}
+
+/* Flag (preview mode): a Tag-Curator-owned highlight so the user can see
+ * which NN rows a rule would hide, without actually hiding them. */
+.nn-tag.tc-nn-flagged {
+  background: var(--tag-curator-flag-bg);
+  box-shadow: inset 2px 0 0 0 var(--tag-curator-flag-color);
+  border-radius: 4px;
+}
+.nn-tag.tc-nn-flagged .nn-navitem-name {
+  color: var(--tag-curator-flag-color);
+  font-weight: var(--tag-curator-flag-weight);
+}
+
+/* -----------------------------------------------------------------
+ * Properties panel tag-pill decoration (plan Phase 6).
+ * Tag-Curator-owned classes only (tc-prop-*); core Obsidian's
+ * multi-select-pill base class is never styled destructively. Colors
+ * come from Obsidian theme variables. The selectors target the rendered
+ * pills in the metadata editor's tags property row from the outside.
+ * The Properties DOM is a version-fragile contract (see
+ * propertiesObserver.ts); the independent kill switch lets the user
+ * disable this scope if a future Obsidian release moves the markup.
+ * ----------------------------------------------------------------- */
+
+/* Hide: collapse the matched tag pill out of the property row. */
+.multi-select-pill.tc-prop-hidden {
+  display: none !important;
+}
+
+/* Flag (preview mode): a Tag-Curator-owned highlight so the user can see
+ * which tag pills a rule would hide, without actually hiding them. */
+.multi-select-pill.tc-prop-flagged {
+  background: var(--tag-curator-flag-bg);
+  box-shadow: inset 2px 0 0 0 var(--tag-curator-flag-color);
+  border-radius: 4px;
+}
+.multi-select-pill.tc-prop-flagged .multi-select-pill-content {
+  color: var(--tag-curator-flag-color);
+  font-weight: var(--tag-curator-flag-weight);
+}
+
+/* -----------------------------------------------------------------
+ * Editor tag-autocomplete suggestion suppression (plan Phase 7).
+ * Tag-Curator-owned classes only (tc-ac-*); core Obsidian's
+ * suggestion-item base class is never styled destructively. Colors come
+ * from Obsidian theme variables. The selectors target the rendered tag
+ * suggestion items inside the transient .suggestion-container popup from
+ * the outside. The autocomplete DOM is a version-fragile contract (see
+ * autocompleteObserver.ts); the independent kill switch lets the user
+ * disable this scope if a future Obsidian release moves the markup.
+ *
+ * Caveat: hiding a suggestion item with display:none removes it visually,
+ * but Obsidian's suggestion controller may still keep it keyboard-focusable
+ * (accepted for v1.0 - see autocompleteObserver.ts).
+ * ----------------------------------------------------------------- */
+
+/* Hide: collapse the matched tag suggestion out of the dropdown. */
+.suggestion-item.tc-ac-hidden {
+  display: none !important;
+}
+
+/* Flag (preview mode): a Tag-Curator-owned highlight so the user can see
+ * which tag suggestions a rule would hide, without actually hiding them. */
+.suggestion-item.tc-ac-flagged {
+  background: var(--tag-curator-flag-bg);
+  box-shadow: inset 2px 0 0 0 var(--tag-curator-flag-color);
+  border-radius: 4px;
+}
+.suggestion-item.tc-ac-flagged .suggestion-content {
+  color: var(--tag-curator-flag-color);
+  font-weight: var(--tag-curator-flag-weight);
 }

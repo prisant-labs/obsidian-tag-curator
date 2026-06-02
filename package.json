@@ -1,12 +1,15 @@
 {
   "name": "obsidian-tag-curator",
-  "version": "0.1.0",
+  "version": "1.0.0-rc.1",
   "description": "Vault-wide tag visibility and curation engine for Obsidian (display-only, file-safe, fully reversible).",
   "main": "main.js",
   "scripts": {
     "dev": "node esbuild.config.mjs",
     "build": "node esbuild.config.mjs production",
-    "lint": "eslint src --ext .ts,.tsx --max-warnings 0"
+    "lint": "eslint src --ext .ts,.tsx --max-warnings 0",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "keywords": [
     "obsidian",
@@ -22,9 +25,11 @@
     "builtin-modules": "^3.3.0",
     "esbuild": "^0.24.0",
     "eslint": "^8.57.1",
+    "happy-dom": "^20.9.0",
     "obsidian": "latest",
     "tslib": "^2.7.0",
-    "typescript": "^5.6.2"
+    "typescript": "^5.6.2",
+    "vitest": "^3.2.4"
   },
   "private": true
 }

@@ -1,6 +1,16 @@
 # Tag Curator: Implementation-Ready Technical Specification
 
-*Compiled April 30, 2026, from primary-source research against Obsidian 1.5–1.10 and major community plugins. Confidence labels (🟢 high / 🟡 medium / 🔴 low) appear inline. Where a finding could not be verified from a fetchable primary source within the research time-box, it is flagged for empirical confirmation in Appendix C.*
+*Compiled April 30, 2026, from primary-source research against Obsidian 1.5 to 1.10 and major community plugins. Confidence labels (🟢 high / 🟡 medium / 🔴 low) appear inline. Where a finding could not be verified from a fetchable primary source within the research time-box, it is flagged for empirical confirmation in Appendix C.*
+
+---
+
+> **📌 v0.1 Implementation Status (2026-05-28).** This document was the **pre-implementation deep-research dossier** that informed `docs/internal/release-plans/plan_v0.1.0.md`. The recommendations below are still accurate as a reference for *how* to use Obsidian's API surfaces - they have not been re-verified against the shipping code, so treat them as the design rationale, not as a description of current behavior. For current state:
+>
+> - **What is built** -> `src/` (118/118 tests pass; engine, observer, storage, settings, main are complete).
+> - **What is locked but not yet implemented in UI code** -> `docs/internal/release-plans/plan_v0.1.0/ui-design_v0.1.0_converged.html` plus decisions D-001 through D-011 in `docs/internal/scope-and-decisions.md`.
+> - **Where this document and the locked design disagree** -> the locked design wins for v0.1. Notably: the wizard described in older sections is dropped (D-002 closed); priority is hidden from the UI (D-009); preview mode replaces dry-run (D-003); rule editor is card view + right-docked preview (D-010 supersedes D-001).
+>
+> The Obsidian-API reference sections (§1, §2) and primary-source citations remain authoritative reading for anyone implementing the v0.1 UI tasks (`tagListView.ts`, `settingsTab.ts`, `ruleEditor.ts`).
 
 ---
 

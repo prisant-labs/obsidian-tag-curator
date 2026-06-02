@@ -1,0 +1,480 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tag Curator v1 - Thin Settings &amp; Scopes</title>
+<style>
+  :root[data-theme="dark"] {
+    --background-primary: #1e1e1e;
+    --background-primary-alt: #1a1a1a;
+    --background-secondary: #252525;
+    --background-secondary-alt: #2a2a2a;
+    --background-tertiary: #151515;
+    --background-modifier-hover: #2f2f2f;
+    --background-modifier-border: #333;
+    --background-modifier-border-hover: #444;
+    --background-modifier-error: #5b2828;
+    --background-modifier-success: #25522a;
+    --background-modifier-form-field: #1a1a1a;
+    --text-normal: #dcddde;
+    --text-muted: #999;
+    --text-faint: #6e6e6e;
+    --text-on-accent: #ffffff;
+    --text-accent: #a78bfa;
+    --text-error: #ff7878;
+    --text-success: #67d391;
+    --text-warning: #f5c97c;
+    --interactive-accent: #7c3aed;
+    --interactive-accent-hover: #8b5cf6;
+    --interactive-normal: #2a2a2a;
+    --interactive-hover: #353535;
+    --divider-color: #2a2a2a;
+    --shadow-s: 0 1px 2px rgba(0,0,0,0.4);
+    --shadow-m: 0 4px 12px rgba(0,0,0,0.4);
+    --shadow-l: 0 12px 28px rgba(0,0,0,0.5);
+    --code-bg: #161616;
+    --selection: rgba(124, 58, 237, 0.35);
+  }
+  :root[data-theme="light"] {
+    --background-primary: #ffffff;
+    --background-primary-alt: #fafafa;
+    --background-secondary: #f5f6f8;
+    --background-secondary-alt: #ebedf0;
+    --background-tertiary: #e6e8eb;
+    --background-modifier-hover: #eef0f3;
+    --background-modifier-border: #d9dce0;
+    --background-modifier-border-hover: #c2c6cb;
+    --background-modifier-error: #fee2e2;
+    --background-modifier-success: #d1fae5;
+    --background-modifier-form-field: #ffffff;
+    --text-normal: #1f2328;
+    --text-muted: #5b6168;
+    --text-faint: #8a9098;
+    --text-on-accent: #ffffff;
+    --text-accent: #6d28d9;
+    --text-error: #b91c1c;
+    --text-success: #047857;
+    --text-warning: #b45309;
+    --interactive-accent: #7c3aed;
+    --interactive-accent-hover: #6d28d9;
+    --interactive-normal: #f1f3f5;
+    --interactive-hover: #e6e9ec;
+    --divider-color: #e6e8eb;
+    --shadow-s: 0 1px 2px rgba(0,0,0,0.08);
+    --shadow-m: 0 4px 12px rgba(0,0,0,0.08);
+    --shadow-l: 0 12px 28px rgba(0,0,0,0.12);
+    --code-bg: #f5f6f8;
+    --selection: rgba(124, 58, 237, 0.18);
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: var(--background-tertiary);
+    color: var(--text-normal);
+    font-family: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    font-size: 14px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+  ::selection { background: var(--selection); }
+  code { background: var(--code-bg); padding: 1px 5px; border-radius: 4px; font-size: 0.92em; font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace; }
+
+  /* Page shell */
+  .page { max-width: 980px; margin: 0 auto; padding: 44px 32px 120px; }
+
+  .topbar { display: flex; align-items: flex-start; gap: 24px; margin-bottom: 40px; }
+  .topbar .head { flex: 1; }
+  .topbar h1 { margin: 0 0 6px; font-size: 26px; font-weight: 700; letter-spacing: -0.01em; }
+  .topbar .subtitle { margin: 0; font-size: 14px; color: var(--text-muted); max-width: 680px; }
+  .topbar .legend { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 16px; }
+  .topbar .legend .chip { font-size: 11px; padding: 4px 10px; border-radius: 999px; border: 1px solid var(--divider-color); background: var(--background-secondary); color: var(--text-muted); }
+
+  .theme-toggle { display: flex; background: var(--background-tertiary); border: 1px solid var(--divider-color); border-radius: 6px; padding: 3px; gap: 2px; flex-shrink: 0; }
+  .theme-toggle button { background: transparent; border: 0; color: var(--text-muted); font: inherit; font-size: 12px; padding: 6px 12px; border-radius: 4px; cursor: pointer; }
+  .theme-toggle button.is-active { background: var(--background-primary); color: var(--text-normal); box-shadow: var(--shadow-s); }
+
+  /* Section block */
+  section.block { margin-bottom: 56px; scroll-margin-top: 24px; }
+  .block-header { margin-bottom: 18px; }
+  .block-eyebrow { font-size: 11px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-faint); margin-bottom: 6px; }
+  .block-title { margin: 0 0 8px; font-size: 22px; font-weight: 700; letter-spacing: -0.01em; }
+  .block-desc { color: var(--text-muted); max-width: 820px; font-size: 14px; }
+  .from-review { display: inline-block; font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-accent); background: rgba(124,58,237,0.12); border: 1px solid rgba(124,58,237,0.3); border-radius: 5px; padding: 2px 7px; margin-left: 8px; vertical-align: middle; }
+  .from-review.tight { margin-left: 0; }
+
+  /* Mockup frame */
+  .mockup { background: var(--background-primary); border: 1px solid var(--background-modifier-border); border-radius: 12px; overflow: hidden; box-shadow: var(--shadow-l); }
+  .mockup-titlebar { display: flex; align-items: center; gap: 8px; padding: 10px 14px; background: var(--background-secondary); border-bottom: 1px solid var(--divider-color); font-size: 12px; color: var(--text-muted); }
+  .traffic { display: flex; gap: 6px; }
+  .traffic span { width: 11px; height: 11px; border-radius: 50%; display: inline-block; background: var(--background-modifier-border); }
+  .traffic span:nth-child(1){ background:#ff5f57; } .traffic span:nth-child(2){ background:#febc2e; } .traffic span:nth-child(3){ background:#28c840; }
+  .mockup-title { flex: 1; text-align: center; font-weight: 500; color: var(--text-normal); font-size: 12px; }
+
+  /* Top tabs */
+  .top-tabs { display: flex; gap: 2px; padding: 10px 16px 0; background: var(--background-secondary); border-bottom: 1px solid var(--divider-color); overflow-x: auto; }
+  .top-tab { padding: 8px 14px; font-size: 13px; color: var(--text-muted); cursor: pointer; border-bottom: 2px solid transparent; white-space: nowrap; display: flex; align-items: center; gap: 6px; }
+  .top-tab:hover { color: var(--text-normal); }
+  .top-tab.active { color: var(--text-normal); border-bottom-color: var(--interactive-accent); }
+  .badge { font-size: 10px; background: var(--background-modifier-border); color: var(--text-muted); border-radius: 999px; padding: 1px 6px; font-variant-numeric: tabular-nums; }
+  .badge.accent { background: rgba(124,58,237,0.18); color: var(--text-accent); }
+  .badge.soon { background: transparent; border: 1px dashed var(--background-modifier-border); color: var(--text-faint); }
+
+  .panel { padding: 22px 24px 28px; }
+  .panel[hidden] { display: none; }
+
+  /* Launch bar - the only "action" Settings exposes (D-012/D-013). */
+  .launch-bar { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; padding: 16px 18px; background: rgba(124,58,237,0.08); border: 1px solid rgba(124,58,237,0.25); border-radius: 11px; margin-bottom: 20px; }
+  .launch-bar .launch-copy { flex: 1; min-width: 240px; }
+  .launch-bar .launch-copy .lc-title { font-size: 14px; font-weight: 600; }
+  .launch-bar .launch-copy .lc-sub { font-size: 12px; color: var(--text-muted); margin-top: 3px; max-width: 460px; }
+  .launch-bar .launch-actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+
+  /* Stats header */
+  .stat-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 20px; }
+  .stat-card { background: var(--background-secondary); border: 1px solid var(--divider-color); border-radius: 9px; padding: 14px 16px; }
+  .stat-card .label { font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; }
+  .stat-card .value { font-size: 26px; font-weight: 700; margin-top: 4px; font-variant-numeric: tabular-nums; }
+  .stat-card .value.hidden-v { color: var(--text-accent); }
+
+  .setting-heading { margin: 24px 0 6px; padding-bottom: 6px; border-bottom: 1px solid var(--divider-color); font-size: 13px; font-weight: 600; }
+  .setting-sub { font-size: 12px; color: var(--text-muted); margin: 0 0 12px; }
+  .setting-item { display: flex; align-items: center; justify-content: space-between; gap: 24px; padding: 13px 0; border-bottom: 1px solid var(--divider-color); }
+  .setting-info { min-width: 0; }
+  .setting-name { font-size: 14px; font-weight: 500; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .setting-desc { font-size: 12px; color: var(--text-muted); margin-top: 3px; max-width: 560px; }
+  .setting-control { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+
+  /* Toggle */
+  .toggle { width: 38px; height: 22px; border-radius: 999px; background: var(--background-modifier-border); position: relative; cursor: pointer; transition: background 0.15s ease; flex-shrink: 0; }
+  .toggle::after { content: ""; position: absolute; width: 16px; height: 16px; border-radius: 50%; background: #fff; top: 3px; left: 3px; transition: left 0.15s ease; box-shadow: var(--shadow-s); }
+  .toggle.on { background: var(--interactive-accent); }
+  .toggle.on::after { left: 19px; }
+  .toggle.small { width: 28px; height: 16px; }
+  .toggle.small::after { width: 12px; height: 12px; top: 2px; left: 2px; }
+  .toggle.small.on::after { left: 14px; }
+  .toggle.disabled { opacity: 0.4; cursor: not-allowed; }
+
+  /* Buttons */
+  .btn { font: inherit; font-size: 12.5px; padding: 6px 12px; border-radius: 6px; border: 1px solid var(--background-modifier-border); background: var(--interactive-normal); color: var(--text-normal); cursor: pointer; }
+  .btn:hover { background: var(--interactive-hover); }
+  .btn.accent { background: var(--interactive-accent); border-color: var(--interactive-accent); color: var(--text-on-accent); }
+  .btn.accent:hover { background: var(--interactive-accent-hover); }
+  .btn.warning { background: var(--background-modifier-error); border-color: var(--background-modifier-error); color: var(--text-error); }
+  .btn.small { padding: 4px 9px; font-size: 11.5px; }
+  .btn.ghost { background: transparent; }
+  .btn.big { font-size: 13.5px; padding: 9px 16px; }
+
+  .pill { font-size: 11px; padding: 2px 8px; border-radius: 999px; background: var(--background-secondary); border: 1px solid var(--divider-color); color: var(--text-muted); }
+  .pill.on { color: var(--text-success); border-color: rgba(103,211,145,0.3); }
+
+  /* Callouts */
+  .callout { display: flex; gap: 10px; border-radius: 9px; padding: 12px 14px; font-size: 12.5px; line-height: 1.55; margin: 14px 0; }
+  .callout .ic { width: 20px; height: 20px; border-radius: 50%; flex-shrink: 0; display: grid; place-items: center; font-weight: 700; font-size: 12px; }
+  .callout.warn { background: rgba(245,201,124,0.1); border: 1px solid rgba(245,201,124,0.3); }
+  .callout.warn .ic { background: var(--text-warning); color: #1a1a1a; }
+  .callout.info { background: rgba(124,58,237,0.08); border: 1px solid rgba(124,58,237,0.25); }
+  .callout.info .ic { background: var(--interactive-accent); color: #fff; }
+  .callout.safe { background: rgba(103,211,145,0.08); border: 1px solid rgba(103,211,145,0.28); }
+  .callout.safe .ic { background: var(--text-success); color: #14321f; }
+  .callout strong { color: var(--text-normal); }
+
+  /* State banner */
+  .state-banner { display: flex; align-items: center; gap: 12px; padding: 9px 16px; font-size: 12.5px; border-bottom: 1px solid var(--divider-color); }
+  .state-banner .sb-ic { width: 18px; height: 18px; border-radius: 50%; display: grid; place-items: center; font-size: 11px; font-weight: 700; flex-shrink: 0; }
+  .state-banner .sb-msg { flex: 1; line-height: 1.4; }
+  .state-banner .sb-msg strong { color: var(--text-normal); }
+  .state-banner.preview { background: rgba(245,201,124,0.1); }
+  .state-banner.preview .sb-ic { background: var(--text-warning); color: #1a1a1a; }
+  .state-banner.preview .sb-msg { color: var(--text-warning); }
+  .state-banner.off { background: var(--background-secondary); }
+  .state-banner.off .sb-ic { background: var(--text-faint); color: var(--background-primary); }
+  .state-banner.off .sb-msg { color: var(--text-muted); }
+  .state-banner .sb-action { background: transparent; border: 1px solid currentColor; color: inherit; font: inherit; font-size: 11.5px; padding: 4px 10px; border-radius: 5px; cursor: pointer; opacity: 0.85; }
+  .state-banner .sb-action:hover { opacity: 1; }
+
+  /* Scope rows - native setting-row styling with an independent kill switch.
+     A scope is a display surface Tag Curator acts on (vision Section 5.1).
+     Each row carries a one-line description and its own toggle (principle 11, D-014). */
+  .scope-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 24px; padding: 16px 0; border-bottom: 1px solid var(--divider-color); }
+  .scope-row:last-of-type { border-bottom: none; }
+  .scope-info { min-width: 0; flex: 1; }
+  .scope-name { font-size: 14px; font-weight: 600; display: flex; align-items: center; gap: 9px; flex-wrap: wrap; }
+  .scope-desc { font-size: 12px; color: var(--text-muted); margin-top: 4px; max-width: 560px; }
+  .scope-note { font-size: 11.5px; color: var(--text-faint); margin-top: 6px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .scope-note code { font-size: 11px; }
+  .scope-control { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; flex-shrink: 0; }
+  .scope-control .kill-label { font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-faint); }
+
+  /* State pill - detected / not detected indicator (NN scope). */
+  .state-pill { font-size: 10.5px; padding: 2px 9px; border-radius: 999px; font-weight: 600; letter-spacing: 0.03em; display: inline-flex; align-items: center; gap: 5px; }
+  .state-pill .dot { width: 6px; height: 6px; border-radius: 50%; }
+  .state-pill.detected { background: rgba(103,211,145,0.15); color: var(--text-success); border: 1px solid rgba(103,211,145,0.3); }
+  .state-pill.detected .dot { background: var(--text-success); }
+  .state-pill.not-detected { background: var(--background-modifier-border); color: var(--text-faint); border: 1px solid var(--background-modifier-border); }
+  .state-pill.not-detected .dot { background: var(--text-faint); }
+
+  /* Help icon with hover tooltip. */
+  .help-ic { display: inline-flex; align-items: center; justify-content: center; width: 14px; height: 14px; margin-left: 2px; border-radius: 50%; border: 1px solid var(--background-modifier-border); color: var(--text-muted); font-size: 9.5px; font-weight: 700; cursor: help; position: relative; vertical-align: middle; }
+  .help-ic:hover { color: var(--text-normal); border-color: var(--background-modifier-border-hover); }
+  .help-ic::before { content: "?"; line-height: 1; }
+  .help-ic .tip { position: absolute; right: 0; bottom: calc(100% + 8px); background: var(--background-secondary); border: 1px solid var(--background-modifier-border); border-radius: 7px; padding: 9px 11px; font-size: 11.5px; font-weight: 400; line-height: 1.5; color: var(--text-normal); width: 260px; text-align: left; box-shadow: var(--shadow-m); opacity: 0; pointer-events: none; transition: opacity 0.12s ease; z-index: 10; text-transform: none; letter-spacing: 0; }
+  .help-ic:hover .tip { opacity: 1; }
+  .help-ic .tip code { font-size: 11px; }
+
+  /* Status bar */
+  .statusbar { display: flex; align-items: center; gap: 8px; padding: 6px 14px; background: var(--background-secondary); border-top: 1px solid var(--divider-color); font-size: 12px; color: var(--text-muted); }
+  .statusbar .sb-item { display: flex; align-items: center; gap: 6px; cursor: pointer; padding: 2px 7px; border-radius: 5px; }
+  .statusbar .sb-item:hover { background: var(--background-modifier-hover); color: var(--text-normal); }
+  .statusbar .dot-accent { width: 7px; height: 7px; border-radius: 50%; background: var(--interactive-accent); }
+
+  @media (max-width: 760px) {
+    .stat-row { grid-template-columns: repeat(2,1fr); }
+    .topbar { flex-direction: column; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+  <div class="topbar">
+    <div class="head">
+      <h1>Tag Curator - thin Settings and Scopes</h1>
+      <p class="subtitle">v1.0 "Curation, in context". Settings stops being the workbench and becomes set-once configuration: the active curation loop moves to the Curation Workspace leaf (D-012). The new "Scopes" section (D-014) makes every display surface Tag Curator touches an independently reversible unit with its own kill switch.</p>
+      <div class="legend">
+        <span class="chip">Tags shown with <code>#</code> as users see them</span>
+        <span class="chip">"Hidden" = display-only, files untouched</span>
+        <span class="chip">Each scope is independently reversible</span>
+      </div>
+    </div>
+    <div class="theme-toggle">
+      <button data-theme-set="dark" class="is-active">Dark</button>
+      <button data-theme-set="light">Light</button>
+    </div>
+  </div>
+
+  <!-- ============ A. GENERAL TAB ============ -->
+  <section class="block" id="general">
+    <div class="block-header">
+      <div class="block-eyebrow">Thin Settings &middot; tab 1 of 6</div>
+      <h2 class="block-title">General <span class="from-review">D-012</span> <span class="from-review">D-013</span></h2>
+      <p class="block-desc">The curation loop is deliberately absent here. Settings does not host the table or the rule editor anymore; it launches the Curation Workspace and holds only set-once safety config. The launch bar near the top is the single doorway out: a primary "Open Curation Workspace" button and a secondary "Open beside the tag pane" split (D-013) for the side-by-side live-preview loop.</p>
+    </div>
+    <div class="mockup">
+      <div class="mockup-titlebar"><div class="traffic"><span></span><span></span><span></span></div><div class="mockup-title">Settings - Tag Curator</div></div>
+      <div class="top-tabs">
+        <div class="top-tab active" data-tab="general">General</div>
+        <div class="top-tab" data-tab="scopes">Scopes <span class="badge accent">4</span></div>
+        <div class="top-tab" data-tab="presets">Presets <span class="badge">5</span></div>
+        <div class="top-tab" data-tab="customrules">Custom rules <span class="badge">3</span></div>
+        <div class="top-tab" data-tab="integrations">Integrations</div>
+        <div class="top-tab" data-tab="advanced">Advanced</div>
+      </div>
+
+      <!-- General panel -->
+      <div class="panel" data-panel="general">
+        <!-- Launch bar: the only action Settings exposes. Curation happens in the leaf. -->
+        <div class="launch-bar">
+          <div class="launch-copy">
+            <div class="lc-title">Curation happens in the workspace, not here</div>
+            <div class="lc-sub">Settings is set-once config. To see, edit, preview, and act on tags, open the Curation Workspace. The "open beside" split docks it next to the native tag pane so rule edits show up live (D-012, D-013).</div>
+          </div>
+          <div class="launch-actions">
+            <button class="btn accent big">Open Curation Workspace</button>
+            <button class="btn big">Open beside the tag pane</button>
+          </div>
+        </div>
+
+        <!-- State banner demo: preview mode is on (amber), with inline turn-off action. -->
+        <div class="state-banner preview">
+          <div class="sb-ic">!</div>
+          <div class="sb-msg"><strong>Preview mode is on.</strong> Matched tags are flagged in place, not hidden, so you can see exactly what a rule would hide before committing. The same banner shows above the Curation Workspace and the tag pane whenever this state is active.</div>
+          <button class="sb-action">Turn off preview</button>
+        </div>
+
+        <!-- Compact stats header. -->
+        <div class="stat-row">
+          <div class="stat-card"><div class="label">Total tags</div><div class="value">1,542</div></div>
+          <div class="stat-card"><div class="label">Hidden now</div><div class="value hidden-v">318</div></div>
+          <div class="stat-card"><div class="label">Active rules</div><div class="value">5</div></div>
+          <div class="stat-card"><div class="label">Orphans</div><div class="value">204</div></div>
+        </div>
+
+        <div class="setting-item">
+          <div class="setting-info">
+            <div class="setting-name">Enable Tag Curator</div>
+            <div class="setting-desc">Master switch. When off, every tag shows normally in every scope and no DOM is touched.</div>
+          </div>
+          <div class="setting-control"><div class="toggle on" data-toggle></div></div>
+        </div>
+        <div class="setting-item">
+          <div class="setting-info">
+            <div class="setting-name">Preview mode</div>
+            <div class="setting-desc">Instead of hiding matched tags, flag them in place so you can see what a rule would hide before committing. Turns on the amber banner above.</div>
+          </div>
+          <div class="setting-control"><div class="toggle on" data-toggle></div></div>
+        </div>
+
+        <div class="setting-heading">If something looks wrong</div>
+        <div class="setting-item" style="border-bottom:none; align-items:flex-start;">
+          <div class="setting-info">
+            <div class="setting-name">Run panic disable</div>
+            <div class="setting-desc">One-shot action that instantly removes every DOM effect (un-hides all tags in every scope), turns the plugin off, and runs cleanup. Works even if these settings fail to load. Fully reversible: nothing in your notes is touched. Leaves a "Tag Curator is off" banner above every surface until you re-enable. Also available as the command "Tag Curator: Panic disable".</div>
+          </div>
+          <div class="setting-control"><button class="btn warning">Run panic disable</button></div>
+        </div>
+      </div>
+
+      <!-- Scopes panel (collapsed in this frame; shown in full below). -->
+      <div class="panel" data-panel="scopes" hidden>
+        <div class="callout info" style="margin-top:0;"><div class="ic">i</div><div>The Scopes section is shown in full in the next frame below. Click the <strong>Scopes</strong> tab to preview it here too.</div></div>
+      </div>
+      <div class="panel" data-panel="presets" hidden><div class="callout info" style="margin-top:0;"><div class="ic">i</div><div>Built-in presets (hex codes, URL anchors, single-character tags, numeric tags, orphans) - toggleable, not editable. Unchanged from v0.1; not the focus of this mockup.</div></div></div>
+      <div class="panel" data-panel="customrules" hidden><div class="callout info" style="margin-top:0;"><div class="ic">i</div><div>The full rule editor (card view plus a docked live preview, D-010) now lives inside the Curation Workspace, not in Settings. This tab keeps only a read-only list and an "Edit in workspace" button.</div></div></div>
+      <div class="panel" data-panel="integrations" hidden><div class="callout info" style="margin-top:0;"><div class="ic">i</div><div>Style Settings registration, Tag Wrangler menu composition, and Notebook Navigator sync options live here (D-016: optional enhancements, never dependencies).</div></div></div>
+      <div class="panel" data-panel="advanced" hidden><div class="callout info" style="margin-top:0;"><div class="ic">i</div><div>Sidecar save debounce, debug logging, reindex, and troubleshooting. Set-once and rarely visited.</div></div></div>
+
+      <div class="statusbar">
+        <div class="sb-item"><span class="dot-accent"></span> Tag Curator: 318 tags hidden &middot; preview on</div>
+        <div style="flex:1;"></div>
+        <div class="sb-item">click to open Curation Workspace &rarr;</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ B. SCOPES TAB (the new section) ============ -->
+  <section class="block" id="scopes">
+    <div class="block-header">
+      <div class="block-eyebrow">Thin Settings &middot; tab 2 of 6 &middot; new in v1.0</div>
+      <h2 class="block-title">Scopes <span class="from-review">D-014</span></h2>
+      <p class="block-desc">A scope is a display surface where tags render and where Tag Curator can act (vision Section 5.1). v1.0 ships four, each an independent observer on the proven <code>ObserverBase</code>. Every scope is a single toggle row with a one-line description and its own kill switch: turning one off never touches the others, so a misbehaving surface never forces you to disable the whole plugin (principle 11). The riskier surfaces (autocomplete, properties) ship on but are first to flip off if their DOM path shifts across an Obsidian release.</p>
+    </div>
+    <div class="mockup">
+      <div class="mockup-titlebar"><div class="traffic"><span></span><span></span><span></span></div><div class="mockup-title">Settings - Tag Curator - Scopes</div></div>
+      <div class="top-tabs">
+        <div class="top-tab" data-tab2="general">General</div>
+        <div class="top-tab active" data-tab2="scopes">Scopes <span class="badge accent">4</span></div>
+        <div class="top-tab" data-tab2="presets">Presets <span class="badge">5</span></div>
+        <div class="top-tab" data-tab2="customrules">Custom rules <span class="badge">3</span></div>
+        <div class="top-tab" data-tab2="integrations">Integrations</div>
+        <div class="top-tab" data-tab2="advanced">Advanced</div>
+      </div>
+
+      <div class="panel" data-panel2="scopes">
+        <p class="setting-sub">Choose where Tag Curator acts. Each scope is independent and reversible: its own kill switch removes that surface's effect immediately, the rest stay on. Hiding a tag hides it everywhere that is switched on; turning a scope off un-hides every tag in that one surface and nothing else.</p>
+
+        <div class="callout safe" style="margin-top:0;"><div class="ic">&#10003;</div><div><strong>Display-only, per scope.</strong> Every scope toggles a visual filter. None of them rewrite, move, or delete a tag in your notes. Flip a scope off and that surface returns to Obsidian's default rendering instantly.</div></div>
+
+        <!-- Scope 1: Tag pane -->
+        <div class="scope-row">
+          <div class="scope-info">
+            <div class="scope-name">Tag pane</div>
+            <div class="scope-desc">Obsidian's built-in tag pane in the right sidebar. The original, fully-tested scope.</div>
+            <div class="scope-note">
+              <span class="state-pill detected"><span class="dot"></span>Core surface</span>
+              <span>Examples now hidden: <code>#FFAA00</code>, <code>#section-3</code>, <code>#archive-2021</code></span>
+            </div>
+          </div>
+          <div class="scope-control">
+            <span class="kill-label">Kill switch</span>
+            <div class="toggle on" data-toggle></div>
+          </div>
+        </div>
+
+        <!-- Scope 2: Notebook Navigator (version-gated, with detection pill) -->
+        <div class="scope-row">
+          <div class="scope-info">
+            <div class="scope-name">Notebook Navigator <span class="help-ic"><span class="tip">Tag Curator observes and calls Notebook Navigator's public API at runtime only. It never copies NN source, because NN is GPL-3.0 and Tag Curator is Apache-2.0.</span></span></div>
+            <div class="scope-desc">Hides and flags tags inside Notebook Navigator's tag tree, the highest-traffic third-party tag surface.</div>
+            <div class="scope-note">
+              <span class="state-pill detected"><span class="dot"></span>Detected &middot; v2.1.0</span>
+              <span>Requires <strong>Notebook Navigator API v2.0.0 or newer</strong>. Older versions are skipped silently.</span>
+            </div>
+          </div>
+          <div class="scope-control">
+            <span class="kill-label">Kill switch</span>
+            <div class="toggle on" data-toggle></div>
+          </div>
+        </div>
+
+        <!-- A "not detected" variant immediately under it, so the state pill reads clearly. -->
+        <div class="callout info"><div class="ic">i</div><div><strong>When Notebook Navigator is absent or too old</strong>, this row dims and the pill reads <span class="state-pill not-detected" style="margin:0 2px;"><span class="dot"></span>Not detected</span> with the sub-note "<em>install or update Notebook Navigator to enable this scope</em>". The toggle disables itself; nothing breaks.</div></div>
+
+        <!-- Scope 3: Properties panel -->
+        <div class="scope-row">
+          <div class="scope-info">
+            <div class="scope-name">Properties panel</div>
+            <div class="scope-desc">Hides and flags frontmatter tags shown in the Properties panel and the inline properties editor.</div>
+            <div class="scope-note">
+              <span class="state-pill detected"><span class="dot"></span>Active</span>
+              <span>Cheap to add via <code>ObserverBase</code>; flip off here if a future Obsidian release moves the DOM.</span>
+            </div>
+          </div>
+          <div class="scope-control">
+            <span class="kill-label">Kill switch</span>
+            <div class="toggle on" data-toggle></div>
+          </div>
+        </div>
+
+        <!-- Scope 4: Autocomplete -->
+        <div class="scope-row">
+          <div class="scope-info">
+            <div class="scope-name">Autocomplete</div>
+            <div class="scope-desc">Suppresses hidden tags from the editor's <code>#</code> autocomplete, so you do not re-create a tag you just hid.</div>
+            <div class="scope-note">
+              <span class="state-pill detected"><span class="dot"></span>Active</span>
+              <span>Undocumented DOM path; ships on, first to disable if a release breaks it.</span>
+            </div>
+          </div>
+          <div class="scope-control">
+            <span class="kill-label">Kill switch</span>
+            <div class="toggle on" data-toggle></div>
+          </div>
+        </div>
+
+        <div class="callout warn"><div class="ic">!</div><div><strong>Independent and reversible.</strong> If one scope misbehaves, turn off just that row. The plugin keeps working everywhere else, and a panic disable on the General tab clears all four at once. Graph view and Bases tags are out of v1.0 (planned for v1.1 "Curation intelligence" and v2.0+ "Reach").</div></div>
+
+        <div class="statusbar">
+          <div class="sb-item"><span class="dot-accent"></span> Tag Curator: 4 of 4 scopes on</div>
+          <div style="flex:1;"></div>
+          <div class="sb-item">click to open Curation Workspace &rarr;</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="callout info" style="max-width:820px;"><div class="ic">i</div><div>The remaining tabs - <strong>Presets</strong>, <strong>Custom rules</strong> (read-only here; editing lives in the workspace), <strong>Integrations</strong> (Style Settings, Tag Wrangler, NN sync; D-016), and <strong>Advanced</strong> - carry forward from v0.1 with thin-Settings copy. This mockup focuses on the two tabs that change most for v1.0: General (now a launcher) and Scopes (new).</div></div>
+
+</div>
+
+<script>
+  // Theme toggle
+  document.querySelectorAll('[data-theme-set]').forEach(function (b) {
+    b.addEventListener('click', function () {
+      document.documentElement.setAttribute('data-theme', b.dataset.themeSet);
+      document.querySelectorAll('[data-theme-set]').forEach(function (x) { x.classList.toggle('is-active', x === b); });
+    });
+  });
+  // Demo toggles (skip disabled)
+  document.querySelectorAll('[data-toggle]').forEach(function (t) {
+    t.addEventListener('click', function () { if (!t.classList.contains('disabled')) t.classList.toggle('on'); });
+  });
+  // Top-tabs for the General frame
+  document.querySelectorAll('[data-tab]').forEach(function (tab) {
+    tab.addEventListener('click', function () {
+      var name = tab.dataset.tab;
+      var root = tab.closest('.mockup');
+      root.querySelectorAll('[data-tab]').forEach(function (x) { x.classList.toggle('active', x === tab); });
+      root.querySelectorAll('[data-panel]').forEach(function (p) { p.hidden = p.dataset.panel !== name; });
+    });
+  });
+  // Top-tabs for the Scopes frame (only the scopes panel is rendered there).
+  document.querySelectorAll('[data-tab2]').forEach(function (tab) {
+    tab.addEventListener('click', function () {
+      var root = tab.closest('.mockup');
+      root.querySelectorAll('[data-tab2]').forEach(function (x) { x.classList.toggle('active', x === tab); });
+    });
+  });
+</script>
+</body>
+</html>

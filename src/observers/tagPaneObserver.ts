@@ -1,172 +1,103 @@
+import { View, WorkspaceLeaf } from 'obsidian';
+import { DecorationMode, ObservedRow, ObserverBase } from './observerBase';
+
+const HIDDEN_CLASS = 'tag-curator-hidden';
+const FLAG_CLASS = 'tag-curator-flagged';
+const TAG_ATTR = 'data-tag-curator-rule';
+const TAG_VIEW_TYPE = 'tag';
+
+interface Filterable extends View {
+  containerEl: HTMLElement;
+}
+
 /**
- * Observer for the tag pane UI
+ * Decorates Obsidian's core tag pane (`.tag-pane-tag` rows). The shared
+ * lifecycle lives in ObserverBase; this subclass supplies only the tag-pane
+ * specifics: how to discover panes, how to read a row's tag, and how to mark a
+ * row hidden or flagged.
  */
-
-import { App, Plugin } from 'obsidian';
-import { Rule, TagMeta } from '../types';
-import { RuleEngine } from '../engine/ruleEngine';
-
-const TAG_CURATOR_ATTR = 'data-tag-curator-hidden';
-const TAG_PANE_ITEM_CLASS = 'tag-pane-tag-self';
-
-export class TagPaneObserver {
-  private observer: MutationObserver | null = null;
-  private containerEl: HTMLElement | null = null;
-  private app: App;
-  private plugin: Plugin;
-  private rules: Rule[] = [];
-  private tagMetadata: Map<string, TagMeta> = new Map();
-  private isEnabled = true;
-
-  constructor(app: App, plugin: Plugin) {
-    this.app = app;
-    this.plugin = plugin;
+export class TagPaneObserver extends ObserverBase {
+  init(): void {
+    this.app.workspace.onLayoutReady(() => this.attachAll());
+    this.plugin.registerEvent(
+      this.app.workspace.on('layout-change', () => this.attachAll()),
+    );
   }
 
-  /**
-   * Initialize the observer
-   */
-  init() {
-    this.app.workspace.onLayoutReady(() => {
-      this.setup();
-    });
-
-    this.app.workspace.on('layout-change', () => {
-      this.setup();
-    });
-  }
-
-  /**
-   * Find and set up the tag pane container
-   */
-  private setup() {
-    // Find the tag pane using Obsidian's class names
-    const leaf = this.app.workspace.getLeavesOfType('tag');
-    if (leaf.length === 0) {
-      return; // Tag pane not open
-    }
-
-    const container = leaf[0].view.containerEl?.querySelector('.tag-container');
-    if (!container) {
-      return;
-    }
-
-    this.containerEl = container as HTMLElement;
-    this.attachObserver();
-    this.applyFilters();
-  }
-
-  /**
-   * Attach mutation observer to tag pane
-   */
-  private attachObserver() {
-    if (this.observer) {
-      this.observer.disconnect();
-    }
-
-    if (!this.containerEl) return;
-
-    this.observer = new MutationObserver(() => {
-      if (this.isEnabled) {
-        this.applyFilters();
-      }
-    });
-
-    this.observer.observe(this.containerEl, {
-      childList: true,
-      subtree: true,
-      characterData: true,
-    });
-  }
-
-  /**
-   * Apply rules to all visible tags in the pane
-   */
-  private applyFilters() {
-    if (!this.containerEl || !this.isEnabled) return;
-
-    // Find all tag items in the pane
-    const tagItems = this.containerEl.querySelectorAll(`.${TAG_PANE_ITEM_CLASS}`);
-
-    for (const item of Array.from(tagItems)) {
-      const element = item as HTMLElement;
-      const tagText = element.textContent?.trim();
-
-      if (!tagText) continue;
-
-      // Normalize tag (remove # if present)
-      const tag = tagText.startsWith('#') ? tagText.slice(1) : tagText;
-
-      // Check if tag matches any active rule
-      const matchResult = RuleEngine.evaluateTag(
-        tag,
-        this.tagMetadata.get(tag),
-        this.rules
-      );
-
-      if (matchResult && matchResult.ruleName) {
-        // Hide the tag
-        element.setAttribute(TAG_CURATOR_ATTR, matchResult.ruleId);
-        element.style.display = 'none';
-      } else {
-        // Show the tag
-        element.removeAttribute(TAG_CURATOR_ATTR);
-        element.style.display = '';
-      }
+  attachAll(): void {
+    for (const leaf of this.app.workspace.getLeavesOfType(TAG_VIEW_TYPE)) {
+      this.attachLeaf(leaf);
     }
   }
 
-  /**
-   * Update rules and re-apply filters
-   */
-  updateRules(rules: Rule[]) {
-    this.rules = rules;
-    this.applyFilters();
+  private attachLeaf(leaf: WorkspaceLeaf): void {
+    const maybeDeferred = leaf as WorkspaceLeaf & {
+      isDeferred?: boolean;
+      loadIfDeferred?: () => void;
+    };
+    if (maybeDeferred.isDeferred) maybeDeferred.loadIfDeferred?.();
+    const view = leaf.view as Filterable;
+    const containerEl = view?.containerEl;
+    if (!containerEl) return;
+    this.observeContainer(containerEl);
   }
 
-  /**
-   * Update tag metadata and re-apply filters
-   */
-  updateTagMetadata(metadata: Map<string, TagMeta>) {
-    this.tagMetadata = metadata;
-    this.applyFilters();
+  countHidden(): number {
+    let count = 0;
+    for (const container of this.containers) {
+      count += container.querySelectorAll(`.${HIDDEN_CLASS}`).length;
+    }
+    return count;
   }
 
-  /**
-   * Enable/disable filtering
-   */
-  setEnabled(enabled: boolean) {
-    this.isEnabled = enabled;
-    if (!enabled) {
-      this.clearFilters();
+  countFlagged(): number {
+    let count = 0;
+    for (const container of this.containers) {
+      count += container.querySelectorAll(`.${FLAG_CLASS}`).length;
+    }
+    return count;
+  }
+
+  ruleForElement(el: HTMLElement): string | null {
+    return el.getAttribute(TAG_ATTR);
+  }
+
+  protected findRows(root: HTMLElement): ObservedRow[] {
+    const rows = root.querySelectorAll<HTMLElement>('.tag-pane-tag');
+    return Array.from(rows).map((row) => {
+      const textEl = row.querySelector('.tag-pane-tag-text') ?? row;
+      return { el: row, tag: (textEl.textContent ?? '').trim() };
+    });
+  }
+
+  protected applyDecoration(
+    el: HTMLElement,
+    ruleId: string,
+    mode: DecorationMode,
+  ): void {
+    if (mode === 'hidden') {
+      el.classList.add(HIDDEN_CLASS);
+      el.classList.remove(FLAG_CLASS);
+      el.setAttribute('aria-hidden', 'true');
+      el.setAttribute(TAG_ATTR, ruleId);
     } else {
-      this.applyFilters();
+      el.classList.add(FLAG_CLASS);
+      el.classList.remove(HIDDEN_CLASS);
+      el.removeAttribute('aria-hidden');
+      el.setAttribute(TAG_ATTR, ruleId);
     }
   }
 
-  /**
-   * Clear all applied styles
-   */
-  private clearFilters() {
-    if (!this.containerEl) return;
-
-    const hiddenItems = this.containerEl.querySelectorAll(`[${TAG_CURATOR_ATTR}]`);
-    for (const item of Array.from(hiddenItems)) {
-      const element = item as HTMLElement;
-      element.removeAttribute(TAG_CURATOR_ATTR);
-      element.style.display = '';
-    }
+  protected clearDecoration(el: HTMLElement): void {
+    el.classList.remove(HIDDEN_CLASS);
+    el.classList.remove(FLAG_CLASS);
+    el.removeAttribute('aria-hidden');
+    el.removeAttribute(TAG_ATTR);
   }
 
-  /**
-   * Clean up
-   */
-  unload() {
-    if (this.observer) {
-      this.observer.disconnect();
-      this.observer = null;
-    }
-    this.clearFilters();
-    this.containerEl = null;
+  protected findDecorated(root: HTMLElement): HTMLElement[] {
+    return Array.from(
+      root.querySelectorAll<HTMLElement>(`.${HIDDEN_CLASS}, .${FLAG_CLASS}`),
+    );
   }
 }

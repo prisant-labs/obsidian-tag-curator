@@ -1,0 +1,433 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Scope Expansion - UI Proposal (#1, #2, #3)</title>
+<style>
+  :root[data-theme="dark"] {
+    --background-primary: #1e1e1e;
+    --background-primary-alt: #1a1a1a;
+    --background-secondary: #252525;
+    --background-tertiary: #151515;
+    --background-modifier-hover: #2f2f2f;
+    --background-modifier-border: #333;
+    --background-modifier-form-field: #1a1a1a;
+    --text-normal: #dcddde;
+    --text-muted: #999;
+    --text-faint: #6e6e6e;
+    --text-on-accent: #ffffff;
+    --text-accent: #a78bfa;
+    --text-warning: #f5c97c;
+    --text-success: #67d391;
+    --interactive-accent: #7c3aed;
+    --interactive-accent-hover: #8b5cf6;
+    --interactive-normal: #2a2a2a;
+    --interactive-hover: #353535;
+    --divider-color: #2a2a2a;
+    --shadow-l: 0 12px 28px rgba(0,0,0,0.5);
+    --code-bg: #161616;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body { background: var(--background-tertiary); color: var(--text-normal); font-family: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", Roboto, sans-serif; font-size: 14px; line-height: 1.5; }
+  code { background: var(--code-bg); padding: 1px 5px; border-radius: 4px; font-size: 0.92em; font-family: "SFMono-Regular", Consolas, monospace; }
+
+  .page { display: grid; grid-template-columns: 240px 1fr; min-height: 100vh; }
+  .sidebar { position: sticky; top: 0; height: 100vh; background: var(--background-secondary); border-right: 1px solid var(--divider-color); padding: 24px 18px; overflow-y: auto; }
+  .sidebar h1 { margin: 0 0 4px; font-size: 16px; font-weight: 700; }
+  .sidebar .subtitle { margin: 0 0 18px; font-size: 11.5px; color: var(--text-muted); }
+  .sidebar .section-label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-faint); margin: 14px 6px 6px; font-weight: 600; }
+  .sidebar nav { display: flex; flex-direction: column; gap: 2px; }
+  .sidebar nav a { display: flex; align-items: center; gap: 8px; padding: 6px 10px; border-radius: 6px; color: var(--text-muted); text-decoration: none; font-size: 12.5px; }
+  .sidebar nav a:hover { background: var(--background-modifier-hover); color: var(--text-normal); }
+  .sidebar nav a.active { background: var(--interactive-accent); color: var(--text-on-accent); }
+  .sidebar .meta { margin-top: 18px; padding: 11px; background: var(--background-tertiary); border-radius: 6px; font-size: 11px; color: var(--text-muted); line-height: 1.55; }
+  .sidebar .meta strong { color: var(--text-normal); }
+
+  .canvas { padding: 42px 56px 100px; max-width: 1180px; }
+  .lede { max-width: 780px; margin-bottom: 50px; }
+  .lede h2 { font-size: 28px; margin: 0 0 12px; }
+  .lede p { color: var(--text-muted); font-size: 14.5px; }
+  .lede .badges { display: flex; gap: 8px; margin-top: 14px; flex-wrap: wrap; }
+  .badge-large { font-size: 11px; padding: 4px 10px; border-radius: 999px; border: 1px solid var(--divider-color); background: var(--background-secondary); color: var(--text-muted); }
+  .badge-large.draft { background: rgba(245,201,124,0.15); color: var(--text-warning); border-color: rgba(245,201,124,0.35); }
+  .badge-large.target { background: rgba(124,58,237,0.15); color: var(--text-accent); border-color: rgba(124,58,237,0.35); }
+
+  section.block { padding-top: 20px; margin-bottom: 70px; scroll-margin-top: 24px; }
+  .block-header { margin-bottom: 22px; }
+  .block-eyebrow { font-size: 11px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-faint); margin-bottom: 6px; }
+  .block-title { margin: 0 0 8px; font-size: 24px; font-weight: 700; }
+  .block-desc { color: var(--text-muted); max-width: 800px; font-size: 14px; }
+
+  .mockup { background: var(--background-primary); border: 1px solid var(--background-modifier-border); border-radius: 12px; overflow: hidden; box-shadow: var(--shadow-l); }
+  .mockup-titlebar { display: flex; align-items: center; gap: 8px; padding: 10px 14px; background: var(--background-secondary); border-bottom: 1px solid var(--divider-color); font-size: 12px; color: var(--text-muted); }
+  .traffic { display: flex; gap: 6px; }
+  .traffic span { width: 11px; height: 11px; border-radius: 50%; display: inline-block; }
+  .traffic span:nth-child(1){ background:#ff5f57; } .traffic span:nth-child(2){ background:#febc2e; } .traffic span:nth-child(3){ background:#28c840; }
+  .mockup-title { flex: 1; text-align: center; font-weight: 500; color: var(--text-normal); font-size: 12px; }
+  .mockup-body { padding: 20px; }
+
+  /* Rule editor scope dropdown variant */
+  .scope-section { background: var(--background-secondary); border: 1px solid var(--divider-color); border-radius: 9px; padding: 14px 16px; margin-bottom: 10px; }
+  .scope-section-label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-faint); font-weight: 600; margin-bottom: 8px; }
+  .scope-row { display: flex; align-items: center; gap: 14px; padding: 8px 0; }
+  .scope-row + .scope-row { border-top: 1px solid var(--divider-color); }
+  .scope-label { width: 110px; font-size: 12.5px; color: var(--text-muted); }
+  .scope-control { flex: 1; }
+  .input, .select { background: var(--background-modifier-form-field); border: 1px solid var(--background-modifier-border); border-radius: 6px; padding: 7px 10px; color: var(--text-normal); font: inherit; font-size: 13px; }
+  .select.tight { width: 300px; }
+
+  .scope-checks { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin-top: 10px; padding: 12px; background: var(--background-primary); border: 1px dashed var(--background-modifier-border); border-radius: 8px; }
+  .scope-check { display: flex; align-items: center; gap: 8px; font-size: 13px; }
+  .scope-check input { width: 16px; height: 16px; accent-color: var(--interactive-accent); }
+  .scope-check .scope-name { font-weight: 500; }
+  .scope-check .scope-hint { color: var(--text-faint); font-size: 11px; margin-left: 8px; }
+
+  .advanced-toggle { font-size: 11.5px; color: var(--text-accent); cursor: pointer; margin-top: 8px; display: inline-block; }
+  .advanced-toggle:hover { text-decoration: underline; }
+
+  /* Graph view mockup */
+  .graph-frame { background: var(--background-primary); padding: 16px; border-radius: 9px; }
+  .graph-svg { display: block; margin: 0 auto; background: var(--background-tertiary); border-radius: 9px; }
+  .graph-legend { display: flex; gap: 14px; margin-top: 12px; font-size: 11.5px; color: var(--text-muted); flex-wrap: wrap; }
+  .graph-legend .sw { display: inline-block; width: 10px; height: 10px; border-radius: 50%; vertical-align: middle; margin-right: 6px; }
+  .graph-legend .visible { background: var(--text-accent); }
+  .graph-legend .hidden { background: var(--text-faint); border: 1px dashed var(--background-modifier-border); }
+  .graph-legend .flagged { background: var(--text-warning); }
+
+  /* Autocomplete mockup */
+  .editor-frame { background: var(--background-primary); padding: 18px; border-radius: 9px; font-family: "SFMono-Regular", Consolas, monospace; font-size: 13px; line-height: 1.6; position: relative; min-height: 200px; }
+  .editor-line { color: var(--text-normal); }
+  .editor-cursor { display: inline-block; width: 2px; height: 16px; background: var(--text-accent); vertical-align: middle; animation: blink 1s infinite; }
+  @keyframes blink { 50% { opacity: 0.3; } }
+  .editor-typed { color: var(--text-accent); font-weight: 600; }
+
+  .suggestion-container { position: absolute; left: 22px; top: 45px; background: var(--background-secondary); border: 1px solid var(--background-modifier-border); border-radius: 7px; min-width: 240px; box-shadow: var(--shadow-l); padding: 4px 0; }
+  .suggestion-item { display: flex; align-items: center; gap: 10px; padding: 7px 12px; font-size: 13px; color: var(--text-normal); }
+  .suggestion-item .icon { color: var(--text-faint); font-size: 11px; }
+  .suggestion-item.selected { background: var(--interactive-accent); color: var(--text-on-accent); }
+  .suggestion-item.hidden { display: none; }
+  .suggestion-item.flagged { background: rgba(245,201,124,0.1); }
+  .suggestion-stash { padding: 6px 12px; font-size: 10.5px; color: var(--text-faint); border-top: 1px dashed var(--background-modifier-border); margin-top: 4px; }
+
+  /* Properties chip mockup */
+  .properties-frame { background: var(--background-primary); padding: 16px; border-radius: 9px; }
+  .properties-row { display: flex; align-items: center; gap: 14px; padding: 9px 0; }
+  .properties-key { width: 120px; font-size: 12.5px; color: var(--text-muted); font-weight: 500; }
+  .properties-value { flex: 1; display: flex; flex-wrap: wrap; gap: 6px; }
+  .chip { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; padding: 3px 9px; border-radius: 999px; background: var(--background-secondary); border: 1px solid var(--divider-color); color: var(--text-normal); }
+  .chip.hidden { display: none; }
+  .chip.flagged { border-color: var(--text-warning); background: rgba(245,201,124,0.08); color: var(--text-warning); }
+  .chip-stash { display: inline-block; font-size: 10.5px; color: var(--text-faint); padding: 3px 9px; border-radius: 999px; border: 1px dashed var(--background-modifier-border); }
+
+  /* Side-by-side comparison */
+  .side-by-side { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .side-by-side .col { background: var(--background-secondary); border: 1px solid var(--divider-color); border-radius: 9px; padding: 14px; }
+  .side-by-side .col h4 { margin: 0 0 12px; font-size: 12px; color: var(--text-faint); text-transform: uppercase; letter-spacing: 0.06em; font-weight: 600; }
+</style>
+</head>
+<body>
+<div class="page">
+  <aside class="sidebar">
+    <h1>Scope expansion</h1>
+    <p class="subtitle">Graph + autocomplete + properties</p>
+    <div class="section-label">Sections</div>
+    <nav>
+      <a href="#scope-picker" class="active">1 - Rule editor scope dropdown</a>
+      <a href="#graph">2 - Graph view</a>
+      <a href="#autocomplete">3 - Autocomplete dropdown</a>
+      <a href="#properties">4 - Properties chips</a>
+      <a href="#defaults">5 - Default scopes setting</a>
+    </nav>
+    <div class="meta">
+      <strong>Status:</strong> Draft / Unreleased<br>
+      <strong>Target:</strong> v0.2<br>
+      <strong>Issues:</strong> #1, #2, #3<br>
+      <strong>Spec:</strong> spec.md<br>
+      <strong>Plan:</strong> plan.md
+    </div>
+  </aside>
+
+  <main class="canvas">
+    <div class="lede">
+      <h2>Scope expansion: graph + autocomplete + properties</h2>
+      <p>v0.1 ships tag filtering in the native tag pane only. v0.2 extends Tag Curator to <strong>every surface where Obsidian renders tags</strong>: the graph view, the autocomplete dropdown, and the properties chip area. Same engine, same rule model, three new observers.</p>
+      <div class="badges">
+        <span class="badge-large draft">Draft</span>
+        <span class="badge-large target">v0.2 target</span>
+        <span class="badge-large">Zero engine change</span>
+        <span class="badge-large">Per-rule scope opt-in</span>
+      </div>
+    </div>
+
+    <!-- Section 1: Scope picker -->
+    <section class="block" id="scope-picker">
+      <div class="block-header">
+        <div class="block-eyebrow">Rule editor change</div>
+        <h2 class="block-title">1 - Scope dropdown lights up</h2>
+        <p class="block-desc">The Rule editor's Scope dropdown (v0.1 mocked with "(v0.2)" placeholders) gets real values. The collapsed dropdown shows common combinations; an <em>Advanced</em> expansion reveals per-scope checkboxes for custom subsets.</p>
+      </div>
+      <div class="mockup">
+        <div class="mockup-titlebar"><div class="traffic"><span></span><span></span><span></span></div><div class="mockup-title">Custom rules - Edit rule</div></div>
+        <div class="mockup-body">
+          <div class="scope-section">
+            <div class="scope-section-label">Then</div>
+            <div class="scope-row">
+              <div class="scope-label">Action</div>
+              <div class="scope-control"><select class="select tight"><option>hide</option><option>flag</option></select></div>
+            </div>
+            <div class="scope-row">
+              <div class="scope-label">Scope</div>
+              <div class="scope-control">
+                <select class="select tight">
+                  <option>tag-pane</option>
+                  <option selected>tag-pane + graph</option>
+                  <option>tag-pane + graph + autocomplete</option>
+                  <option>tag-pane + properties</option>
+                  <option>all surfaces (every scope)</option>
+                </select>
+                <div class="advanced-toggle">Advanced (per-scope checkboxes) ▾</div>
+              </div>
+            </div>
+
+            <div class="scope-checks">
+              <div class="scope-check">
+                <input type="checkbox" checked>
+                <span class="scope-name">tag-pane</span>
+                <span class="scope-hint">Native sidebar tag list (v0.1)</span>
+              </div>
+              <div class="scope-check">
+                <input type="checkbox" checked>
+                <span class="scope-name">graph</span>
+                <span class="scope-hint">Global + local graph nodes</span>
+              </div>
+              <div class="scope-check">
+                <input type="checkbox">
+                <span class="scope-name">autocomplete</span>
+                <span class="scope-hint">Editor # suggestion dropdown</span>
+              </div>
+              <div class="scope-check">
+                <input type="checkbox">
+                <span class="scope-name">properties</span>
+                <span class="scope-hint">Frontmatter tag chips</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 2: Graph view -->
+    <section class="block" id="graph">
+      <div class="block-header">
+        <div class="block-eyebrow">New surface · graphObserver</div>
+        <h2 class="block-title">2 - Graph view</h2>
+        <p class="block-desc">Hidden tag nodes disappear via <code>display: none</code> on a CSS class; connected edges fade to 5% opacity so the layout doesn't shift. Flagged nodes (Preview mode) gain a warning-colored ring.</p>
+      </div>
+      <div class="side-by-side">
+        <div class="col">
+          <h4>Without scope · v0.1</h4>
+          <div class="graph-frame">
+            <svg class="graph-svg" width="280" height="180" viewBox="0 0 280 180">
+              <!-- visible nodes -->
+              <line x1="60" y1="40" x2="140" y2="80" stroke="var(--background-modifier-border)" stroke-width="1"/>
+              <line x1="140" y1="80" x2="220" y2="40" stroke="var(--background-modifier-border)" stroke-width="1"/>
+              <line x1="140" y1="80" x2="80" y2="140" stroke="var(--background-modifier-border)" stroke-width="1"/>
+              <line x1="140" y1="80" x2="200" y2="140" stroke="var(--background-modifier-border)" stroke-width="1"/>
+              <line x1="140" y1="80" x2="140" y2="155" stroke="var(--background-modifier-border)" stroke-width="1"/>
+
+              <circle cx="60" cy="40" r="8" fill="#a78bfa"/>
+              <text x="60" y="28" font-size="9" fill="var(--text-muted)" text-anchor="middle">#ai</text>
+
+              <circle cx="140" cy="80" r="10" fill="#a78bfa"/>
+              <text x="140" y="68" font-size="9" fill="var(--text-muted)" text-anchor="middle">#project</text>
+
+              <circle cx="220" cy="40" r="6" fill="#a78bfa"/>
+              <text x="220" y="28" font-size="9" fill="var(--text-muted)" text-anchor="middle">#ffaa00</text>
+
+              <circle cx="80" cy="140" r="6" fill="#a78bfa"/>
+              <text x="80" y="158" font-size="9" fill="var(--text-muted)" text-anchor="middle">#a</text>
+
+              <circle cx="200" cy="140" r="7" fill="#a78bfa"/>
+              <text x="200" y="158" font-size="9" fill="var(--text-muted)" text-anchor="middle">#section-3</text>
+
+              <circle cx="140" cy="155" r="7" fill="#a78bfa"/>
+              <text x="140" y="172" font-size="9" fill="var(--text-muted)" text-anchor="middle">#journal</text>
+            </svg>
+            <div class="graph-legend">
+              <span><span class="sw visible"></span>visible · 6 nodes</span>
+            </div>
+          </div>
+        </div>
+        <div class="col">
+          <h4>With graph scope on · hex + URL + single-char rules</h4>
+          <div class="graph-frame">
+            <svg class="graph-svg" width="280" height="180" viewBox="0 0 280 180">
+              <!-- faded edges to hidden nodes -->
+              <line x1="60" y1="40" x2="140" y2="80" stroke="var(--background-modifier-border)" stroke-width="1"/>
+              <line x1="140" y1="80" x2="220" y2="40" stroke="var(--background-modifier-border)" stroke-width="1" opacity="0.05"/>
+              <line x1="140" y1="80" x2="80" y2="140" stroke="var(--background-modifier-border)" stroke-width="1" opacity="0.05"/>
+              <line x1="140" y1="80" x2="200" y2="140" stroke="var(--background-modifier-border)" stroke-width="1" opacity="0.05"/>
+              <line x1="140" y1="80" x2="140" y2="155" stroke="var(--background-modifier-border)" stroke-width="1"/>
+
+              <circle cx="60" cy="40" r="8" fill="#a78bfa"/>
+              <text x="60" y="28" font-size="9" fill="var(--text-muted)" text-anchor="middle">#ai</text>
+
+              <circle cx="140" cy="80" r="10" fill="#a78bfa"/>
+              <text x="140" y="68" font-size="9" fill="var(--text-muted)" text-anchor="middle">#project</text>
+
+              <circle cx="140" cy="155" r="7" fill="#a78bfa"/>
+              <text x="140" y="172" font-size="9" fill="var(--text-muted)" text-anchor="middle">#journal</text>
+            </svg>
+            <div class="graph-legend">
+              <span><span class="sw visible"></span>visible · 3</span>
+              <span><span class="sw hidden"></span>hidden · 3 (out of layout)</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 3: Autocomplete -->
+    <section class="block" id="autocomplete">
+      <div class="block-header">
+        <div class="block-eyebrow">New surface · autocompleteObserver</div>
+        <h2 class="block-title">3 - Editor autocomplete dropdown</h2>
+        <p class="block-desc">When the user types <code>#</code> in the editor, Obsidian's tag suggestion dropdown opens. Tag Curator filters items matching hidden tags by adding the <code>tag-curator-suggestion-hidden</code> class. Keyboard arrows skip them naturally because <code>display: none</code> removes them from the flow.</p>
+      </div>
+      <div class="side-by-side">
+        <div class="col">
+          <h4>Without scope</h4>
+          <div class="editor-frame">
+            <div class="editor-line">## Meeting notes</div>
+            <div class="editor-line">Discussed roadmap with the team. Tagged this as <span class="editor-typed">#</span><span class="editor-cursor"></span></div>
+            <div class="suggestion-container">
+              <div class="suggestion-item selected"><span class="icon">#</span>ai</div>
+              <div class="suggestion-item"><span class="icon">#</span>ffaa00</div>
+              <div class="suggestion-item"><span class="icon">#</span>a</div>
+              <div class="suggestion-item"><span class="icon">#</span>section-3</div>
+              <div class="suggestion-item"><span class="icon">#</span>project</div>
+              <div class="suggestion-item"><span class="icon">#</span>journal</div>
+            </div>
+          </div>
+        </div>
+        <div class="col">
+          <h4>With autocomplete scope on · same rules</h4>
+          <div class="editor-frame">
+            <div class="editor-line">## Meeting notes</div>
+            <div class="editor-line">Discussed roadmap with the team. Tagged this as <span class="editor-typed">#</span><span class="editor-cursor"></span></div>
+            <div class="suggestion-container">
+              <div class="suggestion-item selected"><span class="icon">#</span>ai</div>
+              <div class="suggestion-item hidden"><span class="icon">#</span>ffaa00</div>
+              <div class="suggestion-item hidden"><span class="icon">#</span>a</div>
+              <div class="suggestion-item hidden"><span class="icon">#</span>section-3</div>
+              <div class="suggestion-item"><span class="icon">#</span>project</div>
+              <div class="suggestion-item"><span class="icon">#</span>journal</div>
+              <div class="suggestion-stash">3 tags filtered by Tag Curator rules</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <p style="margin-top:14px; font-size:12.5px; color:var(--text-muted); max-width:760px;">The "3 tags filtered" stash row at the bottom is a small UX courtesy - it tells the user why their familiar tags aren't appearing. Hovering it would list which tags and which rules. (Defer this affordance to v0.2.1 if implementation time tight.)</p>
+    </section>
+
+    <!-- Section 4: Properties chips -->
+    <section class="block" id="properties">
+      <div class="block-header">
+        <div class="block-eyebrow">New surface · propertiesObserver</div>
+        <h2 class="block-title">4 - Properties chips</h2>
+        <p class="block-desc">When a note has <code>tags:</code> in its frontmatter, Obsidian renders each tag as a chip. Tag Curator hides chips matching hidden tags - same display-only contract as everywhere else. The underlying frontmatter is untouched.</p>
+      </div>
+      <div class="side-by-side">
+        <div class="col">
+          <h4>Without scope</h4>
+          <div class="properties-frame">
+            <div class="properties-row">
+              <div class="properties-key">tags</div>
+              <div class="properties-value">
+                <span class="chip">#ai</span>
+                <span class="chip">#ffaa00</span>
+                <span class="chip">#a</span>
+                <span class="chip">#project/acme</span>
+                <span class="chip">#section-3</span>
+                <span class="chip">#draft</span>
+              </div>
+            </div>
+            <div class="properties-row">
+              <div class="properties-key">aliases</div>
+              <div class="properties-value">
+                <span class="chip">notes/meeting</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col">
+          <h4>With properties scope on · same rules</h4>
+          <div class="properties-frame">
+            <div class="properties-row">
+              <div class="properties-key">tags</div>
+              <div class="properties-value">
+                <span class="chip">#ai</span>
+                <span class="chip hidden">#ffaa00</span>
+                <span class="chip hidden">#a</span>
+                <span class="chip">#project/acme</span>
+                <span class="chip hidden">#section-3</span>
+                <span class="chip">#draft</span>
+                <span class="chip-stash">+3 hidden</span>
+              </div>
+            </div>
+            <div class="properties-row">
+              <div class="properties-key">aliases</div>
+              <div class="properties-value">
+                <span class="chip">notes/meeting</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 5: Default scopes -->
+    <section class="block" id="defaults">
+      <div class="block-header">
+        <div class="block-eyebrow">Settings > General</div>
+        <h2 class="block-title">5 - Default scopes for new rules</h2>
+        <p class="block-desc">A small multi-toggle in the General panel that pre-selects which scopes are enabled when the user creates a new rule. v0.1's defaults stay (<code>tag-pane</code> only); users opt new rules into broader scopes by checking these once.</p>
+      </div>
+      <div class="mockup">
+        <div class="mockup-titlebar"><div class="traffic"><span></span><span></span><span></span></div><div class="mockup-title">Settings - Tag Curator - General</div></div>
+        <div class="mockup-body">
+          <div style="background:var(--background-secondary); border:1px solid var(--divider-color); border-radius:9px; padding:14px 18px; max-width:720px;">
+            <div style="font-size:14px; font-weight:600;">Default scopes for new rules</div>
+            <div style="font-size:12px; color:var(--text-muted); margin-top:4px;">When you create a new custom rule, these scopes are pre-checked in the Rule editor's Scope row. Changes here do not affect existing rules.</div>
+            <div style="margin-top:14px; display:grid; grid-template-columns: repeat(2, 1fr); gap: 8px;">
+              <label class="scope-check" style="background:var(--background-primary); padding:10px 12px; border-radius:8px; border:1px solid var(--divider-color);">
+                <input type="checkbox" checked>
+                <span class="scope-name">tag-pane</span>
+                <span class="scope-hint">Native sidebar (v0.1)</span>
+              </label>
+              <label class="scope-check" style="background:var(--background-primary); padding:10px 12px; border-radius:8px; border:1px solid var(--divider-color);">
+                <input type="checkbox">
+                <span class="scope-name">graph</span>
+                <span class="scope-hint">Global + local graph</span>
+              </label>
+              <label class="scope-check" style="background:var(--background-primary); padding:10px 12px; border-radius:8px; border:1px solid var(--divider-color);">
+                <input type="checkbox">
+                <span class="scope-name">autocomplete</span>
+                <span class="scope-hint">Editor # dropdown</span>
+              </label>
+              <label class="scope-check" style="background:var(--background-primary); padding:10px 12px; border-radius:8px; border:1px solid var(--divider-color);">
+                <input type="checkbox">
+                <span class="scope-name">properties</span>
+                <span class="scope-hint">Frontmatter chips</span>
+              </label>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+</div>
+</body>
+</html>

@@ -1,0 +1,59 @@
+name: release
+
+# Fires on any tag push. Builds the gitignored artifacts (main.js, styles.css are
+# never committed - see note below) and publishes the artifact quartet as a GitHub
+# release so BRAT and the community installer can fetch them.
+#
+# There is no test step here on purpose: build.yml already gates main, and a release
+# tag is expected to point at an already-green commit. This workflow's job is to
+# build, verify the tag matches the manifest, and publish.
+
+on:
+  push:
+    tags:
+      - '*'
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: '.nvmrc'
+          cache: 'npm'
+      - run: npm ci
+      - run: npm run build
+      - name: Verify artifacts
+        run: |
+          test -f main.js
+          test -f manifest.json
+          test -f styles.css
+          test -f versions.json
+      - name: Verify manifest version matches tag
+        # A mis-tagged release must fail loudly here, before anything is published.
+        # The pushed tag (e.g. refs/tags/1.2.3) must equal manifest.json's version.
+        # Note: Obsidian plugin tags carry no leading "v" (manifest version is plain semver).
+        run: |
+          TAG="${GITHUB_REF#refs/tags/}"
+          MANIFEST_VERSION="$(node -p "require('./manifest.json').version")"
+          echo "Tag: $TAG"
+          echo "manifest.json version: $MANIFEST_VERSION"
+          if [ "$TAG" != "$MANIFEST_VERSION" ]; then
+            echo "::error::Tag ($TAG) does not match manifest.json version ($MANIFEST_VERSION). Run 'npm version' so version-bump.mjs syncs the manifest, then re-tag."
+            exit 1
+          fi
+      - name: Create release
+        uses: softprops/action-gh-release@v3
+        with:
+          files: |
+            manifest.json
+            main.js
+            styles.css
+            versions.json
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
