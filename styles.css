@@ -1468,6 +1468,72 @@ settings:
   color: var(--text-faint);
   text-align: center;
 }
+/* Preview accordion (E5): info-icon row + key/value detail + override pins */
+.tcr-pd-item + .tcr-pd-item {
+  border-top: 1px solid var(--divider-color);
+}
+.tcr-pd-info {
+  cursor: pointer;
+  color: var(--text-faint);
+  font-size: 13px;
+  line-height: 1;
+}
+.tcr-pd-info:hover,
+.tcr-pd-info.open {
+  color: var(--text-accent);
+}
+.tcr-pd-detail {
+  padding: 2px 14px 10px;
+}
+.tcr-pd-detail-collapsed {
+  display: none;
+}
+.tcr-pd-kv {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 3px 14px;
+}
+.tcr-pd-kv-row {
+  display: contents;
+}
+.tcr-pd-kv-key {
+  color: var(--text-faint);
+  font-size: 11px;
+}
+.tcr-pd-kv-val {
+  color: var(--text-muted);
+  font-size: 11px;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+.tcr-pd-ov {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+}
+.tcr-pd-ov-btns {
+  display: flex;
+  gap: 6px;
+  margin-left: auto;
+}
+.tcr-pd-ov-btn {
+  font-size: 11px;
+  padding: 2px 8px;
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 5px;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+}
+.tcr-pd-ov-btn:hover {
+  background: var(--background-modifier-hover);
+}
+.tcr-pd-ov-btn.on {
+  border-color: var(--interactive-accent);
+  color: var(--text-normal);
+  background: var(--background-modifier-hover);
+}
 
 /* Help icon variant used inside the rule editor */
 .tcr-help-ic {
