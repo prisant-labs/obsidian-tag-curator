@@ -92,12 +92,17 @@ export class RuleEditor {
       cls: 'tcr-toolbar-title',
       text: `Custom rules · ${rules.length}`,
     });
+    const newBtn = toolbar.createEl('button', {
+      cls: 'tcr-btn tcr-btn-accent tcr-new-btn',
+      text: '+ New rule',
+    });
+    newBtn.addEventListener('click', () => this.openEdit(null));
 
     const cards = this.mainEl.createDiv({ cls: 'tcr-cards' });
     for (const rule of rules) {
       this.renderCard(cards, rule);
     }
-    this.renderNewCard(cards);
+    if (rules.length === 0) this.renderNewCard(cards);
   }
 
   private renderCard(parent: HTMLElement, rule: Rule): void {
@@ -113,24 +118,16 @@ export class RuleEditor {
 
     const info = card.createDiv({ cls: 'tcr-card-info' });
     info.createDiv({ cls: 'tcr-card-name', text: rule.name });
-    const meta = info.createDiv({ cls: 'tcr-card-meta' });
-    meta.createSpan({
-      cls: 'tcr-type-pill',
-      text: friendlyTypeLabel(rule.match.type),
-    });
-    meta.createSpan({
-      cls: 'tcr-match-summary',
-      text: matchSummaryString(rule.match),
-    });
+    const sub = info.createDiv({ cls: 'tcr-card-sub' });
+    sub.createSpan({ cls: 'tcr-card-type', text: rule.match.type });
+    sub.appendText(' · ' + matchSummaryString(rule.match));
 
     const affectedCount = this.countAffectedForRule(rule);
     const affectedEl = card.createDiv({
       cls: 'tcr-card-affected',
-      text: rule.enabled ? `${affectedCount} tags affected` : 'off',
+      text: rule.enabled ? `${affectedCount} tags ›` : 'off',
     });
     if (!rule.enabled) affectedEl.addClass('tcr-card-affected-zero');
-
-    card.createDiv({ cls: 'tcr-card-chevron', text: '›' });
 
     card.addEventListener('click', (e) => {
       const tgt = e.target as HTMLElement;
@@ -203,47 +200,31 @@ export class RuleEditor {
     this.makeToggle(title, draft.enabled, (next) => {
       draft.enabled = next;
     });
-    title.createEl('h2', {
-      cls: 'tcr-edit-title',
-      text: draft.name || 'Untitled rule',
+    const nameInput = title.createEl('input', { cls: 'tcr-edit-title-input' });
+    nameInput.value = draft.name;
+    nameInput.placeholder = 'Untitled rule';
+    nameInput.addEventListener('input', () => {
+      draft.name = nameInput.value;
     });
 
     this.section(edit, 'Type', (sec) => {
-      const row = this.row(sec);
-      const label = this.label(row, 'Match by');
-      this.attachHelp(
-        label,
-        "Choose how this rule decides which tags match. Pattern match runs a regex against the tag name. Count threshold compares the tag's note-count. Specific tags is an explicit list.",
-      );
-      const control = this.control(row);
-      const select = control.createEl('select', { cls: 'tcr-select tight' });
-      for (const t of ['regex', 'frequency', 'list'] as MatchType[]) {
-        const opt = select.createEl('option', {
-          value: t,
-          text: friendlyTypeLabel(t),
+      const cards = sec.createDiv({ cls: 'tcr-type-cards' });
+      const types: Array<[MatchType, string, string]> = [
+        ['regex', 'Pattern match', 'A regex against the tag name'],
+        ['frequency', 'Count threshold', "Compare the tag's note-count"],
+        ['list', 'Specific tags', 'An explicit list of tags'],
+      ];
+      for (const [t, cardTitle, desc] of types) {
+        const c = cards.createDiv({ cls: 'tcr-type-card' });
+        if (draft.match.type === t) c.addClass('on');
+        c.createDiv({ cls: 'tcr-type-card-title', text: cardTitle });
+        c.createDiv({ cls: 'tcr-type-card-desc', text: desc });
+        c.addEventListener('click', () => {
+          if (draft.match.type === t) return;
+          draft.match = blankCriteriaFor(t);
+          this.render();
         });
-        if (draft.match.type === t) opt.selected = true;
       }
-      select.addEventListener('change', () => {
-        draft.match = blankCriteriaFor(select.value as MatchType);
-        this.render();
-      });
-    });
-
-    this.section(edit, 'Identity', (sec) => {
-      const nameRow = this.row(sec);
-      this.label(nameRow, 'Name');
-      const ctl = this.control(nameRow);
-      const input = ctl.createEl('input', { cls: 'tcr-input' });
-      input.value = draft.name;
-      input.addEventListener('input', () => {
-        draft.name = input.value;
-      });
-
-      const hint = sec.createDiv({ cls: 'tcr-edit-hint' });
-      hint.setText(
-        'Toggle in the header above (or on the card) enables/disables this rule. Priority is architected in the engine (default 50, see D-009) but hidden from the UI for v0.1.',
-      );
     });
 
     this.section(edit, 'Match', (sec) => {
@@ -644,17 +625,6 @@ export class RuleEditor {
 // =================================================================
 // Helpers
 // =================================================================
-
-function friendlyTypeLabel(t: MatchType): string {
-  switch (t) {
-    case 'regex':
-      return 'Pattern match (regex)';
-    case 'frequency':
-      return 'Count threshold (frequency)';
-    case 'list':
-      return 'Specific tags (list)';
-  }
-}
 
 function matchSummaryString(match: MatchCriteria): string {
   switch (match.type) {
