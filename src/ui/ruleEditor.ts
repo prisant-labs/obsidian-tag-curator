@@ -775,11 +775,7 @@ async function confirmModal(
         this.titleEl.setText(title);
         const body = this.contentEl.createDiv();
         body.createDiv({ text: message });
-        const foot = this.contentEl.createDiv();
-        foot.style.display = 'flex';
-        foot.style.gap = '8px';
-        foot.style.justifyContent = 'flex-end';
-        foot.style.marginTop = '16px';
+        const foot = this.contentEl.createDiv({ cls: 'tcr-confirm-foot' });
         const cancel = foot.createEl('button', { text: 'Cancel' });
         cancel.addEventListener('click', () => {
           resolve(false);

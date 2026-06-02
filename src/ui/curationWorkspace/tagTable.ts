@@ -152,7 +152,7 @@ export class TagTable {
     this.spacerEl = this.scrollEl.createDiv({ cls: 'tct-spacer' });
     this.rowsLayer = this.spacerEl.createDiv({ cls: 'tct-rows' });
     this.emptyEl = this.root.createDiv({ cls: 'tct-empty' });
-    this.emptyEl.style.display = 'none';
+    this.emptyEl.addClass('tc-hidden');
 
     this.scrollEl.addEventListener('scroll', this.onScroll);
   }
@@ -173,8 +173,8 @@ export class TagTable {
     this.spacerEl.style.height = `${total * ROW_HEIGHT}px`;
 
     if (total === 0) {
-      this.scrollEl.style.display = 'none';
-      this.emptyEl.style.display = '';
+      this.scrollEl.addClass('tc-hidden');
+      this.emptyEl.removeClass('tc-hidden');
       this.emptyEl.setText(
         this.model.activeFilter === 'all' &&
           this.model.activeRuleFilter === null
@@ -183,8 +183,8 @@ export class TagTable {
       );
       return;
     }
-    this.scrollEl.style.display = '';
-    this.emptyEl.style.display = 'none';
+    this.scrollEl.removeClass('tc-hidden');
+    this.emptyEl.addClass('tc-hidden');
 
     // Clamp scrollTop so a shrinking row set never leaves the viewport blank.
     const maxScroll = Math.max(0, total * ROW_HEIGHT - this.scrollEl.clientHeight);

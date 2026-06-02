@@ -151,7 +151,7 @@ export class TagListView extends ItemView {
 
     // Bulk actions bar (hidden when no selection).
     this.bulkBarEl = this.container.createDiv({ cls: 'tcl-bulk-bar' });
-    this.bulkBarEl.style.display = 'none';
+    this.bulkBarEl.addClass('tc-hidden');
     this.bulkCountEl = this.bulkBarEl.createSpan({ cls: 'tcl-bulk-count' });
     this.bulkBarEl.createDiv({ cls: 'tcl-bulk-spacer' });
     this.renderBulkButton('Hide', () => this.bulkAddDescription('hide-selected'));
@@ -228,7 +228,7 @@ export class TagListView extends ItemView {
       const tip = ic.createDiv({ cls: 'tcl-tip' });
       tip.setText(opts.tip);
     }
-    th.style.cursor = 'pointer';
+    th.addClass('tcl-sortable');
     th.addEventListener('click', () => {
       if (this.sortBy === key) {
         this.sortDesc = !this.sortDesc;
@@ -294,9 +294,7 @@ export class TagListView extends ItemView {
           ? 'No tags match the current filter.'
           : 'No tags yet. Start tagging notes to populate this list.',
       );
-      cell.style.textAlign = 'center';
-      cell.style.color = 'var(--text-faint)';
-      cell.style.padding = '20px';
+      cell.addClass('tcl-empty-cell');
     } else {
       for (const r of this.rows) this.renderRow(r);
     }
@@ -419,10 +417,10 @@ export class TagListView extends ItemView {
   private refreshBulkBar(): void {
     const count = this.selected.size;
     if (count === 0) {
-      this.bulkBarEl.style.display = 'none';
+      this.bulkBarEl.addClass('tc-hidden');
       return;
     }
-    this.bulkBarEl.style.display = '';
+    this.bulkBarEl.removeClass('tc-hidden');
     this.bulkCountEl.setText(
       `${count} selected of ${this.rows.length} on this page`,
     );
