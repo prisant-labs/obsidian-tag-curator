@@ -663,6 +663,37 @@ settings:
   color: var(--text-muted);
   cursor: pointer;
 }
+.tc-pill {
+  font-size: 10px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-weight: 600;
+  margin-left: 8px;
+  vertical-align: middle;
+}
+.tc-pill-active {
+  background: rgba(103, 211, 145, 0.15);
+  color: var(--text-success);
+}
+.tc-pill-warn {
+  background: rgba(245, 201, 124, 0.16);
+  color: var(--text-warning);
+}
+.tc-pill-muted {
+  background: var(--background-modifier-border);
+  color: var(--text-faint);
+}
+.tc-action-link {
+  font-size: 11.5px;
+  margin-left: 8px;
+  color: var(--text-accent);
+  cursor: pointer;
+}
+.tc-action-link:hover {
+  text-decoration: underline;
+}
 .tcst-more-link:hover {
   color: var(--text-normal);
   text-decoration: underline;
