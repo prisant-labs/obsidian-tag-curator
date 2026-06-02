@@ -30,6 +30,8 @@ type WorkspaceMode = 'tags' | 'rules';
 export interface CurationWorkspaceOptions {
   /** When true, the table opens pre-filtered to currently non-shown tags. */
   hiddenOnly?: boolean;
+  /** When set, the table opens pre-filtered to a single rule or preset id. */
+  ruleId?: string;
 }
 
 export class CurationWorkspaceView extends ItemView {
@@ -137,6 +139,14 @@ export class CurationWorkspaceView extends ItemView {
     // This intent targets the tag table; ensure it is the active surface.
     if (this.mode !== 'tags') this.setMode('tags');
     this.model.setFilter(v ? 'hidden' : 'all');
+    this.refresh();
+  }
+
+  /** Pre-filter the table to a single rule or preset (settings deep-link intent). */
+  setRuleFilter(ruleId: string): void {
+    if (this.mode !== 'tags') this.setMode('tags');
+    this.model.setFilter('all');
+    this.model.setRuleFilter(ruleId);
     this.refresh();
   }
 

@@ -400,29 +400,28 @@ export class TagCuratorSettingTab extends PluginSettingTab {
 
     for (const preset of PRESETS) {
       const card = panel.createDiv({ cls: 'tcst-preset' });
-      this.renderInlineToggle(card, enabled.has(preset.id), async (next) => {
-        await this.plugin.settingsManager.setPresetEnabled(preset.id, next);
-      });
+      const isOn = enabled.has(preset.id);
       const body = card.createDiv({ cls: 'tcst-preset-body' });
       const head = body.createDiv({ cls: 'tcst-preset-head' });
       head.createDiv({ cls: 'tcst-preset-nm', text: preset.name });
-      const pill = head.createSpan({ cls: 'tcst-pill', text: 'built-in' });
-      void pill;
+      head.createSpan({ cls: 'tcst-pill', text: 'built-in' });
       body.createDiv({ cls: 'tcst-preset-dsc', text: preset.description });
 
       const affected = this.countAffectedTags(preset.rule.match);
       const meta = body.createDiv({ cls: 'tcst-preset-meta' });
-      if (enabled.has(preset.id)) {
-        meta.createSpan({
-          cls: 'tcst-affected',
-          text: `${affected} tags affected`,
-        });
-      } else {
-        meta.createSpan({
-          cls: 'tcst-affected tcst-affected-zero',
-          text: `would hide ${affected} tags`,
-        });
-      }
+      // The affected-count is a link that opens the panel filtered to this preset.
+      const affectedEl = meta.createEl('a', { cls: 'tcst-affected' });
+      const paintAffected = (on: boolean): void => {
+        affectedEl.toggleClass('tcst-affected-zero', !on);
+        affectedEl.setText(
+          on ? `${affected} tags affected` : `would hide ${affected} tags`,
+        );
+      };
+      paintAffected(isOn);
+      affectedEl.addEventListener('click', (e) => {
+        e.preventDefault();
+        void this.plugin.openCurationWorkspace({ ruleId: preset.id });
+      });
 
       const moreToggle = meta.createSpan({
         cls: 'tcst-more-link',
@@ -432,10 +431,17 @@ export class TagCuratorSettingTab extends PluginSettingTab {
       details.style.display = 'none';
       this.renderPresetDetails(details, preset);
       moreToggle.addEventListener('click', () => {
-        const isOpen = details.style.display !== 'none';
-        details.style.display = isOpen ? 'none' : '';
-        moreToggle.setText(isOpen ? 'More details' : 'Hide details');
+        const open = details.style.display !== 'none';
+        details.style.display = open ? 'none' : '';
+        moreToggle.setText(open ? 'More details' : 'Hide details');
       });
+
+      // Toggle on the left; flipping it updates the affected-count label live.
+      const toggle = this.renderInlineToggle(card, isOn, async (next) => {
+        await this.plugin.settingsManager.setPresetEnabled(preset.id, next);
+        paintAffected(next);
+      });
+      card.prepend(toggle);
     }
   }
 

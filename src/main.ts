@@ -407,6 +407,12 @@ export default class TagCuratorPlugin extends Plugin {
         (view as { setHiddenOnly: (v: boolean) => void }).setHiddenOnly(true);
       }
     }
+    if (opts?.ruleId) {
+      const view = leaf.view;
+      if (view && 'setRuleFilter' in view) {
+        (view as { setRuleFilter: (id: string) => void }).setRuleFilter(opts.ruleId);
+      }
+    }
   }
 
   /**
