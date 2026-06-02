@@ -428,11 +428,11 @@ export class TagCuratorSettingTab extends PluginSettingTab {
         text: 'More details',
       });
       const details = body.createDiv({ cls: 'tcst-preset-details' });
-      details.style.display = 'none';
+      details.addClass('tc-hidden');
       this.renderPresetDetails(details, preset);
       moreToggle.addEventListener('click', () => {
-        const open = details.style.display !== 'none';
-        details.style.display = open ? 'none' : '';
+        const open = !details.hasClass('tc-hidden');
+        details.toggleClass('tc-hidden', open);
         moreToggle.setText(open ? 'More details' : 'Hide details');
       });
 

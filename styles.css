@@ -1534,6 +1534,26 @@ settings:
   color: var(--text-normal);
   background: var(--background-modifier-hover);
 }
+/* Publish-readiness (Phase 8): static styling moved off inline el.style.*.
+   .tc-hidden replaces every style.display='none' show/hide toggle so themes
+   and snippets can restyle these surfaces. */
+.tc-hidden {
+  display: none !important;
+}
+.tcl-sortable {
+  cursor: pointer;
+}
+.tcl-empty-cell {
+  text-align: center;
+  color: var(--text-faint);
+  padding: 20px;
+}
+.tcr-confirm-foot {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+  margin-top: 16px;
+}
 
 /* Help icon variant used inside the rule editor */
 .tcr-help-ic {
@@ -1885,6 +1905,7 @@ settings:
 
 /* "Why is this affected?" popover (rowMenu). */
 .tct-why-pop {
+  position: fixed;
   z-index: var(--layer-popover, 100);
   max-width: 320px;
   padding: 10px 12px;

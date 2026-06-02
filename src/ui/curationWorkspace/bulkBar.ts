@@ -84,10 +84,10 @@ export class BulkBar {
   update(): void {
     const count = this.model.selection.size;
     if (count === 0) {
-      this.root.style.display = 'none';
+      this.root.addClass('tc-hidden');
       return;
     }
-    this.root.style.display = '';
+    this.root.removeClass('tc-hidden');
     this.countEl.setText(`${count} selected`);
 
     // Re-evaluate Tag Wrangler availability on every update so the button

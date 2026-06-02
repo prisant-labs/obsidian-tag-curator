@@ -41,11 +41,11 @@ export class StateBanner {
 
     this.root.empty();
     if (variant === null) {
-      this.root.style.display = 'none';
+      this.root.addClass('tc-hidden');
       this.root.removeAttribute('data-variant');
       return;
     }
-    this.root.style.display = '';
+    this.root.removeClass('tc-hidden');
     this.root.dataset.variant = variant;
 
     const icon = this.root.createDiv({ cls: 'sb-ic', text: '!' });

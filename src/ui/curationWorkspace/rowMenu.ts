@@ -152,7 +152,7 @@ function showWhyAffected(
   for (const line of detail) body.createDiv({ cls: 'tct-why-line', text: line });
 
   // Position near the click, then nudge back on-screen if it would overflow.
-  pop.style.position = 'fixed';
+  // position:fixed lives in .tct-why-pop; only the coordinates are dynamic.
   pop.style.left = `${evt.clientX}px`;
   pop.style.top = `${evt.clientY + 8}px`;
   const rect = pop.getBoundingClientRect();
@@ -163,10 +163,22 @@ function showWhyAffected(
     pop.style.top = `${Math.max(8, evt.clientY - rect.height - 8)}px`;
   }
 
+  // Single idempotent teardown. A closed flag plus the deferred-wire timer id
+  // mean listeners are never added after teardown (a rapid re-render could
+  // remove the popover within the same tick) and never double-removed. blur and
+  // resize also dismiss it, so the fixed-position popover cannot linger detached
+  // after a layout change.
+  let closed = false;
+  let wireTimer = 0;
   const close = (): void => {
+    if (closed) return;
+    closed = true;
+    window.clearTimeout(wireTimer);
     pop.remove();
     document.removeEventListener('mousedown', onDocMouseDown, true);
     document.removeEventListener('keydown', onKeyDown, true);
+    window.removeEventListener('blur', close);
+    window.removeEventListener('resize', close);
   };
   const onDocMouseDown = (e: MouseEvent): void => {
     if (!pop.contains(e.target as Node)) close();
@@ -176,8 +188,11 @@ function showWhyAffected(
   };
   // Defer wiring the outside-click listener so the click that opened the menu
   // does not immediately close the popover.
-  window.setTimeout(() => {
+  wireTimer = window.setTimeout(() => {
+    if (closed) return;
     document.addEventListener('mousedown', onDocMouseDown, true);
     document.addEventListener('keydown', onKeyDown, true);
+    window.addEventListener('blur', close);
+    window.addEventListener('resize', close);
   }, 0);
 }
