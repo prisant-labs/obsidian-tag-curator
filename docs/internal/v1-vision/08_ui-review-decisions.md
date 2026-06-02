@@ -191,6 +191,30 @@ Notes:
   it exists, and a manual smoke pass after each phase.
 - Phase 8 maps to `publish-plugin-planning.md` section 5; it can run independently of 1-7.
 
+### Status (implemented 2026-06-01)
+
+All phases are implemented on `feat/v1.0-curation-in-context`, each commit gated
+green (typecheck, lint `--max-warnings 0`, 250 tests, build):
+
+- Phase 1 Settings IA - `58f20da`
+- Phase 2 Scopes & integrations - `3cd8918`
+- Phase 3 Rule editor - `0df0a2d` (E1-E4: name-first title, type cards, anchored
+  New rule, collapsed cards) + `bc96762` (E5: preview accordion with key/value
+  detail + per-tag override pins)
+- Phase 4 Presets - `d2d3a56`
+- Phase 5 Welcome modal - `36cb393`
+- Phase 6 General + leaf name - `531223e`
+- Phase 7 CSS - folded into each feature phase; no standalone pass was needed.
+- Phase 8 Publish-readiness - `fa55e83` (every static / show-hide inline style
+  moved to a CSS class; `rowMenu` why-popover listener lifecycle hardened).
+  Remaining optional hygiene, not a submission blocker: unify the repeated
+  `app.plugins` `as unknown as {...}` casts (settingsTab, welcomeModal,
+  curationWorkspaceView) into one typed helper.
+
+The open decisions in sections 4-5 below are unchanged and still pending user
+direction (secondary-nav adoption, leaf-name final confirm, Astro docs page,
+`fundingUrl`, submit-now vs defer, `nnColorMirror`).
+
 ---
 
 ## 4. Secondary navigation: adopt or not (open)
