@@ -256,18 +256,12 @@ export class TagCuratorSettingTab extends PluginSettingTab {
 
     // Notebook Navigator - a plugin surface Tag Curator can curate; gated on detection.
     const nnHandle = detectNotebookNavigator(this.app);
+    const nnDisabled = nnHandle.status !== 'ready';
     let nnDesc = 'Curate the Notebook Navigator tag tree (runtime-interop only).';
-    let nnDisabled = false;
-    if (nnHandle.status === 'ready') {
-      nnDesc += ' Detected, API ' + (nnHandle.apiVersion ?? 'unknown') + '.';
-    } else if (nnHandle.status === 'absent') {
-      nnDesc += ' Not installed.';
-      nnDisabled = true;
-    } else {
+    if (nnHandle.status !== 'ready' && nnHandle.status !== 'absent') {
       nnDesc += ' Requires Notebook Navigator ' + MIN_API_VERSION + ' or newer.';
-      nnDisabled = true;
     }
-    new Setting(panel)
+    const nn = new Setting(panel)
       .setName('Notebook Navigator')
       .setDesc(nnDesc)
       .addToggle((t) => {
@@ -278,34 +272,106 @@ export class TagCuratorSettingTab extends PluginSettingTab {
             await this.plugin.settingsManager.setScopeEnabled('notebook-navigator', v);
           });
       });
+    if (nnHandle.status === 'ready') {
+      this.statusPill(nn, 'active', 'Active');
+    } else if (nnHandle.status === 'absent') {
+      this.statusPill(nn, 'muted', 'Not installed');
+      this.actionLink(nn, 'Install', () => this.openPluginSettings('community-plugins'));
+    } else {
+      this.statusPill(nn, 'warn', 'Update needed');
+      this.actionLink(nn, 'Update plugin', () =>
+        this.openPluginSettings('community-plugins'),
+      );
+    }
 
     // Optional capability integrations (no scope toggle; detected at runtime).
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const appPlugins = (this.app as any).plugins as
-      | { enabledPlugins?: Set<string>; manifests?: Record<string, unknown> }
-      | undefined;
-    const enabledPlugins: Set<string> = appPlugins?.enabledPlugins ?? new Set();
-    const allManifests: Record<string, unknown> = appPlugins?.manifests ?? {};
-    const twEnabled = enabledPlugins.has('tag-wrangler');
-    const twInstalled = 'tag-wrangler' in allManifests;
-    const twStatus = twEnabled
-      ? 'Enabled'
-      : twInstalled
-        ? 'Installed but disabled'
-        : 'Not installed';
-    new Setting(panel)
-      .setName('Tag Wrangler')
-      .setDesc(
-        'Delegate tag renaming to Tag Wrangler; "Send to Tag Wrangler" appears in the workspace when it is enabled. Status: ' +
-          twStatus +
-          '.',
-      );
+    this.renderCapabilityIntegration(
+      panel,
+      'tag-wrangler',
+      'Tag Wrangler',
+      'Delegate tag renaming; "Send to Tag Wrangler" appears in the panel when it is enabled.',
+    );
+    this.renderCapabilityIntegration(
+      panel,
+      'obsidian-style-settings',
+      'Style Settings',
+      'Restyle the flag color, background, and bold weight from a GUI. Built-in defaults apply otherwise.',
+    );
+  }
 
-    new Setting(panel)
-      .setName('Style Settings')
-      .setDesc(
-        'Restyle the flag color, background, and bold weight from a GUI when Style Settings is installed. Built-in defaults apply otherwise.',
-      );
+  // -----------------------------------------------------------------
+  // Integration status helpers (status pill + action link)
+  // -----------------------------------------------------------------
+
+  private renderCapabilityIntegration(
+    panel: HTMLElement,
+    pluginId: string,
+    name: string,
+    desc: string,
+  ): void {
+    const state = this.pluginState(pluginId);
+    const s = new Setting(panel).setName(name).setDesc(desc);
+    if (state === 'enabled') {
+      this.statusPill(s, 'active', 'Active');
+      this.actionLink(s, 'Open settings', () => this.openPluginSettings(pluginId));
+    } else if (state === 'installed') {
+      this.statusPill(s, 'warn', 'Disabled');
+      this.actionLink(s, 'Enable', () => this.openPluginSettings('community-plugins'));
+    } else {
+      this.statusPill(s, 'muted', 'Not installed');
+      this.actionLink(s, 'Install', () => this.openPluginSettings('community-plugins'));
+    }
+  }
+
+  private pluginState(pluginId: string): 'enabled' | 'installed' | 'missing' {
+    const plugins = (
+      this.app as unknown as {
+        plugins?: {
+          enabledPlugins?: Set<string>;
+          manifests?: Record<string, unknown>;
+        };
+      }
+    ).plugins;
+    if (!plugins) return 'missing';
+    if (plugins.enabledPlugins?.has(pluginId)) return 'enabled';
+    if (plugins.manifests && pluginId in plugins.manifests) return 'installed';
+    return 'missing';
+  }
+
+  private statusPill(
+    setting: Setting,
+    kind: 'active' | 'warn' | 'muted',
+    text: string,
+  ): void {
+    const pill = setting.nameEl.createSpan({ cls: 'tc-pill', text });
+    pill.addClass(
+      kind === 'active'
+        ? 'tc-pill-active'
+        : kind === 'warn'
+          ? 'tc-pill-warn'
+          : 'tc-pill-muted',
+    );
+  }
+
+  private actionLink(setting: Setting, label: string, onClick: () => void): void {
+    const link = setting.nameEl.createEl('a', {
+      cls: 'tc-action-link',
+      text: label,
+    });
+    link.addEventListener('click', (e) => {
+      e.preventDefault();
+      onClick();
+    });
+  }
+
+  private openPluginSettings(tabId: string): void {
+    const setting = (
+      this.app as unknown as {
+        setting?: { open?: () => void; openTabById?: (id: string) => void };
+      }
+    ).setting;
+    setting?.open?.();
+    setting?.openTabById?.(tabId);
   }
 
   // -----------------------------------------------------------------
