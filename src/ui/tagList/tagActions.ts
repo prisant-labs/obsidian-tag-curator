@@ -24,8 +24,8 @@ export interface TagActionsHost {
    * ahead of rules; see SettingsManager.setOverride / RuleEngine.resolveVisibility.
    */
   setOverride(tag: string, value: TagOverride | null): void | Promise<void>;
-  /** Persist a per-tag reviewed flag (the triage inbox). Keys carry no leading '#'. */
-  setReviewed(tag: string, value: boolean): void | Promise<void>;
+  /** Persist a per-tag reviewed flag for many tags in one batched write. Keys carry no leading '#'. */
+  setReviewedBulk(tags: string[], value: boolean): void | Promise<void>;
 }
 
 export class TagActions {
@@ -55,9 +55,7 @@ export class TagActions {
   }
 
   async markReviewed(tags: string[], value: boolean): Promise<VisibilityResult> {
-    for (const tag of tags) {
-      await this.hostApi.setReviewed(tag, value);
-    }
+    await this.hostApi.setReviewedBulk(tags, value);
     return { applied: tags.length, deferred: 0 };
   }
 

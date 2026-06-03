@@ -362,6 +362,73 @@ describe('TagMetaManager.setReviewed', () => {
   });
 });
 
+describe('TagMetaManager.setReviewedBulk', () => {
+  it('marks multiple present tags and fires changed exactly once', () => {
+    const app = makeApp();
+    const a = addFile(app, 'a.md', ['alpha']);
+    const b = addFile(app, 'b.md', ['beta']);
+    const mgr = new TagMetaManager(app as never, makePlugin());
+    mgr.indexFile(a);
+    mgr.indexFile(b);
+
+    let fired = 0;
+    mgr.on('changed', () => {
+      fired += 1;
+    });
+
+    mgr.setReviewedBulk(['alpha', 'beta'], true);
+    expect(mgr.get('alpha')?.reviewed).toBe(true);
+    expect(mgr.get('beta')?.reviewed).toBe(true);
+    expect(fired).toBe(1);
+  });
+
+  it('fires zero changed events when all tags are absent', () => {
+    const app = makeApp();
+    const mgr = new TagMetaManager(app as never, makePlugin());
+
+    let fired = 0;
+    mgr.on('changed', () => {
+      fired += 1;
+    });
+
+    mgr.setReviewedBulk(['ghost', 'phantom'], true);
+    expect(fired).toBe(0);
+  });
+
+  it('fires zero changed events when all tags are already at the target value', () => {
+    const app = makeApp();
+    const file = addFile(app, 'a.md', ['alpha']);
+    const mgr = new TagMetaManager(app as never, makePlugin());
+    mgr.indexFile(file);
+    mgr.setReviewedBulk(['alpha'], true);
+
+    let fired = 0;
+    mgr.on('changed', () => {
+      fired += 1;
+    });
+
+    mgr.setReviewedBulk(['alpha'], true);
+    expect(fired).toBe(0);
+  });
+
+  it('skips absent tags and still marks and fires for present ones', () => {
+    const app = makeApp();
+    const file = addFile(app, 'a.md', ['real']);
+    const mgr = new TagMetaManager(app as never, makePlugin());
+    mgr.indexFile(file);
+
+    let fired = 0;
+    mgr.on('changed', () => {
+      fired += 1;
+    });
+
+    mgr.setReviewedBulk(['real', 'ghost'], true);
+    expect(mgr.get('real')?.reviewed).toBe(true);
+    expect(mgr.get('ghost')).toBeUndefined();
+    expect(fired).toBe(1);
+  });
+});
+
 describe('TagMetaManager.unload', () => {
   it('flushes pending changes synchronously and clears the timer', async () => {
     const app = makeApp();
