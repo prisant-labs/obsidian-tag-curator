@@ -507,3 +507,56 @@ describe('SettingsManager.setPaneEnabled', () => {
     expect(mgr.get().paneEnabled).toBe(true);
   });
 });
+
+describe('SettingsManager.load - v6 to v7 migration (tableColumns)', () => {
+  // A v6 fixture must NOT carry tableColumns so the migration is what fills it.
+  function v6Fixture(extra: Record<string, unknown> = {}): unknown {
+    const v6 = { ...DEFAULT_SETTINGS, schemaVersion: 6 } as Record<string, unknown>;
+    delete v6.tableColumns;
+    return { ...v6, ...extra };
+  }
+
+  it('defaults tableColumns with all three optional columns on when absent', async () => {
+    const mgr = new SettingsManager(pluginWith(v6Fixture()));
+    await mgr.load();
+    expect(mgr.get().schemaVersion).toBe(SCHEMA_VERSION);
+    expect(mgr.get().tableColumns).toEqual({ lastSeen: true, source: true, rule: true });
+  });
+
+  it('preserves an explicit tableColumns map across migration', async () => {
+    const fixture = v6Fixture({ tableColumns: { lastSeen: false, source: true, rule: false } });
+    const mgr = new SettingsManager(pluginWith(fixture));
+    await mgr.load();
+    expect(mgr.get().tableColumns).toEqual({ lastSeen: false, source: true, rule: false });
+  });
+
+  it('repairs a malformed (array) tableColumns to the default map', async () => {
+    const fixture = v6Fixture({ tableColumns: [] as unknown });
+    const mgr = new SettingsManager(pluginWith(fixture));
+    await mgr.load();
+    expect(mgr.get().tableColumns).toEqual(DEFAULT_SETTINGS.tableColumns);
+  });
+
+  it('persists the v7 schemaVersion + tableColumns to disk', async () => {
+    const plugin = pluginWith(v6Fixture());
+    const mgr = new SettingsManager(plugin);
+    await mgr.load();
+    const onDisk = plugin.data as { schemaVersion: number; tableColumns?: unknown };
+    expect(onDisk.schemaVersion).toBe(SCHEMA_VERSION);
+    expect(onDisk.tableColumns).toEqual({ lastSeen: true, source: true, rule: true });
+  });
+});
+
+describe('SettingsManager.setTableColumns', () => {
+  it('replaces the column map and persists', async () => {
+    const plugin = pluginWith(null);
+    const mgr = new SettingsManager(plugin);
+    await mgr.load();
+    expect(mgr.get().tableColumns).toEqual({ lastSeen: true, source: true, rule: true });
+    await mgr.setTableColumns({ lastSeen: false, source: false, rule: true });
+    expect(mgr.get().tableColumns).toEqual({ lastSeen: false, source: false, rule: true });
+    expect(
+      (plugin.data as { tableColumns: { lastSeen: boolean } }).tableColumns.lastSeen,
+    ).toBe(false);
+  });
+});

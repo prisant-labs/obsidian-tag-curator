@@ -1,4 +1,4 @@
-export const SCHEMA_VERSION = 6;
+export const SCHEMA_VERSION = 7;
 
 export type Mode = 'default' | 'allow-only' | 'inbox';
 
@@ -51,6 +51,18 @@ export type TagSource = 'frontmatter' | 'inline';
  */
 export type TagOverride = 'show' | 'hide';
 
+/**
+ * Which optional data columns the tag table shows (2-5). Tag, Count, and
+ * Visible are always shown; these three are user-toggleable via the column
+ * selector and persisted so the choice sticks across remounts. Applies to both
+ * surfaces that host the table (the Curate Tags settings tab and the pane).
+ */
+export interface TableColumnPrefs {
+  lastSeen: boolean;
+  source: boolean;
+  rule: boolean;
+}
+
 export interface TagMeta {
   tag: string;
   firstSeen: number;
@@ -95,6 +107,9 @@ export interface TagCuratorSettings {
   // always lives in the Curate Tags settings tab; this only governs the sidebar
   // leaf, its ribbon icon, and the open-pane commands. Schema v6 added this.
   paneEnabled: boolean;
+  // Which optional tag-table columns are visible (2-5). Shared by both table
+  // surfaces. Schema v7 added this; v6->v7 defaults all three on.
+  tableColumns: TableColumnPrefs;
 }
 
 export const DEFAULT_SETTINGS: TagCuratorSettings = {
@@ -117,6 +132,7 @@ export const DEFAULT_SETTINGS: TagCuratorSettings = {
   seenWelcomeModal: false,
   seenNnTooOldNotice: false,
   paneEnabled: true,
+  tableColumns: { lastSeen: true, source: true, rule: true },
   debugLog: false,
   sidecarDebounceMs: 5000,
 };

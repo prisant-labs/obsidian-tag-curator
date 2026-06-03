@@ -11,9 +11,10 @@ import TagCuratorPlugin from '../main';
 import { PRESETS, resolveActiveRules } from '../engine/presets';
 import { RuleEditor } from './ruleEditor';
 import { StateBanner } from './stateBanner';
-import { Mode } from '../types';
+import { Mode, Rule } from '../types';
 import { detectNotebookNavigator, MIN_API_VERSION } from '../integrations/notebookNavigator';
 import { TagTable } from './curationWorkspace/tagTable';
+import { TagListModel } from './tagList/tagListModel';
 import { makeTagTableDeps } from './tagList/tagTableDeps';
 
 type TabId = 'general' | 'curate' | 'scopes' | 'presets' | 'custom' | 'advanced' | 'help';
@@ -34,9 +35,16 @@ export class TagCuratorSettingTab extends PluginSettingTab {
   private tabBar: HTMLElement | null = null;
   private panelHost: HTMLElement | null = null;
   private curateTable: TagTable | null = null;
+  private curateModel: TagListModel | null = null;
   private curateOffSettings: (() => void) | null = null;
   private curateMetaRef: EventRef | null = null;
   private ruleEditor: RuleEditor | null = null;
+  // The rule id the Curate Tags table is filtered to (null = all tags). Driven
+  // by the "Filter by rule" selector and by a Presets deep-link (3-1).
+  private curateRuleFilter: string | null = null;
+  // Set by a Presets "N tags affected" click just before switching tabs;
+  // consumed once on the next renderCurate so the table opens pre-filtered.
+  private pendingRuleFilter: string | null = null;
 
   constructor(app: App, plugin: TagCuratorPlugin) {
     super(app, plugin);
@@ -106,6 +114,7 @@ export class TagCuratorSettingTab extends PluginSettingTab {
     }
     this.curateTable?.destroy();
     this.curateTable = null;
+    this.curateModel = null;
   }
 
   // -----------------------------------------------------------------
@@ -150,32 +159,32 @@ export class TagCuratorSettingTab extends PluginSettingTab {
   private renderGeneral(panel: HTMLElement): void {
     const s = this.plugin.settingsManager.get();
     const meta = this.plugin.tagMetaManager.all();
-    const ruleCount = resolveActiveRules(s).length;
-    const hiddenCount = this.plugin.curatedCount();
+    // The curation-state cards reflect what is actually in effect: when the
+    // master switch is off, nothing is curated, so they read 0 (matching the
+    // status bar's "off"). Total tags / Orphans stay - those are vault facts,
+    // not curation state (1-3).
+    const ruleCount = s.enabled ? resolveActiveRules(s).length : 0;
+    const hiddenCount = s.enabled ? this.plugin.curatedCount() : 0;
     let orphanCount = 0;
     for (const m of meta.values()) {
       if (m.count <= 1) orphanCount += 1;
     }
 
-    new Setting(panel)
-      .setName('Enable Tag Curator Pane')
-      .setDesc(
-        'Also surface curation as a dockable sidebar pane you can keep open beside the native tag pane. Curation always lives in the Curate Tags tab; this adds the docked option.',
-      )
-      .addToggle((t) =>
-        t.setValue(this.plugin.settingsManager.get().paneEnabled).onChange(async (v) => {
-          await this.plugin.settingsManager.setPaneEnabled(v);
-          this.plugin.applyPaneEnabled();
-        }),
-      );
-
-    // Stats header.
+    // Stats header on top (1-1).
     const stats = panel.createDiv({ cls: 'tcst-stats' });
     this.renderStatCard(stats, 'Total tags', meta.size);
-    this.renderStatCard(stats, 'Hidden now', hiddenCount, 'accent');
+    // In preview mode the curated set is flagged in place, not hidden, so the
+    // card labels itself honestly rather than always saying "Hidden now".
+    this.renderStatCard(
+      stats,
+      s.enabled && s.previewMode ? 'Flagged now' : 'Hidden now',
+      hiddenCount,
+      'accent',
+    );
     this.renderStatCard(stats, 'Active rules', ruleCount);
     this.renderStatCard(stats, 'Orphans', orphanCount);
 
+    // Master switch first, then the opt-in pane beneath it (1-1).
     new Setting(panel)
       .setName('Enable Tag Curator')
       .setDesc(
@@ -184,6 +193,20 @@ export class TagCuratorSettingTab extends PluginSettingTab {
       .addToggle((t) =>
         t.setValue(s.enabled).onChange(async (v) => {
           await this.plugin.settingsManager.setEnabled(v);
+          // Re-render so the stat cards reflect the new on/off state at once.
+          this.display();
+        }),
+      );
+
+    new Setting(panel)
+      .setName('Enable Tag Curator Pane')
+      .setDesc(
+        'Also surface curation as a dockable sidebar pane you can keep open beside the native tag pane. Curation always lives in the Curate Tags tab; this adds the docked option.',
+      )
+      .addToggle((t) =>
+        t.setValue(s.paneEnabled).onChange(async (v) => {
+          await this.plugin.settingsManager.setPaneEnabled(v);
+          this.plugin.applyPaneEnabled();
         }),
       );
 
@@ -195,6 +218,8 @@ export class TagCuratorSettingTab extends PluginSettingTab {
       .addToggle((t) =>
         t.setValue(s.previewMode).onChange(async (v) => {
           await this.plugin.settingsManager.setPreviewMode(v);
+          // Refresh so the "Hidden now" / "Flagged now" card relabels live.
+          this.display();
         }),
       );
 
@@ -202,7 +227,7 @@ export class TagCuratorSettingTab extends PluginSettingTab {
     new Setting(panel)
       .setName('Run panic disable')
       .setDesc(
-        'One-shot action that instantly removes every DOM effect (un-hides all tags), turns the plugin off, and runs cleanup. Works even if these settings fail to load. Fully reversible: nothing in your notes is touched. The result is a "Tag Curator is off" state - shown as a persistent banner above every Tag Curator surface until you re-enable.',
+        'One-shot hard reset: instantly un-hides every tag across all surfaces and sweeps the document even if a scope is wedged, then turns the plugin off. Goes further than the master toggle, which only flips the switch. Fully reversible: nothing in your notes is touched. Leaves a "Tag Curator is off" banner until you re-enable.',
       )
       .addButton((b) =>
         b
@@ -225,10 +250,11 @@ export class TagCuratorSettingTab extends PluginSettingTab {
     v.setText(typeof value === 'number' ? value.toLocaleString() : value);
   }
 
-  private async runPanicDisable(): Promise<void> {
-    this.plugin.tagPaneObserver.setEnabled(false);
-    await this.plugin.settingsManager.setEnabled(false);
-    new Notice('Tag Curator: panic disable activated. All DOM effects removed.');
+  private runPanicDisable(): void {
+    // Call the SAME hard-reset the command uses (full observer disable + DOM
+    // sweep), not a weaker local duplicate (1-2). It flips enabled off, so the
+    // re-render shows the "off" banner and zeroed curation stats.
+    this.plugin.panicDisable();
     this.display();
   }
 
@@ -239,14 +265,58 @@ export class TagCuratorSettingTab extends PluginSettingTab {
   private renderCurate(panel: HTMLElement): void {
     // Dispose any previous table and its subscriptions before (re)mounting.
     this.teardownCurate();
+
+    // A Presets "N tags affected" click (3-1) deep-links here with a pending
+    // rule id; consume it once so the table opens pre-filtered to that preset.
+    if (this.pendingRuleFilter !== null) {
+      this.curateRuleFilter = this.pendingRuleFilter;
+      this.pendingRuleFilter = null;
+    }
+
+    const activeRules = resolveActiveRules(this.plugin.settingsManager.get());
+    // Drop a filter that points at a rule no longer active (e.g. its preset was
+    // toggled off) so the table never shows a confusing empty result.
+    if (
+      this.curateRuleFilter &&
+      !activeRules.some((r) => r.id === this.curateRuleFilter)
+    ) {
+      this.curateRuleFilter = null;
+    }
+
+    this.renderCurateFilterBar(panel, activeRules);
+
     const host = panel.createDiv({ cls: 'tcst-curate-host' });
     const deps = makeTagTableDeps(this.plugin, this.app, () => this.curateTable?.refresh());
+    this.curateModel = deps.model;
+    deps.model.setRuleFilter(this.curateRuleFilter);
     this.curateTable = new TagTable(host, deps.model, deps.actions, deps.host);
     // Subscribe to shared state so the table live-updates from external changes
     // (e.g. a rule toggle in the workspace, a metadata rescan) - F-1.
     const refreshCurate = (): void => { this.curateTable?.refresh(); };
     this.curateOffSettings = this.plugin.settingsManager.onChange(refreshCurate);
     this.curateMetaRef = this.plugin.tagMetaManager.on('changed', refreshCurate);
+  }
+
+  /**
+   * The "Filter by rule" selector above the Curate Tags table (3-1). Lists every
+   * active rule (enabled presets + enabled custom rules, the exact set the engine
+   * applies) plus an "All tags" reset. Picking one narrows the table to the tags
+   * that rule affects; this is the selector the deep-link from Presets needed.
+   */
+  private renderCurateFilterBar(panel: HTMLElement, activeRules: Rule[]): void {
+    const bar = panel.createDiv({ cls: 'tcst-curate-filterbar' });
+    bar.createSpan({ cls: 'tcst-curate-filterlabel', text: 'Filter by rule' });
+    const sel = bar.createEl('select', { cls: 'dropdown tcst-curate-ruleselect' });
+    sel.createEl('option', { value: '', text: 'All tags' });
+    for (const r of activeRules) {
+      sel.createEl('option', { value: r.id, text: r.name });
+    }
+    sel.value = this.curateRuleFilter ?? '';
+    sel.addEventListener('change', () => {
+      this.curateRuleFilter = sel.value || null;
+      this.curateModel?.setRuleFilter(this.curateRuleFilter);
+      this.curateTable?.refresh();
+    });
   }
 
   // -----------------------------------------------------------------
@@ -461,7 +531,17 @@ export class TagCuratorSettingTab extends PluginSettingTab {
       paintAffected(isOn);
       affectedEl.addEventListener('click', (e) => {
         e.preventDefault();
-        void this.plugin.openCurationWorkspace({ ruleId: preset.id });
+        // Only navigate when the preset is active: its rule is then in the
+        // engine, so the Curate Tags filter has tags to show. When off, the
+        // "would hide N tags" label is informational, not a link (3-1).
+        if (!this.plugin.settingsManager.get().enabledPresets.includes(preset.id)) {
+          return;
+        }
+        // Stay inside Settings: jump to the Curate Tags tab pre-filtered to this
+        // preset instead of opening the pane behind the Settings window.
+        this.pendingRuleFilter = preset.id;
+        this.activeTab = 'curate';
+        this.display();
       });
 
       const moreToggle = meta.createSpan({
