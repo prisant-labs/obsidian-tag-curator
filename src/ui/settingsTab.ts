@@ -14,7 +14,7 @@ import { StateBanner } from './stateBanner';
 import { Mode } from '../types';
 import { detectNotebookNavigator, MIN_API_VERSION } from '../integrations/notebookNavigator';
 
-type TabId = 'general' | 'scopes' | 'rules' | 'advanced' | 'help';
+type TabId = 'general' | 'scopes' | 'presets' | 'custom' | 'advanced' | 'help';
 
 interface TabDescriptor {
   id: TabId;
@@ -98,11 +98,18 @@ export class TagCuratorSettingTab extends PluginSettingTab {
         render: (p) => this.renderScopes(p),
       },
       {
-        id: 'rules',
-        label: 'Rules',
-        badge: String(PRESETS.length + customCount),
+        id: 'presets',
+        label: 'Presets',
+        badge: String(PRESETS.length),
         badgeKind: 'count',
-        render: (p) => this.renderRules(p),
+        render: (p) => this.renderPresetsTab(p),
+      },
+      {
+        id: 'custom',
+        label: 'Custom rules',
+        badge: String(customCount),
+        badgeKind: 'count',
+        render: (p) => this.renderCustomRules(p),
       },
       { id: 'advanced', label: 'Advanced', render: (p) => this.renderAdvanced(p) },
       { id: 'help', label: 'Help', render: (p) => this.renderHelp(p) },
@@ -382,14 +389,12 @@ export class TagCuratorSettingTab extends PluginSettingTab {
   }
 
   // -----------------------------------------------------------------
-  // Rules (Presets + Custom rules)
+  // Presets tab
   // -----------------------------------------------------------------
 
-  private renderRules(panel: HTMLElement): void {
+  private renderPresetsTab(panel: HTMLElement): void {
     new Setting(panel).setName('Presets').setHeading();
     this.renderPresets(panel);
-    new Setting(panel).setName('Custom rules').setHeading();
-    this.renderCustomRules(panel);
   }
 
   // -----------------------------------------------------------------
