@@ -13,8 +13,10 @@ import { RuleEditor } from './ruleEditor';
 import { StateBanner } from './stateBanner';
 import { Mode } from '../types';
 import { detectNotebookNavigator, MIN_API_VERSION } from '../integrations/notebookNavigator';
+import { TagTable } from './curationWorkspace/tagTable';
+import { makeTagTableDeps } from './tagList/tagTableDeps';
 
-type TabId = 'general' | 'scopes' | 'presets' | 'custom' | 'advanced' | 'help';
+type TabId = 'general' | 'curate' | 'scopes' | 'presets' | 'custom' | 'advanced' | 'help';
 
 interface TabDescriptor {
   id: TabId;
@@ -31,6 +33,7 @@ export class TagCuratorSettingTab extends PluginSettingTab {
   private banner: StateBanner | null = null;
   private tabBar: HTMLElement | null = null;
   private panelHost: HTMLElement | null = null;
+  private curateTable: TagTable | null = null;
 
   constructor(app: App, plugin: TagCuratorPlugin) {
     super(app, plugin);
@@ -41,6 +44,10 @@ export class TagCuratorSettingTab extends PluginSettingTab {
     const { containerEl } = this;
     containerEl.empty();
     containerEl.addClass('tag-curator-settings');
+
+    // Tear down the curate table before rebuilding DOM (avoids leaked scroll listeners).
+    this.curateTable?.destroy();
+    this.curateTable = null;
 
     // Persistent state banner above everything (D-007).
     if (this.banner) {
@@ -76,6 +83,8 @@ export class TagCuratorSettingTab extends PluginSettingTab {
   }
 
   hide(): void {
+    this.curateTable?.destroy();
+    this.curateTable = null;
     if (this.banner) {
       this.banner.destroy();
       this.banner = null;
@@ -92,6 +101,7 @@ export class TagCuratorSettingTab extends PluginSettingTab {
 
     return [
       { id: 'general', label: 'General', render: (p) => this.renderGeneral(p) },
+      { id: 'curate', label: 'Curate Tags', render: (p) => this.renderCurate(p) },
       {
         id: 'scopes',
         label: 'Scopes & integrations',
@@ -213,6 +223,17 @@ export class TagCuratorSettingTab extends PluginSettingTab {
     await this.plugin.settingsManager.setEnabled(false);
     new Notice('Tag Curator: panic disable activated. All DOM effects removed.');
     this.display();
+  }
+
+  // -----------------------------------------------------------------
+  // Curate Tags - always-Manage grid
+  // -----------------------------------------------------------------
+
+  private renderCurate(panel: HTMLElement): void {
+    this.curateTable?.destroy();
+    const host = panel.createDiv({ cls: 'tcst-curate-host' });
+    const deps = makeTagTableDeps(this.plugin, this.app, () => this.curateTable?.refresh());
+    this.curateTable = new TagTable(host, deps.model, deps.actions, deps.host);
   }
 
   // -----------------------------------------------------------------

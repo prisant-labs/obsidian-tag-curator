@@ -400,3 +400,7 @@ The plugin is **not** desktop-only (`isDesktopOnly: false`), so mobile must work
 ### 20. Bulk bar: Mark reviewed
 
 - [ ] Select 2 or more tags, click Mark reviewed in the bulk bar: all selected tags leave the Unreviewed filter.
+
+### 21. Settings Curate Tags tab
+
+- [ ] Settings -> Curate Tags shows the full Manage grid (search, chips, selection, bulk bar, row menu, virtual scroll). Switching to another tab and back, and closing/reopening Settings, does not duplicate rows or leak scroll listeners.
