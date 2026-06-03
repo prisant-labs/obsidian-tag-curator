@@ -392,3 +392,7 @@ The plugin is **not** desktop-only (`isDesktopOnly: false`), so mobile must work
 ### 18. Workspace toolbar layout
 
 - [ ] Workspace toolbar shows the search box on top and the filter chips on their own row directly beneath it (not side by side).
+
+### 19. Row menu: Mark reviewed / Mark unreviewed
+
+- [ ] Row menu shows "Mark reviewed"; after clicking it, re-opening the same row's menu shows "Mark unreviewed", and the tag leaves the Unreviewed filter.

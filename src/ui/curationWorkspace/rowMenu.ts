@@ -69,6 +69,18 @@ export function openRowMenu(
   }
 
   menu.addSeparator();
+  const isReviewed = Boolean(host.getMeta().get(tag)?.reviewed);
+  menu.addItem((item) =>
+    item
+      .setTitle(isReviewed ? 'Mark unreviewed' : 'Mark reviewed')
+      .setIcon(isReviewed ? 'rotate-ccw' : 'check')
+      .onClick(async () => {
+        await actions.markReviewed([tag], !isReviewed);
+        host.requestRefresh();
+      }),
+  );
+
+  menu.addSeparator();
   menu.addItem((item) =>
     item
       .setTitle('Why is this affected?')
