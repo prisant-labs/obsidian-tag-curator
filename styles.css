@@ -2094,3 +2094,7 @@ settings:
 .tcst-cmd-table td { padding: 4px 8px; border-bottom: 1px solid var(--background-modifier-border); vertical-align: top; }
 .tcst-cmd-table td.tcst-cmd { font-weight: 600; color: var(--text-normal); white-space: nowrap; width: 1%; }
 .tcst-cmd-table td.tcst-cmd-d { color: var(--text-muted); }
+
+/* Reviewed-state row marker in the tag name cell */
+.tct-reviewed-mark { margin-left: 6px; color: var(--text-success); opacity: 0.7; }
+.tct-reviewed-mark svg { width: 13px; height: 13px; }

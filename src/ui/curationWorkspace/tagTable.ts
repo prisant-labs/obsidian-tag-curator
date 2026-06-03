@@ -257,6 +257,12 @@ export class TagTable {
     // Tag name.
     const nameCell = tr.createDiv({ cls: 'tct-cell tct-cell-name' });
     nameCell.createSpan({ cls: 'tct-tagname', text: '#' + row.meta.tag });
+    if (row.meta.reviewed) {
+      const mark = nameCell.createSpan({ cls: 'tct-reviewed-mark' });
+      mark.setAttribute('aria-label', 'Reviewed');
+      mark.setAttribute('title', 'Reviewed');
+      setIcon(mark, 'check');
+    }
 
     // Count.
     tr.createDiv({ cls: 'tct-cell tct-cell-count', text: String(row.meta.count) });
