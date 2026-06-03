@@ -6,7 +6,7 @@ function host(overrides: Partial<TagActionsHost> = {}): TagActionsHost {
     isPluginEnabled: () => true,
     executeCommand: () => true,
     setOverride: () => {},
-    setReviewed: () => {},
+    setReviewedBulk: () => {},
     ...overrides,
   };
 }
@@ -111,39 +111,43 @@ describe('TagActions visibility and bulk', () => {
 });
 
 describe('TagActions markReviewed', () => {
-  it('markReviewed calls setReviewed once per tag and returns applied count', async () => {
-    const calls: Array<[string, boolean]> = [];
+  it('markReviewed calls setReviewedBulk once with the full array and returns applied count', async () => {
+    const calls: Array<[string[], boolean]> = [];
     const actions = new TagActions(
-      host({ setReviewed: (tag, value) => void calls.push([tag, value]) }),
+      host({ setReviewedBulk: (tags, value) => void calls.push([tags, value]) }),
     );
     expect(await actions.markReviewed(['a', 'b'], true)).toEqual({ applied: 2, deferred: 0 });
-    expect(calls).toEqual([['a', true], ['b', true]]);
+    expect(calls).toHaveLength(1);
+    expect(calls[0]).toEqual([['a', 'b'], true]);
   });
 
-  it('markReviewed with false marks tags as unreviewed', async () => {
-    const calls: Array<[string, boolean]> = [];
+  it('markReviewed with false calls setReviewedBulk once with false', async () => {
+    const calls: Array<[string[], boolean]> = [];
     const actions = new TagActions(
-      host({ setReviewed: (tag, value) => void calls.push([tag, value]) }),
+      host({ setReviewedBulk: (tags, value) => void calls.push([tags, value]) }),
     );
     expect(await actions.markReviewed(['a'], false)).toEqual({ applied: 1, deferred: 0 });
-    expect(calls).toEqual([['a', false]]);
+    expect(calls).toHaveLength(1);
+    expect(calls[0]).toEqual([['a'], false]);
   });
 
-  it('applyBulk routes mark-reviewed to markReviewed with true', async () => {
-    const calls: Array<[string, boolean]> = [];
+  it('applyBulk routes mark-reviewed to setReviewedBulk with true in one call', async () => {
+    const calls: Array<[string[], boolean]> = [];
     const actions = new TagActions(
-      host({ setReviewed: (tag, value) => void calls.push([tag, value]) }),
+      host({ setReviewedBulk: (tags, value) => void calls.push([tags, value]) }),
     );
     expect(await actions.applyBulk(['a', 'b'], 'mark-reviewed')).toEqual({ applied: 2, deferred: 0 });
-    expect(calls).toEqual([['a', true], ['b', true]]);
+    expect(calls).toHaveLength(1);
+    expect(calls[0]).toEqual([['a', 'b'], true]);
   });
 
-  it('applyBulk routes mark-unreviewed to markReviewed with false', async () => {
-    const calls: Array<[string, boolean]> = [];
+  it('applyBulk routes mark-unreviewed to setReviewedBulk with false in one call', async () => {
+    const calls: Array<[string[], boolean]> = [];
     const actions = new TagActions(
-      host({ setReviewed: (tag, value) => void calls.push([tag, value]) }),
+      host({ setReviewedBulk: (tags, value) => void calls.push([tags, value]) }),
     );
     expect(await actions.applyBulk(['a'], 'mark-unreviewed')).toEqual({ applied: 1, deferred: 0 });
-    expect(calls).toEqual([['a', false]]);
+    expect(calls).toHaveLength(1);
+    expect(calls[0]).toEqual([['a'], false]);
   });
 });
