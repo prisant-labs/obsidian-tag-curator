@@ -115,6 +115,9 @@ export class CurationWorkspaceView extends ItemView {
     // This intent targets the tag table; ensure it is the active surface.
     if (this.mode !== 'tags') this.setMode('tags');
     this.model.setFilter(v ? 'hidden' : 'all');
+    // Clear any rule filter from a prior preset deep-link so the status-bar
+    // hidden view shows ALL hidden tags, not a narrowed rule subset (F-3).
+    this.model.setRuleFilter(null);
     this.refresh();
   }
 
