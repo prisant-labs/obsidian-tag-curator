@@ -61,6 +61,9 @@ export function makeTagTableDeps(
       }).internalPlugins?.getPluginById?.('global-search')?.instance;
       search?.openGlobalSearch?.(`tag:#${tag}`);
     },
+    setColumns: (cols) => {
+      void plugin.settingsManager.setTableColumns(cols);
+    },
   };
 
   return { model, actions, host };

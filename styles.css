@@ -59,137 +59,6 @@ settings:
 
 */
 
-/* Tag List View */
-.tag-curator-list-header {
-  padding: 1rem;
-  border-bottom: 1px solid var(--divider-color);
-}
-
-.tag-curator-list-header h2 {
-  margin: 0;
-  font-size: 1.25rem;
-}
-
-.tag-curator-list-filter {
-  padding: 0.5rem 1rem;
-  background-color: var(--background-secondary);
-  border-bottom: 1px solid var(--divider-color);
-}
-
-.tag-curator-search {
-  width: 100%;
-  padding: 0.5rem;
-  border: 1px solid var(--input-border-color);
-  border-radius: 4px;
-  background-color: var(--background-primary);
-  color: var(--text-normal);
-}
-
-.tag-curator-table-wrapper {
-  overflow: auto;
-  padding: 0.5rem;
-}
-
-.tag-curator-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 0.85rem;
-}
-
-.tag-curator-table th {
-  background-color: var(--background-secondary);
-  border-bottom: 2px solid var(--divider-color);
-  padding: 0.5rem;
-  text-align: left;
-  font-weight: 600;
-  user-select: none;
-}
-
-.tag-curator-table th:hover {
-  background-color: var(--background-tertiary);
-}
-
-.tag-curator-table td {
-  padding: 0.5rem;
-  border-bottom: 1px solid var(--divider-color);
-}
-
-.tag-curator-table tr:hover {
-  background-color: var(--background-secondary);
-}
-
-.tag-curator-table tr.tag-hidden {
-  opacity: 0.6;
-}
-
-.tag-name-cell {
-  font-weight: 500;
-  color: var(--text-accent);
-}
-
-.tag-count-cell,
-.tag-date-cell {
-  text-align: center;
-}
-
-.tag-hidden-badge {
-  display: inline-block;
-  padding: 0.25rem 0.5rem;
-  border-radius: 3px;
-  background-color: var(--background-modifier-error);
-  color: var(--text-on-accent);
-  font-size: 0.75rem;
-  font-weight: 500;
-}
-
-.tag-visible-badge {
-  display: inline-block;
-  padding: 0.25rem 0.5rem;
-  border-radius: 3px;
-  background-color: var(--background-modifier-success);
-  color: var(--text-on-accent);
-  font-size: 0.75rem;
-  font-weight: 500;
-}
-
-.tag-curator-list-status {
-  padding: 1rem;
-  text-align: center;
-  color: var(--text-muted);
-  font-size: 0.85rem;
-  border-top: 1px solid var(--divider-color);
-}
-
-/* Settings */
-.tag-curator-about {
-  margin-top: 1rem;
-  padding: 1rem;
-  background-color: var(--background-secondary);
-  border-radius: 4px;
-}
-
-.tag-curator-about p {
-  margin: 0.5rem 0;
-  font-size: 0.85rem;
-  line-height: 1.5;
-}
-
-.tag-curator-links {
-  display: flex;
-  gap: 1rem;
-  margin-top: 1rem;
-}
-
-.tag-curator-links a {
-  color: var(--text-accent);
-  text-decoration: none;
-  border-bottom: 1px solid var(--text-accent);
-}
-
-.tag-curator-links a:hover {
-  text-decoration: underline;
-}
-
 /* =========================================================
  * State banner (D-007) - persistent above Tag Curator surfaces
  * whenever the plugin is in a non-default state.
@@ -212,12 +81,16 @@ settings:
 .tag-curator-state-banner[data-variant="preview"] .sb-msg {
   color: var(--text-warning);
 }
+/* Off state reads as a real callout (1-4): a distinct wash plus a left accent
+ * bar and a filled accent icon, so it does not blend into the panel like the
+ * old gray-on-gray strip. The accent draws the eye to the "Turn on" action. */
 .tag-curator-state-banner[data-variant="off"] {
-  background: var(--background-secondary);
+  background: var(--background-modifier-hover);
+  border-left: 3px solid var(--text-accent);
 }
 .tag-curator-state-banner[data-variant="off"] .sb-ic {
-  background: var(--text-faint);
-  color: var(--background-primary);
+  background: var(--text-accent);
+  color: var(--text-on-accent);
 }
 .tag-curator-state-banner[data-variant="off"] .sb-msg {
   color: var(--text-muted);
@@ -604,6 +477,21 @@ settings:
   margin: 8px 0 12px;
 }
 
+/* Curate Tags "Filter by rule" selector (3-1). */
+.tcst-curate-filterbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+.tcst-curate-filterlabel {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+.tcst-curate-ruleselect {
+  font-size: 12px;
+}
+
 /* Preset cards */
 .tcst-preset {
   display: flex;
@@ -809,235 +697,6 @@ settings:
 }
 .tcst-toggle.on::after {
   left: 19px;
-}
-
-/* =========================================================
- * Tag list view (D-007, D-011) - row-based, sortable, multi-select.
- * Used in both the sidebar leaf and the Settings tab.
- * ========================================================= */
-.tag-curator-list {
-  padding: 0;
-}
-.tag-curator-list .tag-curator-state-banner {
-  margin-bottom: 12px;
-}
-
-.tcl-header {
-  padding: 14px 16px 4px;
-}
-.tcl-header h2 {
-  margin: 0;
-  font-size: 18px;
-  font-weight: 700;
-}
-
-.tcl-toolbar {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  flex-wrap: wrap;
-  padding: 8px 16px 10px;
-}
-.tcl-search {
-  flex: 1;
-  min-width: 180px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  background: var(--background-modifier-form-field);
-  border: 1px solid var(--background-modifier-border);
-  border-radius: 7px;
-  padding: 6px 10px;
-}
-.tcl-search-ic {
-  color: var(--text-faint);
-  font-size: 12px;
-}
-.tcl-search input {
-  flex: 1;
-  background: transparent;
-  border: 0;
-  outline: 0;
-  color: var(--text-normal);
-  font-size: 13px;
-}
-.tcl-chip {
-  font-size: 12px;
-  padding: 5px 11px;
-  border-radius: 999px;
-  border: 1px solid var(--background-modifier-border);
-  background: var(--background-secondary);
-  color: var(--text-muted);
-  cursor: pointer;
-}
-.tcl-chip.active {
-  background: rgba(124, 58, 237, 0.16);
-  border-color: rgba(124, 58, 237, 0.4);
-  color: var(--text-accent);
-}
-
-/* Bulk-actions bar */
-.tcl-bulk-bar {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin: 0 16px 10px;
-  padding: 9px 12px;
-  background: rgba(124, 58, 237, 0.1);
-  border: 1px solid rgba(124, 58, 237, 0.3);
-  border-radius: 9px;
-  font-size: 13px;
-}
-.tcl-bulk-count {
-  font-weight: 600;
-  color: var(--text-accent);
-}
-.tcl-bulk-spacer {
-  flex: 1;
-}
-.tcl-bulk-btn {
-  font: inherit;
-  font-size: 11.5px;
-  padding: 4px 10px;
-  border-radius: 5px;
-  border: 1px solid var(--background-modifier-border);
-  background: var(--interactive-normal);
-  color: var(--text-normal);
-  cursor: pointer;
-}
-.tcl-bulk-btn:hover {
-  background: var(--interactive-hover);
-}
-.tcl-bulk-btn-ghost {
-  background: transparent;
-  border-color: transparent;
-}
-
-/* Table */
-.tcl-table-wrap {
-  padding: 0 16px 16px;
-  overflow-x: auto;
-}
-.tcl-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 13px;
-}
-.tcl-table th {
-  text-align: left;
-  font-size: 11px;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: var(--text-faint);
-  font-weight: 600;
-  padding: 8px 10px;
-  border-bottom: 1px solid var(--background-modifier-border);
-  white-space: nowrap;
-}
-.tcl-table td {
-  padding: 9px 10px;
-  border-bottom: 1px solid var(--divider-color);
-  vertical-align: top;
-}
-.tcl-table tr:hover td {
-  background: var(--background-modifier-hover);
-}
-.tcl-select-col {
-  width: 34px;
-}
-.tcl-select-col input {
-  cursor: pointer;
-}
-.tcl-tagname {
-  font-weight: 500;
-}
-.tcl-row-hidden .tcl-tagname {
-  color: var(--text-faint);
-  text-decoration: line-through;
-}
-.tcl-row-flagged .tcl-tagname {
-  color: var(--tag-curator-flag-color);
-  font-weight: var(--tag-curator-flag-weight);
-}
-.tcl-src {
-  font-size: 10.5px;
-  color: var(--text-faint);
-  border: 1px solid var(--divider-color);
-  border-radius: 4px;
-  padding: 1px 5px;
-}
-.tcl-vis {
-  font-size: 11px;
-  text-transform: lowercase;
-}
-.tcl-vis-shown {
-  color: var(--text-success);
-}
-.tcl-vis-hidden {
-  color: var(--text-accent);
-}
-.tcl-vis-flagged {
-  color: var(--tag-curator-flag-color);
-}
-.tcl-rule-link {
-  color: var(--text-accent);
-  font-size: 12px;
-  line-height: 1.5;
-}
-.tcl-rule-none {
-  color: var(--text-faint);
-  font-size: 12px;
-}
-
-/* Help icon with hover tooltip on column headers */
-.tcl-help-ic {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 14px;
-  height: 14px;
-  margin-left: 5px;
-  border-radius: 50%;
-  border: 1px solid var(--background-modifier-border);
-  color: var(--text-muted);
-  font-size: 9.5px;
-  font-weight: 700;
-  cursor: help;
-  position: relative;
-  vertical-align: middle;
-  text-transform: none;
-  letter-spacing: 0;
-}
-.tcl-help-ic:hover {
-  color: var(--text-normal);
-  border-color: var(--background-modifier-border-hover);
-}
-.tcl-tip {
-  position: absolute;
-  left: 50%;
-  transform: translateX(-50%);
-  bottom: calc(100% + 8px);
-  background: var(--background-secondary);
-  border: 1px solid var(--background-modifier-border);
-  border-radius: 7px;
-  padding: 9px 11px;
-  font-size: 11.5px;
-  font-weight: 400;
-  line-height: 1.5;
-  color: var(--text-normal);
-  width: 260px;
-  text-align: left;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.18);
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.12s ease;
-  z-index: 10;
-  text-transform: none;
-  letter-spacing: 0;
-  white-space: normal;
-}
-.tcl-help-ic:hover .tcl-tip {
-  opacity: 1;
 }
 
 /* =========================================================
@@ -1426,6 +1085,49 @@ settings:
   font-weight: 700;
   font-variant-numeric: tabular-nums;
 }
+/* Preview quick-search + sortable Tag / Count header (4-3). */
+.tcr-pd-controls {
+  padding: 8px 14px 6px;
+  border-bottom: 1px solid var(--divider-color);
+}
+.tcr-pd-search {
+  display: flex;
+  align-items: center;
+  background: var(--background-modifier-form-field);
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 6px;
+  padding: 4px 8px;
+  margin-bottom: 8px;
+}
+.tcr-pd-search input {
+  flex: 1;
+  background: transparent;
+  border: 0;
+  outline: 0;
+  color: var(--text-normal);
+  font-size: 12px;
+}
+.tcr-pd-listhead {
+  display: flex;
+  align-items: center;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+.tcr-pd-listhead-tag {
+  flex: 1;
+  cursor: pointer;
+}
+.tcr-pd-listhead-count {
+  cursor: pointer;
+  font-variant-numeric: tabular-nums;
+}
+.tcr-pd-listhead-tag:hover,
+.tcr-pd-listhead-count:hover {
+  color: var(--text-normal);
+}
 .tcr-pd-body {
   flex: 1;
   overflow-y: auto;
@@ -1452,10 +1154,11 @@ settings:
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+/* 4-2: was --text-muted on the alt-background dock, too faint to read. */
 .tcr-pd-count {
-  color: var(--text-muted);
+  color: var(--text-normal);
   font-variant-numeric: tabular-nums;
-  font-size: 11.5px;
+  font-size: 12px;
 }
 .tcr-pd-rule {
   font-size: 11px;
@@ -1474,8 +1177,8 @@ settings:
 }
 .tcr-pd-info {
   cursor: pointer;
-  color: var(--text-faint);
-  font-size: 13px;
+  color: var(--text-muted);
+  font-size: 14px;
   line-height: 1;
 }
 .tcr-pd-info:hover,
@@ -1496,12 +1199,13 @@ settings:
 .tcr-pd-kv-row {
   display: contents;
 }
+/* 4-2: lift the expanded detail off the gray-on-gray it was. */
 .tcr-pd-kv-key {
-  color: var(--text-faint);
+  color: var(--text-muted);
   font-size: 11px;
 }
 .tcr-pd-kv-val {
-  color: var(--text-muted);
+  color: var(--text-normal);
   font-size: 11px;
   text-align: right;
   font-variant-numeric: tabular-nums;
@@ -1540,14 +1244,6 @@ settings:
 .tc-hidden {
   display: none !important;
 }
-.tcl-sortable {
-  cursor: pointer;
-}
-.tcl-empty-cell {
-  text-align: center;
-  color: var(--text-faint);
-  padding: 20px;
-}
 .tcr-confirm-foot {
   display: flex;
   gap: 8px;
@@ -1580,8 +1276,11 @@ settings:
 }
 .tcr-tip {
   position: absolute;
-  left: 50%;
-  transform: translateX(-50%);
+  /* Anchor to the icon's left edge and grow rightward into the open form area.
+   * Centering pushed the tooltip's left half off the left edge of the
+   * overflow:hidden .tcr-workspace, clipping it (4-5). */
+  left: 0;
+  transform: none;
   bottom: calc(100% + 8px);
   background: var(--background-secondary);
   border: 1px solid var(--background-modifier-border);
@@ -1591,7 +1290,7 @@ settings:
   font-weight: 400;
   line-height: 1.5;
   color: var(--text-normal);
-  width: 260px;
+  width: 230px;
   text-align: left;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.18);
   opacity: 0;
@@ -1659,7 +1358,7 @@ settings:
   padding: 0 16px 16px;
 }
 
-/* Toolbar: search + filter chips. */
+/* Toolbar: search + column selector row, then filter chips. */
 .tct-toolbar {
   display: flex;
   flex-direction: column;
@@ -1667,9 +1366,30 @@ settings:
   gap: 8px;
   padding: 8px 0 10px;
 }
+.tct-toolbar-top {
+  display: flex;
+  align-items: stretch;
+  gap: 8px;
+}
+.tct-cols-btn {
+  flex-shrink: 0;
+  font: inherit;
+  font-size: 12px;
+  padding: 0 12px;
+  border-radius: 7px;
+  border: 1px solid var(--background-modifier-border);
+  background: var(--interactive-normal);
+  color: var(--text-muted);
+  cursor: pointer;
+  white-space: nowrap;
+}
+.tct-cols-btn:hover {
+  background: var(--interactive-hover);
+  color: var(--text-normal);
+}
 .tct-search {
-  width: 100%;
-  min-width: 180px;
+  flex: 1;
+  min-width: 140px;
   display: flex;
   align-items: center;
   gap: 8px;
@@ -1757,11 +1477,18 @@ settings:
   height: 14px;
 }
 
-/* Shared column grid for the header row and every data row. */
+/* Shared column grid for the header row and every data row. The template is
+ * published by TagTable as --tct-grid from the active column set (mode + the
+ * persisted column prefs), so the header and rows always line up no matter
+ * which optional columns are on. The fallback is the full manage layout for the
+ * first paint before JS sets the variable. */
 .tct-head-row,
 .tct-row {
   display: grid;
-  grid-template-columns: 34px minmax(160px, 2fr) 64px 96px 80px 56px minmax(120px, 1.5fr) 36px;
+  grid-template-columns: var(
+    --tct-grid,
+    34px minmax(150px, 2fr) 72px 92px 78px 52px minmax(120px, 1.5fr) 40px
+  );
   align-items: center;
   gap: 0;
 }
@@ -1799,6 +1526,29 @@ settings:
 .tct-sort-arrow {
   margin-left: 4px;
   font-size: 9px;
+}
+
+/* The select + actions chrome holds controls, not text, so they must not clip
+ * (the row more-button was being cut to a stray dot inside an overflow:hidden
+ * cell - 2-3). */
+.tct-cell-select,
+.tct-cell-actions {
+  overflow: visible;
+  padding: 0 4px;
+}
+/* Count reads as a number column: right-aligned in the header and rows (2-1). */
+.tct-cell-count {
+  text-align: right;
+}
+/* Eye-icon header for the Visible column so the label never truncates (2-4). */
+.tct-head-ic {
+  display: inline-flex;
+  align-items: center;
+  color: inherit;
+}
+.tct-head-ic svg {
+  width: 15px;
+  height: 15px;
 }
 
 /* Scroll viewport + spacer for virtualization. */
@@ -1940,20 +1690,13 @@ settings:
 }
 
 /* -----------------------------------------------------------------
- * View mode: hide manage-only chrome and re-declare the grid template
- * so the header and rows stay column-aligned when select + actions
- * tracks are removed. The original 8-column template is:
- *   34px (select) | minmax(160px,2fr) | 64px | 96px | 80px | 56px |
- *   minmax(120px,1.5fr) | 36px (actions)
- * View mode drops column 1 (select) and column 8 (actions), leaving 6.
+ * View mode: hide the contextual bulk bar (it is always constructed, unlike the
+ * select/actions cells which TagTable simply does not create in view mode). The
+ * grid template no longer needs a static view-mode override: TagTable computes
+ * --tct-grid from the active column set, which already excludes the select +
+ * actions tracks in view mode.
  * ----------------------------------------------------------------- */
-.tct-view .tct-cell-select,
-.tct-view .tct-cell-actions,
 .tct-view .tct-bulk-bar { display: none; }
-.tct-view .tct-head-row,
-.tct-view .tct-row {
-  grid-template-columns: minmax(160px, 2fr) 64px 96px 80px 56px minmax(120px, 1.5fr);
-}
 .tct-tagname-link { cursor: pointer; color: var(--text-accent); }
 .tct-tagname-link:hover .tct-tagname { text-decoration: underline; }
 /* Filters disclosure: toggle button hidden by default, visible only in view mode */

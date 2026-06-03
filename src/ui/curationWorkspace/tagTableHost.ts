@@ -5,7 +5,7 @@
  * asks the host to refresh after a write, but it never reaches into the plugin
  * directly.
  */
-import { Rule, TagCuratorSettings, TagMeta } from '../../types';
+import { Rule, TableColumnPrefs, TagCuratorSettings, TagMeta } from '../../types';
 
 export interface TagListDiagnosticsHost {
   /** Current settings (overrides, previewMode, ...) for visibility resolution. */
@@ -20,4 +20,6 @@ export interface TagListDiagnosticsHost {
   requestRefresh(): void;
   /** Open Obsidian's core global search filtered to the given tag (no-op if unavailable). */
   searchTag(tag: string): void;
+  /** Persist which optional data columns are visible (Last used / Source / Rule). */
+  setColumns(cols: TableColumnPrefs): void;
 }

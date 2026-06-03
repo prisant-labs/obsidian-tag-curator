@@ -12,7 +12,6 @@ import {
   MIN_API_VERSION,
 } from './integrations/notebookNavigator';
 import { TagCuratorSettingTab } from './ui/settingsTab';
-import { TagListView, TAG_LIST_VIEW_TYPE } from './ui/tagListView';
 import {
   CurationWorkspaceView,
   CURATION_VIEW_TYPE,
@@ -106,10 +105,9 @@ export default class TagCuratorPlugin extends Plugin {
     }
     this.autocompleteObserver.init();
 
-    // TagListView is superseded by CurationWorkspaceView per D-012 but kept
-    // registered for one release so existing commands and saved layouts do not
-    // break. Slated for removal in v1.1.
-    this.registerView(TAG_LIST_VIEW_TYPE, (leaf: WorkspaceLeaf) => new TagListView(leaf, this));
+    // The legacy "Vault tags" TagListView (D-012) was retired pre-1.0: the
+    // Curation Workspace pane plus the Curate Tags settings tab are the single
+    // tag-surface family, so the old leaf no longer registers or opens.
     this.registerView(
       CURATION_VIEW_TYPE,
       (leaf: WorkspaceLeaf) => new CurationWorkspaceView(leaf, this),
@@ -208,20 +206,6 @@ export default class TagCuratorPlugin extends Plugin {
           return;
         }
         void this.openBesideTagPane();
-      },
-    });
-    this.addCommand({
-      id: 'open-tag-list',
-      name: 'Open tag list view',
-      callback: () => {
-        void this.openTagList();
-      },
-    });
-    this.addCommand({
-      id: 'open-tag-list-hidden',
-      name: 'Open tag list (hidden tags only)',
-      callback: () => {
-        void this.openTagListWithHiddenFilter();
       },
     });
     this.addCommand({
@@ -398,9 +382,17 @@ export default class TagCuratorPlugin extends Plugin {
     new Notice(`Preview mode ${!current ? 'on' : 'off'}`);
   }
 
-  private panicDisable(): void {
-    // Disable every observer (tag-pane + NN if live) so each clears its own
-    // decoration, then sweep the document for any stragglers in both namespaces.
+  /**
+   * The hard reset behind both the "Panic disable" command and the General-tab
+   * button (1-2). Unlike the plain master toggle (which relies on the reactive
+   * observer path), this directly disables every observer so each clears its own
+   * decoration, brute-force sweeps the document for any straggler in all four
+   * namespaces (so an orphaned node no observer tracks is still un-hidden), then
+   * flips the enable off. Works even if a scope's observer is wedged or settings
+   * failed to load. Public so the Settings button calls the SAME routine the
+   * command does, instead of a weaker duplicate.
+   */
+  panicDisable(): void {
     for (const obs of this.observers) obs.setEnabled(false);
     panicCleanup(document);
     void this.settingsManager.setEnabled(false);
@@ -491,27 +483,6 @@ export default class TagCuratorPlugin extends Plugin {
     // --- Fallback: no tag pane and no split available ---
     new Notice('Tag Curator: could not open beside the tag pane - opening in sidebar instead.');
     await this.openCurationWorkspace();
-  }
-
-  private async openTagList(): Promise<void> {
-    const { workspace } = this.app;
-    const leaves = workspace.getLeavesOfType(TAG_LIST_VIEW_TYPE);
-    let leaf: WorkspaceLeaf | null = leaves[0] ?? null;
-    if (!leaf) {
-      leaf = workspace.getRightLeaf(false);
-      if (!leaf) return;
-      await leaf.setViewState({ type: TAG_LIST_VIEW_TYPE });
-    }
-    workspace.revealLeaf(leaf);
-  }
-
-  private async openTagListWithHiddenFilter(): Promise<void> {
-    await this.openTagList();
-    const leaves = this.app.workspace.getLeavesOfType(TAG_LIST_VIEW_TYPE);
-    const view = leaves[0]?.view;
-    if (view && 'setHiddenOnly' in view) {
-      (view as { setHiddenOnly: (v: boolean) => void }).setHiddenOnly(true);
-    }
   }
 
   /**

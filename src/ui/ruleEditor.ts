@@ -47,6 +47,18 @@ export class RuleEditor {
   // keeps the open panel open instead of collapsing it.
   private openPreviewTags = new Set<string>();
 
+  // Quick-search + column-sort state for the preview list (4-3). Held on the
+  // instance so they survive the frequent re-renders (settings change, every
+  // keystroke while editing a rule). previewItems + the empty message are set by
+  // whichever preview builder ran; renderPreviewRows() reads them so search/sort
+  // repaints only the rows, never rebuilding (and unfocusing) the search box.
+  private previewSearch = '';
+  private previewSort: 'name' | 'count' = 'count';
+  private previewSortDesc = true;
+  private previewItems: Array<{ m: TagMeta; ruleLabel: string | null }> = [];
+  private previewEmptyMsg = '';
+  private previewBodyEl: HTMLElement | null = null;
+
   // Unsubscribe handle from settingsManager.onChange; released in destroy() so
   // a mounted-then-unmounted editor (e.g. switching workspace modes) does not
   // leak a listener that keeps rendering into a detached root.
@@ -190,16 +202,14 @@ export class RuleEditor {
     const edit = this.mainEl.createDiv({ cls: 'tcr-edit' });
 
     const head = edit.createDiv({ cls: 'tcr-edit-head' });
+    // Just the back affordance: the "/ Custom rules / Edit rule" trail was noise
+    // next to the rule's own title row below it (4-4).
     const crumbs = head.createDiv({ cls: 'tcr-edit-crumbs' });
     const back = crumbs.createEl('button', {
       cls: 'tcr-edit-back',
       text: '← Back to rules',
     });
     back.addEventListener('click', () => this.exitEdit());
-    crumbs.createSpan({ cls: 'tcr-edit-crumb-sep', text: '/' });
-    crumbs.createSpan({ text: 'Custom rules' });
-    crumbs.createSpan({ cls: 'tcr-edit-crumb-sep', text: '/' });
-    crumbs.createSpan({ text: this.isNew ? 'New rule' : 'Edit rule' });
 
     const title = head.createDiv({ cls: 'tcr-edit-title-row' });
     this.makeToggle(title, draft.enabled, (next) => {
@@ -449,33 +459,26 @@ export class RuleEditor {
       text: 'Every tag any rule is affecting',
     });
 
-    const affected: Array<{ m: TagMeta; ruleName: string }> = [];
+    const affected: Array<{ m: TagMeta; ruleLabel: string | null }> = [];
     for (const m of meta.values()) {
       const attr = RuleEngine.getRuleAttribution(m.tag, m, activeRules);
       if (attr.effective) {
-        affected.push({ m, ruleName: attr.effective.ruleName });
+        affected.push({ m, ruleLabel: attr.effective.ruleName });
       }
     }
-    affected.sort((a, b) => b.m.count - a.m.count);
 
-    const totalInstances = affected.reduce((s, a) => s + a.m.count, 0);
+    const totalInstances = affected.reduce((sum, a) => sum + a.m.count, 0);
     this.renderStatRow(head, affected.length, totalInstances);
     head.createDiv({
       cls: 'tcr-pd-sub',
-      text: 'Scrollable. In edit mode this list filters to the selected rule.',
+      text: 'In edit mode this list filters to the selected rule.',
     });
 
-    const body = this.previewEl.createDiv({ cls: 'tcr-pd-body' });
-    if (affected.length === 0) {
-      body.createDiv({
-        cls: 'tcr-pd-empty',
-        text: 'No tags currently affected by any rule.',
-      });
-      return;
-    }
-    for (const a of affected) {
-      this.previewRow(body, a.m, a.ruleName);
-    }
+    this.previewItems = affected;
+    this.previewEmptyMsg = 'No tags currently affected by any rule.';
+    this.renderPreviewControls();
+    this.previewBodyEl = this.previewEl.createDiv({ cls: 'tcr-pd-body' });
+    this.renderPreviewRows();
   }
 
   private renderPreviewForRule(rule: Rule | null): void {
@@ -485,6 +488,7 @@ export class RuleEditor {
 
     if (!rule) {
       head.createDiv({ cls: 'tcr-pd-title', text: 'No rule selected' });
+      this.previewBodyEl = null;
       return;
     }
 
@@ -493,30 +497,102 @@ export class RuleEditor {
     titleRow.createSpan({ text: rule.name || 'Untitled rule' });
 
     const meta = this.plugin.tagMetaManager.all();
-    const matching: TagMeta[] = [];
+    const matching: Array<{ m: TagMeta; ruleLabel: string | null }> = [];
     for (const m of meta.values()) {
-      if (this.testCriteriaOnTag(rule.match, m)) matching.push(m);
+      if (this.testCriteriaOnTag(rule.match, m)) matching.push({ m, ruleLabel: null });
     }
-    matching.sort((a, b) => b.count - a.count);
 
-    const totalInstances = matching.reduce((s, m) => s + m.count, 0);
+    const totalInstances = matching.reduce((sum, a) => sum + a.m.count, 0);
     this.renderStatRow(head, matching.length, totalInstances);
 
     head.createDiv({
       cls: 'tcr-pd-sub',
-      text: 'Scrollable. Updates as you edit the rule.',
+      text: 'Updates as you edit the rule.',
     });
 
-    const body = this.previewEl.createDiv({ cls: 'tcr-pd-body' });
-    if (matching.length === 0) {
-      body.createDiv({
-        cls: 'tcr-pd-empty',
-        text: 'No tags match this rule yet.',
-      });
+    this.previewItems = matching;
+    this.previewEmptyMsg = 'No tags match this rule yet.';
+    this.renderPreviewControls();
+    this.previewBodyEl = this.previewEl.createDiv({ cls: 'tcr-pd-body' });
+    this.renderPreviewRows();
+  }
+
+  // The preview list's quick-search box + sortable Tag / Count headers (4-3).
+  // Built once per full preview render; typing or clicking a header repaints
+  // only the rows (renderPreviewRows), so the search box keeps focus.
+  private renderPreviewControls(): void {
+    const controls = this.previewEl.createDiv({ cls: 'tcr-pd-controls' });
+
+    const searchWrap = controls.createDiv({ cls: 'tcr-pd-search' });
+    const input = searchWrap.createEl('input', {
+      type: 'text',
+      placeholder: 'Search tags...',
+    });
+    input.value = this.previewSearch;
+    input.addEventListener('input', () => {
+      this.previewSearch = input.value;
+      this.renderPreviewRows();
+    });
+
+    const listHead = controls.createDiv({ cls: 'tcr-pd-listhead' });
+    const tagH = listHead.createSpan({ cls: 'tcr-pd-listhead-tag' });
+    const countH = listHead.createSpan({ cls: 'tcr-pd-listhead-count' });
+    const paint = (): void => {
+      const arrow = (active: boolean): string =>
+        active ? (this.previewSortDesc ? ' ▼' : ' ▲') : '';
+      tagH.setText('Tag' + arrow(this.previewSort === 'name'));
+      countH.setText('Count' + arrow(this.previewSort === 'count'));
+    };
+    paint();
+    tagH.addEventListener('click', () => {
+      if (this.previewSort === 'name') this.previewSortDesc = !this.previewSortDesc;
+      else {
+        this.previewSort = 'name';
+        this.previewSortDesc = false;
+      }
+      paint();
+      this.renderPreviewRows();
+    });
+    countH.addEventListener('click', () => {
+      if (this.previewSort === 'count') this.previewSortDesc = !this.previewSortDesc;
+      else {
+        this.previewSort = 'count';
+        this.previewSortDesc = true;
+      }
+      paint();
+      this.renderPreviewRows();
+    });
+  }
+
+  // Repaint just the preview rows from previewItems + the current search/sort.
+  private renderPreviewRows(): void {
+    const body = this.previewBodyEl;
+    if (!body) return;
+    body.empty();
+
+    if (this.previewItems.length === 0) {
+      body.createDiv({ cls: 'tcr-pd-empty', text: this.previewEmptyMsg });
       return;
     }
-    for (const m of matching) {
-      this.previewRow(body, m, null);
+
+    const term = this.previewSearch.trim().toLowerCase();
+    const items = this.previewItems
+      .filter((it) => !term || it.m.tag.toLowerCase().includes(term))
+      .sort((a, b) =>
+        this.previewSort === 'name'
+          ? (this.previewSortDesc
+              ? b.m.tag.localeCompare(a.m.tag)
+              : a.m.tag.localeCompare(b.m.tag))
+          : (this.previewSortDesc ? b.m.count - a.m.count : a.m.count - b.m.count),
+      );
+
+    if (items.length === 0) {
+      body.createDiv({ cls: 'tcr-pd-empty', text: 'No tags match your search.' });
+      return;
+    }
+
+    for (const it of items) {
+      this.previewRow(body, it.m, it.ruleLabel);
     }
   }
 

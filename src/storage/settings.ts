@@ -3,6 +3,7 @@ import {
   DEFAULT_SETTINGS,
   Rule,
   SCHEMA_VERSION,
+  TableColumnPrefs,
   TagCuratorSettings,
   TagOverride,
 } from '../types';
@@ -97,6 +98,19 @@ export class SettingsManager {
         merged.paneEnabled = true;
       }
     }
+    if (inferred < 7) {
+      // Added persisted tag-table column prefs (2-5). The spread above already
+      // fills this from DEFAULT_SETTINGS when absent; this guard only repairs a
+      // present-but-malformed value (e.g. a hand-edited data.json), defaulting
+      // all three optional columns ON.
+      if (
+        !merged.tableColumns ||
+        typeof merged.tableColumns !== 'object' ||
+        Array.isArray(merged.tableColumns)
+      ) {
+        merged.tableColumns = { ...DEFAULT_SETTINGS.tableColumns };
+      }
+    }
     return merged;
   }
 
@@ -163,6 +177,15 @@ export class SettingsManager {
 
   async setPaneEnabled(paneEnabled: boolean): Promise<void> {
     this.settings.paneEnabled = paneEnabled;
+    await this.persist();
+  }
+
+  /**
+   * Persist the tag-table column visibility prefs (2-5). Replaces the whole map
+   * so the single onChange fan-out repaints every table surface at once.
+   */
+  async setTableColumns(columns: TableColumnPrefs): Promise<void> {
+    this.settings.tableColumns = { ...columns };
     await this.persist();
   }
 
