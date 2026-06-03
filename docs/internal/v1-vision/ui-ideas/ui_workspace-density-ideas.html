@@ -1,0 +1,562 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tag Curator - Workspace density ideas</title>
+<style>
+  :root[data-theme="dark"] {
+    --background-primary: #1e1e1e;
+    --background-primary-alt: #1a1a1a;
+    --background-secondary: #252525;
+    --background-secondary-alt: #2a2a2a;
+    --background-tertiary: #151515;
+    --background-modifier-hover: #2f2f2f;
+    --background-modifier-border: #333;
+    --background-modifier-border-hover: #444;
+    --background-modifier-success: #25522a;
+    --background-modifier-form-field: #1a1a1a;
+    --text-normal: #dcddde;
+    --text-muted: #999;
+    --text-faint: #6e6e6e;
+    --text-on-accent: #ffffff;
+    --text-accent: #a78bfa;
+    --text-success: #67d391;
+    --text-warning: #f5c97c;
+    --interactive-accent: #7c3aed;
+    --interactive-accent-hover: #8b5cf6;
+    --divider-color: #2a2a2a;
+    --shadow-s: 0 1px 2px rgba(0,0,0,0.4);
+    --shadow-m: 0 4px 12px rgba(0,0,0,0.4);
+    --shadow-l: 0 12px 28px rgba(0,0,0,0.5);
+    --code-bg: #161616;
+    --selection: rgba(124, 58, 237, 0.35);
+  }
+  :root[data-theme="light"] {
+    --background-primary: #ffffff;
+    --background-primary-alt: #fafafa;
+    --background-secondary: #f5f6f8;
+    --background-secondary-alt: #ebedf0;
+    --background-tertiary: #e6e8eb;
+    --background-modifier-hover: #eef0f3;
+    --background-modifier-border: #d9dce0;
+    --background-modifier-border-hover: #c2c6cb;
+    --background-modifier-success: #d1fae5;
+    --background-modifier-form-field: #ffffff;
+    --text-normal: #1f2328;
+    --text-muted: #5b6168;
+    --text-faint: #8a9098;
+    --text-on-accent: #ffffff;
+    --text-accent: #6d28d9;
+    --text-success: #047857;
+    --text-warning: #b45309;
+    --interactive-accent: #7c3aed;
+    --interactive-accent-hover: #6d28d9;
+    --divider-color: #e6e8eb;
+    --shadow-s: 0 1px 2px rgba(0,0,0,0.08);
+    --shadow-m: 0 4px 12px rgba(0,0,0,0.08);
+    --shadow-l: 0 12px 28px rgba(0,0,0,0.12);
+    --code-bg: #f5f6f8;
+    --selection: rgba(124, 58, 237, 0.18);
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: var(--background-tertiary);
+    color: var(--text-normal);
+    font-family: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    font-size: 14px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+  ::selection { background: var(--selection); }
+  code { background: var(--code-bg); padding: 1px 5px; border-radius: 4px; font-size: 0.92em; font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace; }
+
+  .canvas { padding: 40px 48px 120px; max-width: 1180px; margin: 0 auto; }
+
+  /* Page header */
+  .page-head { display: flex; align-items: flex-start; gap: 24px; margin-bottom: 18px; }
+  .page-head .ph-text { flex: 1; min-width: 0; }
+  .ph-eyebrow { font-size: 11px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-faint); margin-bottom: 7px; }
+  .ph-title { font-size: 27px; font-weight: 700; letter-spacing: -0.01em; margin: 0 0 10px; }
+  .ph-thesis { color: var(--text-muted); font-size: 15px; max-width: 920px; }
+  .ph-thesis strong { color: var(--text-normal); }
+
+  .theme-toggle { display: flex; background: var(--background-secondary); border: 1px solid var(--divider-color); border-radius: 8px; padding: 3px; gap: 2px; flex-shrink: 0; }
+  .theme-toggle button { background: transparent; border: 0; color: var(--text-muted); font: inherit; font-size: 12px; padding: 6px 13px; border-radius: 5px; cursor: pointer; }
+  .theme-toggle button.is-active { background: var(--background-primary); color: var(--text-normal); box-shadow: var(--shadow-s); }
+
+  /* The problem callout */
+  .callout { background: var(--background-secondary); border: 1px solid var(--divider-color); border-left: 3px solid var(--text-warning); border-radius: 8px; padding: 13px 16px; margin-bottom: 30px; font-size: 13.5px; color: var(--text-muted); }
+  .callout strong { color: var(--text-normal); }
+
+  /* Idea section */
+  .idea { margin-bottom: 44px; }
+  .idea-head { display: flex; align-items: baseline; gap: 12px; margin-bottom: 4px; }
+  .idea-tag { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-accent); background: rgba(124,58,237,0.12); border: 1px solid rgba(124,58,237,0.3); border-radius: 5px; padding: 3px 9px; }
+  .idea-title { font-size: 18px; font-weight: 650; letter-spacing: -0.01em; }
+  .idea-sub { color: var(--text-muted); font-size: 13.5px; margin: 6px 0 14px; max-width: 880px; }
+  .idea-sub b { color: var(--text-normal); font-weight: 600; }
+  .tradeoff { font-size: 12.5px; color: var(--text-faint); margin-top: 12px; }
+  .tradeoff .plus { color: var(--text-success); } .tradeoff .minus { color: var(--text-warning); }
+
+  /* Mock leaf frame (an Obsidian right-sidebar panel) */
+  .leaf { width: 430px; max-width: 100%; background: var(--background-primary); border: 1px solid var(--background-modifier-border); border-radius: 11px; overflow: hidden; box-shadow: var(--shadow-l); }
+  .leaf.wide { width: 560px; }
+  .leaf-tabbar { display: flex; align-items: center; gap: 8px; padding: 0 10px; height: 34px; background: var(--background-secondary); border-bottom: 1px solid var(--divider-color); }
+  .leaf-tabbar .ic { width: 22px; height: 22px; display: grid; place-items: center; color: var(--text-faint); font-size: 13px; border-radius: 4px; }
+  .leaf-tabbar .ic.on { color: var(--text-accent); background: var(--background-modifier-hover); }
+  .leaf-tabbar .sp { flex: 1; }
+
+  .leaf-head { display: flex; align-items: center; gap: 10px; padding: 12px 14px 8px; }
+  .leaf-head h2 { font-size: 16px; font-weight: 700; color: var(--text-accent); margin: 0; letter-spacing: -0.01em; }
+  .leaf-head .sp { flex: 1; }
+  .modeswitch { display: flex; background: var(--background-secondary); border: 1px solid var(--divider-color); border-radius: 7px; padding: 2px; gap: 2px; }
+  .modeswitch button { background: transparent; border: 0; color: var(--text-muted); font: inherit; font-size: 12px; padding: 4px 11px; border-radius: 5px; cursor: pointer; }
+  .modeswitch button.on { background: var(--interactive-accent); color: var(--text-on-accent); }
+
+  .leaf-body { padding: 4px 14px 14px; }
+
+  /* Toolbar: search row, then a chip row beneath it (the requested relocation) */
+  .search { display: flex; align-items: center; gap: 8px; background: var(--background-modifier-form-field); border: 1px solid var(--background-modifier-border); border-radius: 7px; padding: 7px 11px; color: var(--text-faint); font-size: 13px; flex: 1; }
+  .search .mag { font-size: 13px; }
+  .toolbar-top { display: flex; align-items: center; gap: 8px; margin-bottom: 9px; }
+
+  .chip-row { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin-bottom: 12px; }
+  .chip { font-size: 11.5px; padding: 4px 10px; border-radius: 999px; border: 1px solid var(--background-modifier-border); background: var(--background-secondary); color: var(--text-muted); cursor: pointer; white-space: nowrap; }
+  .chip:hover { border-color: var(--background-modifier-border-hover); color: var(--text-normal); }
+  .chip.active { background: rgba(124,58,237,0.16); border-color: rgba(124,58,237,0.4); color: var(--text-accent); }
+  .chip.more { color: var(--text-faint); border-style: dashed; }
+
+  /* Column picker button + popover */
+  .colbtn { position: relative; }
+  .btn { font-size: 12px; padding: 6px 11px; border-radius: 7px; border: 1px solid var(--background-modifier-border); background: var(--background-secondary); color: var(--text-muted); cursor: pointer; white-space: nowrap; display: inline-flex; align-items: center; gap: 6px; }
+  .btn:hover { border-color: var(--background-modifier-border-hover); color: var(--text-normal); }
+  .popover { position: absolute; right: 0; top: calc(100% + 6px); z-index: 30; background: var(--background-secondary); border: 1px solid var(--background-modifier-border); border-radius: 9px; box-shadow: var(--shadow-m); padding: 7px; width: 190px; display: none; }
+  .popover.open { display: block; }
+  .popover .pop-h { font-size: 10px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-faint); padding: 4px 7px 6px; }
+  .popover label { display: flex; align-items: center; gap: 9px; font-size: 12.5px; padding: 5px 7px; border-radius: 5px; cursor: pointer; color: var(--text-normal); }
+  .popover label:hover { background: var(--background-modifier-hover); }
+  .popover label.locked { color: var(--text-faint); cursor: default; }
+  .popover input { accent-color: var(--interactive-accent); }
+
+  /* Tag table */
+  table.tags { width: 100%; border-collapse: collapse; font-size: 13px; }
+  table.tags thead th { text-align: left; font-size: 10px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-faint); font-weight: 600; padding: 7px 9px; border-bottom: 1px solid var(--background-modifier-border); white-space: nowrap; }
+  table.tags td { padding: 7px 9px; border-bottom: 1px solid var(--divider-color); vertical-align: middle; }
+  table.tags tbody tr:hover td { background: var(--background-modifier-hover); }
+  table.tags tbody tr.is-hidden td .tagname { color: var(--text-faint); text-decoration: line-through; }
+  .tagname { font-weight: 500; }
+  .tag-hash { color: var(--text-faint); }
+  .num { font-variant-numeric: tabular-nums; color: var(--text-muted); }
+  .src { font-size: 10px; color: var(--text-faint); border: 1px solid var(--divider-color); border-radius: 4px; padding: 1px 5px; white-space: nowrap; }
+  .rulecell { font-size: 11.5px; color: var(--text-muted); }
+  .rulecell.none { color: var(--text-faint); }
+  th.col-actions, td.col-actions { width: 24px; text-align: center; color: var(--text-faint); }
+  .vdot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+  .vdot.shown { background: var(--text-success); }
+  .vdot.hidden { background: var(--text-accent); }
+  .vdot.flagged { background: var(--text-warning); }
+
+  /* Column hiding (Idea A + B): a class on the table hides a column's cells */
+  .hide-lastSeen .col-lastSeen, .hide-source .col-source, .hide-rule .col-rule, .hide-firstSeen .col-firstSeen { display: none; }
+
+  /* Idea B density toggle: simple hides the extra columns + extra chips */
+  .density.simple .col-lastSeen, .density.simple .col-source, .density.simple .col-rule { display: none; }
+  .density.simple .chip-extra { display: none; }
+
+  /* Idea C expandable rows */
+  tr.exp-row td { border-bottom: 0; }
+  tr.detail-row { display: none; }
+  tr.detail-row.open { display: table-row; }
+  tr.detail-row td { background: var(--background-primary-alt); padding: 0 9px 11px; border-bottom: 1px solid var(--divider-color); }
+  .detail-grid { display: grid; grid-template-columns: auto 1fr; gap: 4px 16px; padding: 10px 4px 4px; font-size: 12px; }
+  .detail-grid .k { color: var(--text-faint); text-transform: uppercase; font-size: 10px; letter-spacing: 0.05em; padding-top: 2px; }
+  .detail-grid .v { color: var(--text-normal); }
+  .chev { cursor: pointer; color: var(--text-faint); display: inline-block; width: 14px; transition: transform 0.12s; }
+  tr.exp-row.open .chev { transform: rotate(90deg); color: var(--text-accent); }
+  .row-pins { display: flex; gap: 6px; margin-top: 7px; }
+  .pin { font-size: 10.5px; padding: 2px 8px; border-radius: 999px; border: 1px solid var(--divider-color); color: var(--text-muted); cursor: pointer; }
+  .pin:hover { border-color: var(--background-modifier-border-hover); color: var(--text-normal); }
+
+  /* Idea D grouped/triage view */
+  .group { border: 1px solid var(--divider-color); border-radius: 9px; margin-bottom: 10px; overflow: hidden; }
+  .group-head { display: flex; align-items: center; gap: 10px; padding: 9px 12px; background: var(--background-secondary); cursor: pointer; }
+  .group-head .g-ic { width: 8px; height: 8px; border-radius: 50%; }
+  .group-head .g-name { font-weight: 600; font-size: 13px; }
+  .group-head .g-count { color: var(--text-faint); font-size: 12px; }
+  .group-head .g-act { margin-left: auto; font-size: 11.5px; color: var(--text-accent); }
+  .group-body { padding: 4px 0; }
+  .group-body.collapsed { display: none; }
+  .grow { display: flex; align-items: center; gap: 10px; padding: 6px 13px; font-size: 13px; }
+  .grow:hover { background: var(--background-modifier-hover); }
+  .grow .gt { font-weight: 500; flex: 1; }
+  .grow .gn { color: var(--text-muted); font-variant-numeric: tabular-nums; }
+
+  .leaf-foot { font-size: 11px; color: var(--text-faint); padding: 9px 14px; border-top: 1px solid var(--divider-color); background: var(--background-primary-alt); }
+
+  /* Settings Rules split mock (idea S) */
+  .settings { width: 620px; max-width: 100%; }
+  .set-tabs { display: flex; gap: 2px; padding: 0 14px; border-bottom: 1px solid var(--divider-color); background: var(--background-secondary); }
+  .set-tab { font-size: 12.5px; padding: 9px 13px; color: var(--text-muted); cursor: pointer; border-bottom: 2px solid transparent; }
+  .set-tab.on { color: var(--text-accent); border-bottom-color: var(--text-accent); }
+  .set-tab .b { font-size: 10px; color: var(--text-faint); background: var(--background-modifier-hover); border-radius: 999px; padding: 0 6px; margin-left: 5px; }
+  .set-body { padding: 16px; min-height: 120px; }
+  .set-sub { font-size: 12.5px; color: var(--text-muted); margin: 0 0 12px; }
+
+  .legend-inline { display: inline-flex; align-items: center; gap: 5px; margin-right: 14px; font-size: 11.5px; color: var(--text-muted); }
+  .compare-note { font-size: 12px; color: var(--text-faint); margin-top: 10px; }
+</style>
+</head>
+<body>
+<div class="canvas">
+
+  <div class="page-head">
+    <div class="ph-text">
+      <div class="ph-eyebrow">Tag Curator - design exploration</div>
+      <h1 class="ph-title">Calming the workspace: density ideas</h1>
+      <p class="ph-thesis">The panel today shows <strong>6 columns and 7 filter chips at once</strong> over hundreds of tags - a power-user data grid presented at full strength on first open. These are four directions for making the default feel calm while keeping every advanced control one click away. Every mock here also <strong>moves the filter chips to their own row below the search</strong>, as requested. Click the controls - they work.</p>
+    </div>
+    <div class="theme-toggle">
+      <button data-theme-set="dark" class="is-active">Dark</button>
+      <button data-theme-set="light">Light</button>
+    </div>
+  </div>
+
+  <div class="callout">
+    <strong>The everyday loop needs only a few columns:</strong> Tag, Count, and the visibility dot, plus a couple of filters (All / Hidden / Unreviewed). Source, Last used, Rule, and the Frontmatter/Inline/Flagged chips are <em>occasional</em> - so the question across these ideas is <strong>how to demote them without losing them.</strong>
+  </div>
+
+  <!-- IDEA A -->
+  <section class="idea">
+    <div class="idea-head"><span class="idea-tag">Idea A</span><span class="idea-title">Lean default + a Columns menu</span></div>
+    <p class="idea-sub">Show only <b>Tag, Count, Visible</b> by default. A <b>Columns</b> button opens a checklist to bring back Last used, Source, or Rule when you want them - your choice persists. Chips sit on a second row, with the rarely-used ones folded under a <b>More</b> chip. This is the most direct answer to "add show/hide columns."</p>
+
+    <div class="leaf" id="ideaA">
+      <div class="leaf-tabbar"><span class="ic">&#9776;</span><span class="ic on">&#127991;</span><span class="sp"></span><span class="ic">&times;</span></div>
+      <div class="leaf-head">
+        <h2>Tag Curator</h2><span class="sp"></span>
+        <div class="modeswitch"><button class="on">Tags</button><button>Rules</button></div>
+      </div>
+      <div class="leaf-body">
+        <div class="toolbar-top">
+          <div class="search"><span class="mag">&#128269;</span> Search tags...</div>
+          <div class="colbtn">
+            <button class="btn" data-pop="A">Columns &#9662;</button>
+            <div class="popover" id="popA">
+              <div class="pop-h">Show columns</div>
+              <label class="locked"><input type="checkbox" checked disabled> Tag</label>
+              <label class="locked"><input type="checkbox" checked disabled> Count</label>
+              <label class="locked"><input type="checkbox" checked disabled> Visible</label>
+              <label><input type="checkbox" data-col="lastSeen"> Last used</label>
+              <label><input type="checkbox" data-col="source"> Source</label>
+              <label><input type="checkbox" data-col="rule"> Rule</label>
+            </div>
+          </div>
+        </div>
+        <div class="chip-row">
+          <span class="chip active">All</span>
+          <span class="chip">Hidden</span>
+          <span class="chip">Orphans</span>
+          <span class="chip">Unreviewed</span>
+          <span class="chip more">More &#9662;</span>
+        </div>
+        <table class="tags hide-lastSeen hide-source hide-rule" id="tableA">
+          <thead><tr>
+            <th>Tag</th><th>Count</th>
+            <th class="col-lastSeen">Last used</th>
+            <th class="col-source">Source</th>
+            <th>Visible</th>
+            <th class="col-rule">Rule</th>
+            <th class="col-actions"></th>
+          </tr></thead>
+          <tbody>
+            <tr><td><span class="tag-hash">#</span><span class="tagname">daily</span></td><td class="num">993</td><td class="col-lastSeen num">6/2/2026</td><td class="col-source"><span class="src">both</span></td><td><span class="vdot shown"></span></td><td class="col-rule rulecell none">none</td><td class="col-actions">&#8942;</td></tr>
+            <tr><td><span class="tag-hash">#</span><span class="tagname">reference</span></td><td class="num">396</td><td class="col-lastSeen num">6/2/2026</td><td class="col-source"><span class="src">both</span></td><td><span class="vdot shown"></span></td><td class="col-rule rulecell none">none</td><td class="col-actions">&#8942;</td></tr>
+            <tr><td><span class="tag-hash">#</span><span class="tagname">topic/ai/llm/api</span></td><td class="num">106</td><td class="col-lastSeen num">6/2/2026</td><td class="col-source"><span class="src">both</span></td><td><span class="vdot shown"></span></td><td class="col-rule rulecell none">none</td><td class="col-actions">&#8942;</td></tr>
+            <tr class="is-hidden"><td><span class="tag-hash">#</span><span class="tagname">x</span></td><td class="num">27</td><td class="col-lastSeen num">5/31/2026</td><td class="col-source"><span class="src">inline</span></td><td><span class="vdot hidden"></span></td><td class="col-rule rulecell">3 or fewer</td><td class="col-actions">&#8942;</td></tr>
+            <tr class="is-hidden"><td><span class="tag-hash">#</span><span class="tagname">a</span></td><td class="num">26</td><td class="col-lastSeen num">5/31/2026</td><td class="col-source"><span class="src">inline</span></td><td><span class="vdot hidden"></span></td><td class="col-rule rulecell">Single-character</td><td class="col-actions">&#8942;</td></tr>
+            <tr class="is-hidden"><td><span class="tag-hash">#</span><span class="tagname">tmp</span></td><td class="num">1</td><td class="col-lastSeen num">5/12/2026</td><td class="col-source"><span class="src">inline</span></td><td><span class="vdot hidden"></span></td><td class="col-rule rulecell">Orphan tags</td><td class="col-actions">&#8942;</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="leaf-foot">247 tags &middot; 3 columns shown &middot; click <b>Columns</b> to reveal more</div>
+    </div>
+
+    <p class="tradeoff"><span class="plus">+</span> Familiar pattern, fully reversible, your layout sticks. &nbsp; <span class="minus">~</span> The user has to discover the Columns menu to get the detail back.</p>
+  </section>
+
+  <!-- IDEA B -->
+  <section class="idea">
+    <div class="idea-head"><span class="idea-tag">Idea B</span><span class="idea-title">One Simple / Detailed switch</span></div>
+    <p class="idea-sub">No per-column fiddling - a single <b>Simple | Detailed</b> toggle. <b>Simple</b> shows 3 columns and 3 chips for the everyday "hide the noise" pass; <b>Detailed</b> reveals the full grid for power triage. One decision instead of six. Try the toggle.</p>
+
+    <div class="leaf" id="ideaB">
+      <div class="leaf-tabbar"><span class="ic">&#9776;</span><span class="ic on">&#127991;</span><span class="sp"></span><span class="ic">&times;</span></div>
+      <div class="leaf-head">
+        <h2>Tag Curator</h2><span class="sp"></span>
+        <div class="modeswitch"><button class="on">Tags</button><button>Rules</button></div>
+      </div>
+      <div class="leaf-body">
+        <div class="toolbar-top">
+          <div class="search"><span class="mag">&#128269;</span> Search tags...</div>
+          <div class="modeswitch" id="densitySwitch">
+            <button class="on" data-density="simple">Simple</button>
+            <button data-density="detailed">Detailed</button>
+          </div>
+        </div>
+        <div class="chip-row">
+          <span class="chip active">All</span>
+          <span class="chip">Hidden</span>
+          <span class="chip">Unreviewed</span>
+          <span class="chip chip-extra">Flagged</span>
+          <span class="chip chip-extra">Orphans</span>
+          <span class="chip chip-extra">Frontmatter</span>
+          <span class="chip chip-extra">Inline</span>
+        </div>
+        <table class="tags density simple" id="tableB">
+          <thead><tr>
+            <th>Tag</th><th>Count</th>
+            <th class="col-lastSeen">Last used</th>
+            <th class="col-source">Source</th>
+            <th>Visible</th>
+            <th class="col-rule">Rule</th>
+            <th class="col-actions"></th>
+          </tr></thead>
+          <tbody>
+            <tr><td><span class="tag-hash">#</span><span class="tagname">research</span></td><td class="num">342</td><td class="col-lastSeen num">6/2/2026</td><td class="col-source"><span class="src">both</span></td><td><span class="vdot shown"></span></td><td class="col-rule rulecell none">none</td><td class="col-actions">&#8942;</td></tr>
+            <tr><td><span class="tag-hash">#</span><span class="tagname">review</span></td><td class="num">326</td><td class="col-lastSeen num">6/2/2026</td><td class="col-source"><span class="src">both</span></td><td><span class="vdot shown"></span></td><td class="col-rule rulecell none">none</td><td class="col-actions">&#8942;</td></tr>
+            <tr><td><span class="tag-hash">#</span><span class="tagname">area/health/diet/keto</span></td><td class="num">115</td><td class="col-lastSeen num">6/2/2026</td><td class="col-source"><span class="src">both</span></td><td><span class="vdot shown"></span></td><td class="col-rule rulecell none">none</td><td class="col-actions">&#8942;</td></tr>
+            <tr class="is-hidden"><td><span class="tag-hash">#</span><span class="tagname">y</span></td><td class="num">25</td><td class="col-lastSeen num">5/31/2026</td><td class="col-source"><span class="src">inline</span></td><td><span class="vdot hidden"></span></td><td class="col-rule rulecell">Single-character</td><td class="col-actions">&#8942;</td></tr>
+            <tr class="is-hidden"><td><span class="tag-hash">#</span><span class="tagname">c</span></td><td class="num">25</td><td class="col-lastSeen num">5/31/2026</td><td class="col-source"><span class="src">inline</span></td><td><span class="vdot hidden"></span></td><td class="col-rule rulecell">Single-character</td><td class="col-actions">&#8942;</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="leaf-foot" id="footB">Simple view &middot; the essentials for a quick pass</div>
+    </div>
+
+    <p class="tradeoff"><span class="plus">+</span> Zero discovery cost - one obvious switch; great default for newcomers. &nbsp; <span class="minus">~</span> Less granular than picking individual columns.</p>
+  </section>
+
+  <!-- IDEA C -->
+  <section class="idea">
+    <div class="idea-head"><span class="idea-tag">Idea C</span><span class="idea-title">Calm list + expand-on-demand</span></div>
+    <p class="idea-sub">The calmest default: each row is just <b>tag, count, and a status dot</b>. Everything else - last used, source, first seen, the affecting rule, and the per-tag <b>Always show / Always hide</b> pins - lives in an inline panel that opens when you click a row. Detail is never gone, just folded. Click a chevron.</p>
+
+    <div class="leaf" id="ideaC">
+      <div class="leaf-tabbar"><span class="ic">&#9776;</span><span class="ic on">&#127991;</span><span class="sp"></span><span class="ic">&times;</span></div>
+      <div class="leaf-head">
+        <h2>Tag Curator</h2><span class="sp"></span>
+        <div class="modeswitch"><button class="on">Tags</button><button>Rules</button></div>
+      </div>
+      <div class="leaf-body">
+        <div class="toolbar-top">
+          <div class="search"><span class="mag">&#128269;</span> Search tags...</div>
+        </div>
+        <div class="chip-row">
+          <span class="chip active">All</span>
+          <span class="chip">Hidden</span>
+          <span class="chip">Orphans</span>
+          <span class="chip">Unreviewed</span>
+          <span class="chip more">More &#9662;</span>
+        </div>
+        <table class="tags" id="tableC">
+          <thead><tr><th style="width:18px"></th><th>Tag</th><th>Count</th><th>Visible</th></tr></thead>
+          <tbody>
+            <tr class="exp-row"><td><span class="chev">&#9656;</span></td><td><span class="tag-hash">#</span><span class="tagname">personal</span></td><td class="num">322</td><td><span class="vdot shown"></span></td></tr>
+            <tr class="detail-row"><td colspan="4"><div class="detail-grid">
+              <span class="k">Last used</span><span class="v">6/2/2026</span>
+              <span class="k">First seen</span><span class="v">5/29/2026</span>
+              <span class="k">Source</span><span class="v">frontmatter + inline</span>
+              <span class="k">Affected by</span><span class="v">no rule - shown normally</span>
+            </div><div class="row-pins"><span class="pin">&#9679; Always show</span><span class="pin">&#9711; Always hide</span></div></td></tr>
+
+            <tr class="exp-row"><td><span class="chev">&#9656;</span></td><td><span class="tag-hash">#</span><span class="tagname">todo</span></td><td class="num">319</td><td><span class="vdot shown"></span></td></tr>
+            <tr class="detail-row"><td colspan="4"><div class="detail-grid">
+              <span class="k">Last used</span><span class="v">6/2/2026</span>
+              <span class="k">First seen</span><span class="v">5/29/2026</span>
+              <span class="k">Source</span><span class="v">both</span>
+              <span class="k">Affected by</span><span class="v">no rule - shown normally</span>
+            </div><div class="row-pins"><span class="pin">&#9679; Always show</span><span class="pin">&#9711; Always hide</span></div></td></tr>
+
+            <tr class="exp-row is-hidden"><td><span class="chev">&#9656;</span></td><td><span class="tag-hash">#</span><span class="tagname">z</span></td><td class="num">25</td><td><span class="vdot hidden"></span></td></tr>
+            <tr class="detail-row"><td colspan="4"><div class="detail-grid">
+              <span class="k">Last used</span><span class="v">5/31/2026</span>
+              <span class="k">First seen</span><span class="v">5/30/2026</span>
+              <span class="k">Source</span><span class="v">inline</span>
+              <span class="k">Affected by</span><span class="v">preset <b>Single-character tags</b></span>
+            </div><div class="row-pins"><span class="pin">&#9679; Always show</span><span class="pin">&#9711; Always hide</span></div></td></tr>
+
+            <tr class="exp-row"><td><span class="chev">&#9656;</span></td><td><span class="tag-hash">#</span><span class="tagname">idea</span></td><td class="num">316</td><td><span class="vdot shown"></span></td></tr>
+            <tr class="detail-row"><td colspan="4"><div class="detail-grid">
+              <span class="k">Last used</span><span class="v">6/2/2026</span>
+              <span class="k">First seen</span><span class="v">5/29/2026</span>
+              <span class="k">Source</span><span class="v">both</span>
+              <span class="k">Affected by</span><span class="v">no rule - shown normally</span>
+            </div><div class="row-pins"><span class="pin">&#9679; Always show</span><span class="pin">&#9711; Always hide</span></div></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="leaf-foot">247 tags &middot; click any row for detail and override pins</div>
+    </div>
+
+    <p class="tradeoff"><span class="plus">+</span> Calmest possible default; scales to a phone width. &nbsp; <span class="minus">~</span> Comparing detail across many tags needs a click each; less "scannable as a grid."</p>
+  </section>
+
+  <!-- IDEA D -->
+  <section class="idea">
+    <div class="idea-head"><span class="idea-tag">Idea D</span><span class="idea-title">Triage-first: lead with the job, not the grid</span></div>
+    <p class="idea-sub">Reframe the surface around <b>what you came to do</b>. Instead of a flat 247-row dump, open on a few collapsible buckets - <b>Needs review</b>, <b>Hidden by rules</b>, <b>Healthy</b> - each with a one-click bulk action. The full table is still a click away ("View all as table"), but the front door is the decision, not the database.</p>
+
+    <div class="leaf" id="ideaD">
+      <div class="leaf-tabbar"><span class="ic">&#9776;</span><span class="ic on">&#127991;</span><span class="sp"></span><span class="ic">&times;</span></div>
+      <div class="leaf-head">
+        <h2>Tag Curator</h2><span class="sp"></span>
+        <div class="modeswitch"><button class="on">Tags</button><button>Rules</button></div>
+      </div>
+      <div class="leaf-body">
+        <div class="toolbar-top">
+          <div class="search"><span class="mag">&#128269;</span> Search tags...</div>
+          <button class="btn">View all as table</button>
+        </div>
+
+        <div class="group">
+          <div class="group-head"><span class="g-ic" style="background:var(--text-warning)"></span><span class="g-name">Needs review</span><span class="g-count">88 orphan tags</span><span class="g-act">Review all &#8594;</span></div>
+          <div class="group-body">
+            <div class="grow"><span class="vdot shown"></span><span class="gt">#tmp</span><span class="gn">1</span></div>
+            <div class="grow"><span class="vdot shown"></span><span class="gt">#misc</span><span class="gn">1</span></div>
+            <div class="grow"><span class="vdot shown"></span><span class="gt">#xyz</span><span class="gn">1</span></div>
+          </div>
+        </div>
+
+        <div class="group">
+          <div class="group-head"><span class="g-ic" style="background:var(--text-accent)"></span><span class="g-name">Hidden by rules</span><span class="g-count">169 tags</span><span class="g-act">View &#8594;</span></div>
+          <div class="group-body collapsed"></div>
+        </div>
+
+        <div class="group">
+          <div class="group-head"><span class="g-ic" style="background:var(--text-success)"></span><span class="g-name">Healthy</span><span class="g-count">~78 active tags, no action needed</span><span class="g-act">View &#8594;</span></div>
+          <div class="group-body collapsed"></div>
+        </div>
+      </div>
+      <div class="leaf-foot">Grouped by what to do next &middot; click a group to expand</div>
+    </div>
+
+    <p class="tradeoff"><span class="plus">+</span> Turns "247 rows" into "3 decisions"; strongest first-run story. &nbsp; <span class="minus">~</span> Biggest build; power users may still want the flat grid as home.</p>
+  </section>
+
+  <!-- IDEA S: Settings Rules split -->
+  <section class="idea">
+    <div class="idea-head"><span class="idea-tag">Bonus</span><span class="idea-title">Settings: split Rules into Presets / Custom rules</span></div>
+    <p class="idea-sub">Per your second note - rather than one long <b>Rules</b> tab stacking Presets above Custom rules, make them <b>two sibling tabs</b>. Each page is shorter and single-purpose, and the count badges tell you what's inside at a glance. Click the tabs.</p>
+
+    <div class="leaf settings" id="ideaS">
+      <div class="leaf-tabbar"><span class="ic">&#9881;</span><span style="font-size:12px;color:var(--text-muted)">Tag Curator settings</span><span class="sp"></span></div>
+      <div class="set-tabs" id="setTabs">
+        <span class="set-tab">General</span>
+        <span class="set-tab">Scopes</span>
+        <span class="set-tab on" data-set="presets">Presets <span class="b">5</span></span>
+        <span class="set-tab" data-set="custom">Custom rules <span class="b">1</span></span>
+        <span class="set-tab">Advanced</span>
+        <span class="set-tab">Help</span>
+      </div>
+      <div class="set-body" id="setPresets">
+        <p class="set-sub">Built-in presets are toggleable but not editable - copy one into a custom rule to change it.</p>
+        <div style="font-size:13px;color:var(--text-muted)">&#9679; Hide hex color codes &nbsp;&middot;&nbsp; &#9679; Hide URL anchor fragments &nbsp;&middot;&nbsp; &#9679; Hide single-character tags &nbsp;&middot;&nbsp; &#9679; Hide purely numeric tags &nbsp;&middot;&nbsp; &#9711; Hide orphan tags</div>
+      </div>
+      <div class="set-body" id="setCustom" style="display:none">
+        <p class="set-sub">Your own rules. Edit, preview affected tags, and reorder.</p>
+        <div style="font-size:13px;color:var(--text-muted)">&#9679; <b>3 or fewer</b> - frequency, when count &le; 3 &nbsp;&middot;&nbsp; 100 tags affected</div>
+      </div>
+    </div>
+    <p class="compare-note">Note: this is a Settings change, separate from the workspace ideas above. It is small and self-contained - say the word and I will implement it directly.</p>
+  </section>
+
+  <div class="callout" style="border-left-color: var(--text-accent); margin-top: 8px;">
+    <strong>Not mutually exclusive.</strong> A strong default is likely <b>Idea A or B for the column problem</b> + <b>filter chips below the search</b> (shown in every mock) + the <b>Rules tab split</b>. Idea C and Idea D are bigger bets we could stage for a later pass. Tell me which directions resonate and I will turn the winner into a spec and phased implementation.
+  </div>
+
+</div>
+
+<script>
+  // Theme toggle
+  document.querySelectorAll('[data-theme-set]').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      document.documentElement.setAttribute('data-theme', btn.getAttribute('data-theme-set'));
+      document.querySelectorAll('[data-theme-set]').forEach(function (b) { b.classList.remove('is-active'); });
+      btn.classList.add('is-active');
+    });
+  });
+
+  // Idea A: column picker popover + per-column checkboxes
+  document.querySelectorAll('[data-pop]').forEach(function (btn) {
+    btn.addEventListener('click', function (e) {
+      e.stopPropagation();
+      var pop = document.getElementById('pop' + btn.getAttribute('data-pop'));
+      if (pop) pop.classList.toggle('open');
+    });
+  });
+  document.addEventListener('click', function () {
+    document.querySelectorAll('.popover.open').forEach(function (p) { p.classList.remove('open'); });
+  });
+  document.querySelectorAll('#popA input[data-col]').forEach(function (cb) {
+    cb.addEventListener('click', function (e) { e.stopPropagation(); });
+    cb.addEventListener('change', function () {
+      var table = document.getElementById('tableA');
+      table.classList.toggle('hide-' + cb.getAttribute('data-col'), !cb.checked);
+      var shown = 3 + table.querySelectorAll('thead th[class^="col-"]:not(.col-actions)').length
+        - ['lastSeen','source','rule'].filter(function (k) { return table.classList.contains('hide-' + k); }).length;
+      var foot = document.querySelector('#ideaA .leaf-foot');
+      if (foot) foot.innerHTML = '247 tags &middot; ' + shown + ' columns shown &middot; click <b>Columns</b> to reveal more';
+    });
+  });
+
+  // Idea B: Simple / Detailed density switch
+  document.querySelectorAll('#densitySwitch button').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var mode = btn.getAttribute('data-density');
+      document.querySelectorAll('#densitySwitch button').forEach(function (b) { b.classList.remove('on'); });
+      btn.classList.add('on');
+      var table = document.getElementById('tableB');
+      table.classList.toggle('simple', mode === 'simple');
+      table.classList.toggle('detailed', mode === 'detailed');
+      var foot = document.getElementById('footB');
+      if (foot) foot.innerHTML = mode === 'simple'
+        ? 'Simple view &middot; the essentials for a quick pass'
+        : 'Detailed view &middot; every column for power triage';
+    });
+  });
+
+  // Idea C: expandable rows
+  document.querySelectorAll('#tableC .exp-row').forEach(function (row) {
+    row.addEventListener('click', function () {
+      var detail = row.nextElementSibling;
+      if (detail && detail.classList.contains('detail-row')) {
+        detail.classList.toggle('open');
+        row.classList.toggle('open');
+      }
+    });
+  });
+
+  // Idea D: collapse/expand groups
+  document.querySelectorAll('#ideaD .group-head').forEach(function (head) {
+    head.addEventListener('click', function () {
+      var body = head.nextElementSibling;
+      if (body) body.classList.toggle('collapsed');
+    });
+  });
+
+  // Idea S: settings tab switch
+  document.querySelectorAll('#setTabs .set-tab[data-set]').forEach(function (tab) {
+    tab.addEventListener('click', function () {
+      var which = tab.getAttribute('data-set');
+      document.querySelectorAll('#setTabs .set-tab').forEach(function (t) { t.classList.remove('on'); });
+      tab.classList.add('on');
+      document.getElementById('setPresets').style.display = which === 'presets' ? 'block' : 'none';
+      document.getElementById('setCustom').style.display = which === 'custom' ? 'block' : 'none';
+    });
+  });
+</script>
+</body>
+</html>
