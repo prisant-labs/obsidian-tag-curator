@@ -388,3 +388,7 @@ Verify on:
 - iOS Obsidian Mobile (cell 4)
 
 The plugin is **not** desktop-only (`isDesktopOnly: false`), so mobile must work; the only desktop-specific surface is the status bar (Obsidian doesn't render one on mobile).
+
+### 18. Workspace toolbar layout
+
+- [ ] Workspace toolbar shows the search box on top and the filter chips on their own row directly beneath it (not side by side).
