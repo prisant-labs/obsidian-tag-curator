@@ -360,6 +360,10 @@ Before tagging:
 7. Update `CHANGELOG.md` with any post-merge fixes.
 8. Confirm `manifest.json` version + `versions.json` entry + `package.json` version all match.
 
+### 16. Split Rules tabs
+
+- [ ] Settings shows Presets and Custom rules as separate tabs, each with a count badge; the old combined Rules tab is gone.
+
 ## Reporting Issues
 
 If you find issues during testing:
