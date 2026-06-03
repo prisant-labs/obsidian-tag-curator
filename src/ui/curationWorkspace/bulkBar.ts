@@ -5,18 +5,18 @@
  * selected, appearing only once the model holds a selection. Buttons route
  * through TagActions.applyBulk (Hide / Unhide) and TagActions.sendToTagWrangler.
  *
- * NOTE: There is no Flag bulk action. TagActions.BulkAction is
- * 'hide' | 'unhide' | 'send-to-tag-wrangler' and the override store (D-015)
- * only holds 'show' | 'hide'; "flagged" is a derived display state of Preview
- * mode, not a per-tag pin you can bulk-apply. So this bar omits Flag by design;
- * if a flag override is ever added to the model/actions, add the button here.
+ * NOTE: There is no Flag bulk action. "flagged" is a derived display state of
+ * Preview mode, not a per-tag pin you can bulk-apply, and the override store
+ * (D-015) only holds 'show' | 'hide'. So this bar omits Flag by design; if a
+ * flag override is ever added to the model/actions (see BulkAction), add the
+ * button here.
  *
  * Tag Wrangler is gated (D-016): disabled with an explanatory tooltip when the
  * tag-wrangler plugin is not enabled.
  */
 import { setIcon } from 'obsidian';
 import { TagListModel } from '../tagList/tagListModel';
-import { TagActions } from '../tagList/tagActions';
+import { TagActions, BulkAction } from '../tagList/tagActions';
 import { TagListDiagnosticsHost } from './tagTableHost';
 
 export class BulkBar {
@@ -39,6 +39,7 @@ export class BulkBar {
 
     this.addButton('Hide', 'eye-off', () => this.runBulk('hide'));
     this.addButton('Unhide', 'eye', () => this.runBulk('unhide'));
+    this.addButton('Mark reviewed', 'check', () => this.runBulk('mark-reviewed'));
 
     // Tag Wrangler gate is intentionally NOT evaluated here; update() checks
     // isPluginEnabled() on every call so the button reflects current state.
@@ -69,9 +70,7 @@ export class BulkBar {
     return btn;
   }
 
-  private async runBulk(
-    action: 'hide' | 'unhide' | 'send-to-tag-wrangler',
-  ): Promise<void> {
+  private async runBulk(action: BulkAction): Promise<void> {
     const tags = [...this.model.selection];
     if (tags.length === 0) return;
     await this.actions.applyBulk(tags, action);

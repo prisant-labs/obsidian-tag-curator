@@ -396,3 +396,7 @@ The plugin is **not** desktop-only (`isDesktopOnly: false`), so mobile must work
 ### 19. Row menu: Mark reviewed / Mark unreviewed
 
 - [ ] Row menu shows "Mark reviewed"; after clicking it, re-opening the same row's menu shows "Mark unreviewed", and the tag leaves the Unreviewed filter.
+
+### 20. Bulk bar: Mark reviewed
+
+- [ ] Select 2 or more tags, click Mark reviewed in the bulk bar: all selected tags leave the Unreviewed filter.
