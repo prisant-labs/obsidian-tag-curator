@@ -2088,3 +2088,9 @@ settings:
   color: var(--tag-curator-flag-color);
   font-weight: var(--tag-curator-flag-weight);
 }
+
+/* Help tab: compact command table */
+.tcst-cmd-table { width: 100%; border-collapse: collapse; font-size: 12.5px; margin-bottom: 14px; }
+.tcst-cmd-table td { padding: 4px 8px; border-bottom: 1px solid var(--background-modifier-border); vertical-align: top; }
+.tcst-cmd-table td.tcst-cmd { font-weight: 600; color: var(--text-normal); white-space: nowrap; width: 1%; }
+.tcst-cmd-table td.tcst-cmd-d { color: var(--text-muted); }

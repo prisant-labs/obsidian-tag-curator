@@ -364,6 +364,10 @@ Before tagging:
 
 - [ ] Settings shows Presets and Custom rules as separate tabs, each with a count badge; the old combined Rules tab is gone.
 
+### 17. Help tab compact command table
+
+- [ ] Help tab shows commands as a compact two-column table (name + description), not a tall list of setting rows; FAQ and About still present.
+
 ## Reporting Issues
 
 If you find issues during testing:

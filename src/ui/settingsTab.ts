@@ -577,8 +577,11 @@ export class TagCuratorSettingTab extends PluginSettingTab {
       ],
       ['Rescan vault tags', 'Rebuild the tag sidecar across all notes.'],
     ];
+    const table = panel.createEl('table', { cls: 'tcst-cmd-table' });
     for (const [name, desc] of cmds) {
-      new Setting(panel).setName(name).setDesc(desc);
+      const tr = table.createEl('tr');
+      tr.createEl('td', { cls: 'tcst-cmd', text: name });
+      tr.createEl('td', { cls: 'tcst-cmd-d', text: desc });
     }
 
     new Setting(panel).setName('FAQ').setHeading();
