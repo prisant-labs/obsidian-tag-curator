@@ -1,4 +1,4 @@
-export const SCHEMA_VERSION = 5;
+export const SCHEMA_VERSION = 6;
 
 export type Mode = 'default' | 'allow-only' | 'inbox';
 
@@ -91,6 +91,10 @@ export interface TagCuratorSettings {
   // False until the notice has been shown once; flipped true and persisted so the
   // user is not nagged on every load when NN is below MIN_API_VERSION.
   seenNnTooOldNotice: boolean;
+  // Whether the dockable Tag Curator Pane is available (opt-in surface). Curation
+  // always lives in the Curate Tags settings tab; this only governs the sidebar
+  // leaf, its ribbon icon, and the open-pane commands. Schema v6 added this.
+  paneEnabled: boolean;
 }
 
 export const DEFAULT_SETTINGS: TagCuratorSettings = {
@@ -112,6 +116,7 @@ export const DEFAULT_SETTINGS: TagCuratorSettings = {
   previewMode: false,
   seenWelcomeModal: false,
   seenNnTooOldNotice: false,
+  paneEnabled: true,
   debugLog: false,
   sidecarDebounceMs: 5000,
 };

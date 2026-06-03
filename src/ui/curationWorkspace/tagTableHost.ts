@@ -18,4 +18,6 @@ export interface TagListDiagnosticsHost {
   isPluginEnabled(id: string): boolean;
   /** Re-render the table from current model + data state. */
   requestRefresh(): void;
+  /** Open Obsidian's core global search filtered to the given tag (no-op if unavailable). */
+  searchTag(tag: string): void;
 }

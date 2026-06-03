@@ -313,6 +313,122 @@ describe('TagMetaManager debounced persistence', () => {
   });
 });
 
+describe('TagMetaManager.setReviewed', () => {
+  it('sets reviewed to true and fires changed', () => {
+    const app = makeApp();
+    const file = addFile(app, 'a.md', ['inbox']);
+    const mgr = new TagMetaManager(app as never, makePlugin());
+    mgr.indexFile(file);
+
+    let fired = 0;
+    mgr.on('changed', () => {
+      fired += 1;
+    });
+
+    mgr.setReviewed('inbox', true);
+    expect(mgr.get('inbox')?.reviewed).toBe(true);
+    expect(fired).toBe(1);
+  });
+
+  it('sets reviewed to false and fires changed', () => {
+    const app = makeApp();
+    const file = addFile(app, 'a.md', ['inbox']);
+    const mgr = new TagMetaManager(app as never, makePlugin());
+    mgr.indexFile(file);
+
+    mgr.setReviewed('inbox', true);
+    let fired = 0;
+    mgr.on('changed', () => {
+      fired += 1;
+    });
+
+    mgr.setReviewed('inbox', false);
+    expect(mgr.get('inbox')?.reviewed).toBe(false);
+    expect(fired).toBe(1);
+  });
+
+  it('is a no-op for a tag not in the store', () => {
+    const app = makeApp();
+    const mgr = new TagMetaManager(app as never, makePlugin());
+
+    let fired = 0;
+    mgr.on('changed', () => {
+      fired += 1;
+    });
+
+    mgr.setReviewed('ghost', true);
+    expect(mgr.get('ghost')).toBeUndefined();
+    expect(fired).toBe(0);
+  });
+});
+
+describe('TagMetaManager.setReviewedBulk', () => {
+  it('marks multiple present tags and fires changed exactly once', () => {
+    const app = makeApp();
+    const a = addFile(app, 'a.md', ['alpha']);
+    const b = addFile(app, 'b.md', ['beta']);
+    const mgr = new TagMetaManager(app as never, makePlugin());
+    mgr.indexFile(a);
+    mgr.indexFile(b);
+
+    let fired = 0;
+    mgr.on('changed', () => {
+      fired += 1;
+    });
+
+    mgr.setReviewedBulk(['alpha', 'beta'], true);
+    expect(mgr.get('alpha')?.reviewed).toBe(true);
+    expect(mgr.get('beta')?.reviewed).toBe(true);
+    expect(fired).toBe(1);
+  });
+
+  it('fires zero changed events when all tags are absent', () => {
+    const app = makeApp();
+    const mgr = new TagMetaManager(app as never, makePlugin());
+
+    let fired = 0;
+    mgr.on('changed', () => {
+      fired += 1;
+    });
+
+    mgr.setReviewedBulk(['ghost', 'phantom'], true);
+    expect(fired).toBe(0);
+  });
+
+  it('fires zero changed events when all tags are already at the target value', () => {
+    const app = makeApp();
+    const file = addFile(app, 'a.md', ['alpha']);
+    const mgr = new TagMetaManager(app as never, makePlugin());
+    mgr.indexFile(file);
+    mgr.setReviewedBulk(['alpha'], true);
+
+    let fired = 0;
+    mgr.on('changed', () => {
+      fired += 1;
+    });
+
+    mgr.setReviewedBulk(['alpha'], true);
+    expect(fired).toBe(0);
+  });
+
+  it('skips absent tags and still marks and fires for present ones', () => {
+    const app = makeApp();
+    const file = addFile(app, 'a.md', ['real']);
+    const mgr = new TagMetaManager(app as never, makePlugin());
+    mgr.indexFile(file);
+
+    let fired = 0;
+    mgr.on('changed', () => {
+      fired += 1;
+    });
+
+    mgr.setReviewedBulk(['real', 'ghost'], true);
+    expect(mgr.get('real')?.reviewed).toBe(true);
+    expect(mgr.get('ghost')).toBeUndefined();
+    expect(fired).toBe(1);
+  });
+});
+
 describe('TagMetaManager.unload', () => {
   it('flushes pending changes synchronously and clears the timer', async () => {
     const app = makeApp();

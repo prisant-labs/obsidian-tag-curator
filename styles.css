@@ -1662,13 +1662,13 @@ settings:
 /* Toolbar: search + filter chips. */
 .tct-toolbar {
   display: flex;
-  align-items: center;
-  gap: 10px;
-  flex-wrap: wrap;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 8px;
   padding: 8px 0 10px;
 }
 .tct-search {
-  flex: 1;
+  width: 100%;
   min-width: 180px;
   display: flex;
   align-items: center;
@@ -1940,6 +1940,78 @@ settings:
 }
 
 /* -----------------------------------------------------------------
+ * View mode: hide manage-only chrome and re-declare the grid template
+ * so the header and rows stay column-aligned when select + actions
+ * tracks are removed. The original 8-column template is:
+ *   34px (select) | minmax(160px,2fr) | 64px | 96px | 80px | 56px |
+ *   minmax(120px,1.5fr) | 36px (actions)
+ * View mode drops column 1 (select) and column 8 (actions), leaving 6.
+ * ----------------------------------------------------------------- */
+.tct-view .tct-cell-select,
+.tct-view .tct-cell-actions,
+.tct-view .tct-bulk-bar { display: none; }
+.tct-view .tct-head-row,
+.tct-view .tct-row {
+  grid-template-columns: minmax(160px, 2fr) 64px 96px 80px 56px minmax(120px, 1.5fr);
+}
+.tct-tagname-link { cursor: pointer; color: var(--text-accent); }
+.tct-tagname-link:hover .tct-tagname { text-decoration: underline; }
+/* Filters disclosure: toggle button hidden by default, visible only in view mode */
+.tct-filters-toggle {
+  background: transparent;
+  border: 0;
+  color: var(--text-muted);
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+  display: none;
+  align-items: center;
+  gap: 5px;
+  padding: 2px 0;
+}
+.tct-filters-toggle .tct-filters-caret {
+  display: inline-block;
+  transition: transform 0.12s;
+}
+.tct-filters-toggle.open .tct-filters-caret {
+  transform: rotate(90deg);
+  color: var(--text-accent);
+}
+.tct-view .tct-filters-toggle { display: inline-flex; }
+.tct-view .tct-chips-collapsed { display: none; }
+
+/* View/Manage segmented control in the workspace header. */
+.tag-curator-workspace .tcw-viewswitch {
+  display: inline-flex;
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 8px;
+  overflow: hidden;
+  background: var(--background-secondary);
+}
+.tag-curator-workspace .tcw-viewswitch-btn {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  color: var(--text-muted);
+  padding: 4px 14px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  box-shadow: none;
+}
+.tag-curator-workspace .tcw-viewswitch-btn:not(:last-child) {
+  border-right: 1px solid var(--background-modifier-border);
+}
+.tag-curator-workspace .tcw-viewswitch-btn:hover {
+  color: var(--text-normal);
+  background: var(--background-modifier-hover);
+}
+.tag-curator-workspace .tcw-viewswitch-btn.active {
+  color: var(--text-on-accent);
+  background: var(--interactive-accent);
+}
+
+/* -----------------------------------------------------------------
  * Curation Workspace leaf shell (Phase 3B-2).
  * The leaf is a flex column: banner, header (title + Tags/Rules mode
  * switch), then a single content host that mounts either the tag table
@@ -2088,3 +2160,13 @@ settings:
   color: var(--tag-curator-flag-color);
   font-weight: var(--tag-curator-flag-weight);
 }
+
+/* Help tab: compact command table */
+.tcst-cmd-table { width: 100%; border-collapse: collapse; font-size: 12.5px; margin-bottom: 14px; }
+.tcst-cmd-table td { padding: 4px 8px; border-bottom: 1px solid var(--background-modifier-border); vertical-align: top; }
+.tcst-cmd-table td.tcst-cmd { font-weight: 600; color: var(--text-normal); white-space: nowrap; width: 1%; }
+.tcst-cmd-table td.tcst-cmd-d { color: var(--text-muted); }
+
+/* Reviewed-state row marker in the tag name cell */
+.tct-reviewed-mark { margin-left: 6px; color: var(--text-success); opacity: 0.7; }
+.tct-reviewed-mark svg { width: 13px; height: 13px; }

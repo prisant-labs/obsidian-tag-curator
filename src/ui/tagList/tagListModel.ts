@@ -6,6 +6,7 @@ export type TagVisibility = 'shown' | 'hidden' | 'flagged';
 export type SortKey = 'name' | 'count' | 'firstSeen' | 'lastSeen' | 'source' | 'visible';
 export type FilterChip =
   | 'all'
+  | 'shown'
   | 'hidden'
   | 'flagged'
   | 'orphans'
@@ -87,6 +88,8 @@ export class TagListModel {
     switch (this.filter) {
       case 'all':
         return true;
+      case 'shown':
+        return row.visibility === 'shown';
       case 'hidden':
         return row.visibility !== 'shown';
       case 'flagged':

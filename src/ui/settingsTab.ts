@@ -6,15 +6,17 @@
  *
  * The persistent state banner (D-007) sits above whichever panel is active.
  */
-import { App, Notice, PluginSettingTab, Setting } from 'obsidian';
+import { App, EventRef, Notice, PluginSettingTab, Setting } from 'obsidian';
 import TagCuratorPlugin from '../main';
 import { PRESETS, resolveActiveRules } from '../engine/presets';
 import { RuleEditor } from './ruleEditor';
 import { StateBanner } from './stateBanner';
 import { Mode } from '../types';
 import { detectNotebookNavigator, MIN_API_VERSION } from '../integrations/notebookNavigator';
+import { TagTable } from './curationWorkspace/tagTable';
+import { makeTagTableDeps } from './tagList/tagTableDeps';
 
-type TabId = 'general' | 'scopes' | 'rules' | 'advanced' | 'help';
+type TabId = 'general' | 'curate' | 'scopes' | 'presets' | 'custom' | 'advanced' | 'help';
 
 interface TabDescriptor {
   id: TabId;
@@ -31,6 +33,10 @@ export class TagCuratorSettingTab extends PluginSettingTab {
   private banner: StateBanner | null = null;
   private tabBar: HTMLElement | null = null;
   private panelHost: HTMLElement | null = null;
+  private curateTable: TagTable | null = null;
+  private curateOffSettings: (() => void) | null = null;
+  private curateMetaRef: EventRef | null = null;
+  private ruleEditor: RuleEditor | null = null;
 
   constructor(app: App, plugin: TagCuratorPlugin) {
     super(app, plugin);
@@ -41,6 +47,12 @@ export class TagCuratorSettingTab extends PluginSettingTab {
     const { containerEl } = this;
     containerEl.empty();
     containerEl.addClass('tag-curator-settings');
+
+    // Tear down curate table + its subscriptions and the rule editor before
+    // rebuilding DOM (avoids leaked listeners and scroll listeners).
+    this.teardownCurate();
+    this.ruleEditor?.destroy();
+    this.ruleEditor = null;
 
     // Persistent state banner above everything (D-007).
     if (this.banner) {
@@ -76,10 +88,24 @@ export class TagCuratorSettingTab extends PluginSettingTab {
   }
 
   hide(): void {
+    this.teardownCurate();
+    this.ruleEditor?.destroy();
+    this.ruleEditor = null;
     if (this.banner) {
       this.banner.destroy();
       this.banner = null;
     }
+  }
+
+  private teardownCurate(): void {
+    this.curateOffSettings?.();
+    this.curateOffSettings = null;
+    if (this.curateMetaRef) {
+      this.plugin.tagMetaManager.offref(this.curateMetaRef);
+      this.curateMetaRef = null;
+    }
+    this.curateTable?.destroy();
+    this.curateTable = null;
   }
 
   // -----------------------------------------------------------------
@@ -92,17 +118,25 @@ export class TagCuratorSettingTab extends PluginSettingTab {
 
     return [
       { id: 'general', label: 'General', render: (p) => this.renderGeneral(p) },
+      { id: 'curate', label: 'Curate Tags', render: (p) => this.renderCurate(p) },
       {
         id: 'scopes',
         label: 'Scopes & integrations',
         render: (p) => this.renderScopes(p),
       },
       {
-        id: 'rules',
-        label: 'Rules',
-        badge: String(PRESETS.length + customCount),
+        id: 'presets',
+        label: 'Presets',
+        badge: String(PRESETS.length),
         badgeKind: 'count',
-        render: (p) => this.renderRules(p),
+        render: (p) => this.renderPresetsTab(p),
+      },
+      {
+        id: 'custom',
+        label: 'Custom rules',
+        badge: String(customCount),
+        badgeKind: 'count',
+        render: (p) => this.renderCustomRules(p),
       },
       { id: 'advanced', label: 'Advanced', render: (p) => this.renderAdvanced(p) },
       { id: 'help', label: 'Help', render: (p) => this.renderHelp(p) },
@@ -123,23 +157,15 @@ export class TagCuratorSettingTab extends PluginSettingTab {
       if (m.count <= 1) orphanCount += 1;
     }
 
-    // Launcher (D-012): Settings launches the workspace; it lives here, not its own tab.
     new Setting(panel)
-      .setName('Tag Curator')
+      .setName('Enable Tag Curator Pane')
       .setDesc(
-        'See, edit, preview, and act on tags in a dockable panel. Open it here, or beside the tag pane for live side-by-side preview.',
+        'Also surface curation as a dockable sidebar pane you can keep open beside the native tag pane. Curation always lives in the Curate Tags tab; this adds the docked option.',
       )
-      .addButton((b) =>
-        b
-          .setButtonText('Open Tag Curator')
-          .setCta()
-          .onClick(() => {
-            void this.plugin.openCurationWorkspace();
-          }),
-      )
-      .addButton((b) =>
-        b.setButtonText('Open beside the tag pane').onClick(() => {
-          void this.plugin.openBesideTagPane();
+      .addToggle((t) =>
+        t.setValue(this.plugin.settingsManager.get().paneEnabled).onChange(async (v) => {
+          await this.plugin.settingsManager.setPaneEnabled(v);
+          this.plugin.applyPaneEnabled();
         }),
       );
 
@@ -204,6 +230,23 @@ export class TagCuratorSettingTab extends PluginSettingTab {
     await this.plugin.settingsManager.setEnabled(false);
     new Notice('Tag Curator: panic disable activated. All DOM effects removed.');
     this.display();
+  }
+
+  // -----------------------------------------------------------------
+  // Curate Tags - always-Manage grid
+  // -----------------------------------------------------------------
+
+  private renderCurate(panel: HTMLElement): void {
+    // Dispose any previous table and its subscriptions before (re)mounting.
+    this.teardownCurate();
+    const host = panel.createDiv({ cls: 'tcst-curate-host' });
+    const deps = makeTagTableDeps(this.plugin, this.app, () => this.curateTable?.refresh());
+    this.curateTable = new TagTable(host, deps.model, deps.actions, deps.host);
+    // Subscribe to shared state so the table live-updates from external changes
+    // (e.g. a rule toggle in the workspace, a metadata rescan) - F-1.
+    const refreshCurate = (): void => { this.curateTable?.refresh(); };
+    this.curateOffSettings = this.plugin.settingsManager.onChange(refreshCurate);
+    this.curateMetaRef = this.plugin.tagMetaManager.on('changed', refreshCurate);
   }
 
   // -----------------------------------------------------------------
@@ -375,14 +418,12 @@ export class TagCuratorSettingTab extends PluginSettingTab {
   }
 
   // -----------------------------------------------------------------
-  // Rules (Presets + Custom rules)
+  // Presets tab
   // -----------------------------------------------------------------
 
-  private renderRules(panel: HTMLElement): void {
+  private renderPresetsTab(panel: HTMLElement): void {
     new Setting(panel).setName('Presets').setHeading();
     this.renderPresets(panel);
-    new Setting(panel).setName('Custom rules').setHeading();
-    this.renderCustomRules(panel);
   }
 
   // -----------------------------------------------------------------
@@ -530,10 +571,10 @@ export class TagCuratorSettingTab extends PluginSettingTab {
   // -----------------------------------------------------------------
 
   private renderCustomRules(panel: HTMLElement): void {
-    // The RuleEditor manages its own DOM (workspace shell + preview dock)
-    // and subscribes to settings changes for live updates. Each display()
-    // call constructs a fresh editor inside the new panel.
-    new RuleEditor(panel, this.plugin);
+    // Destroy any prior instance to release its settingsManager subscription
+    // before constructing a new one (F-2: prevents leak on tab switch).
+    this.ruleEditor?.destroy();
+    this.ruleEditor = new RuleEditor(panel, this.plugin);
   }
 
   // -----------------------------------------------------------------
@@ -565,8 +606,11 @@ export class TagCuratorSettingTab extends PluginSettingTab {
       ],
       ['Rescan vault tags', 'Rebuild the tag sidecar across all notes.'],
     ];
+    const table = panel.createEl('table', { cls: 'tcst-cmd-table' });
     for (const [name, desc] of cmds) {
-      new Setting(panel).setName(name).setDesc(desc);
+      const tr = table.createEl('tr');
+      tr.createEl('td', { cls: 'tcst-cmd', text: name });
+      tr.createEl('td', { cls: 'tcst-cmd-d', text: desc });
     }
 
     new Setting(panel).setName('FAQ').setHeading();
