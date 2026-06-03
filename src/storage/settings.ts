@@ -92,6 +92,11 @@ export class SettingsManager {
         merged.seenNnTooOldNotice = false;
       }
     }
+    if (inferred < 6) {
+      if (typeof merged.paneEnabled !== 'boolean') {
+        merged.paneEnabled = true;
+      }
+    }
     return merged;
   }
 
@@ -153,6 +158,11 @@ export class SettingsManager {
 
   async setSeenNnTooOldNotice(seen: boolean): Promise<void> {
     this.settings.seenNnTooOldNotice = seen;
+    await this.persist();
+  }
+
+  async setPaneEnabled(paneEnabled: boolean): Promise<void> {
+    this.settings.paneEnabled = paneEnabled;
     await this.persist();
   }
 
