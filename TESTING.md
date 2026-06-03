@@ -412,3 +412,7 @@ The plugin is **not** desktop-only (`isDesktopOnly: false`), so mobile must work
 ### 22. Enable Tag Curator Pane toggle
 
 - [ ] General has no Open button. Toggling Enable Tag Curator Pane OFF removes the ribbon icon and closes any open Tag Curator pane; toggling ON restores the ribbon. With the pane OFF, the 'Open the panel' / 'Open beside the tag pane' commands show a Notice. The Presets-tab 'N tags affected' deep-link and the status-bar click still open the pane regardless (they are not gated).
+
+### 23. Rule deep-link opens pane in Manage mode
+
+- [ ] Clicking a Presets 'N tags affected' deep-link opens the pane in Manage mode (checkboxes/bulk available) filtered to that rule's tags. The status-bar click still opens in the default View.
