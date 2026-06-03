@@ -404,3 +404,7 @@ The plugin is **not** desktop-only (`isDesktopOnly: false`), so mobile must work
 ### 21. Settings Curate Tags tab
 
 - [ ] Settings -> Curate Tags shows the full Manage grid (search, chips, selection, bulk bar, row menu, virtual scroll). Switching to another tab and back, and closing/reopening Settings, does not duplicate rows or leak scroll listeners.
+
+### 22. Enable Tag Curator Pane toggle
+
+- [ ] General has no Open button. Toggling Enable Tag Curator Pane OFF removes the ribbon icon and closes any open Tag Curator pane; toggling ON restores the ribbon. With the pane OFF, the 'Open the panel' / 'Open beside the tag pane' commands show a Notice. The Presets-tab 'N tags affected' deep-link and the status-bar click still open the pane regardless (they are not gated).

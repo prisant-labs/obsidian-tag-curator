@@ -140,25 +140,15 @@ export class TagCuratorSettingTab extends PluginSettingTab {
       if (m.count <= 1) orphanCount += 1;
     }
 
-    // Launcher (D-012): Settings launches the workspace; it lives here, not its own tab.
     new Setting(panel)
-      .setName('Tag Curator')
+      .setName('Enable Tag Curator Pane')
       .setDesc(
-        'See, edit, preview, and act on tags in a dockable panel. Open it here, or beside the tag pane for live side-by-side preview.',
+        'Also surface curation as a dockable sidebar pane you can keep open beside the native tag pane. Curation always lives in the Curate Tags tab; this adds the docked option.',
       )
-      .addButton((b) =>
-        b
-          .setButtonText('Open Tag Curator')
-          .setCta()
-          .onClick(() => {
-            this.closeSettings();
-            void this.plugin.openCurationWorkspace();
-          }),
-      )
-      .addButton((b) =>
-        b.setButtonText('Open beside the tag pane').onClick(() => {
-          this.closeSettings();
-          void this.plugin.openBesideTagPane();
+      .addToggle((t) =>
+        t.setValue(this.plugin.settingsManager.get().paneEnabled).onChange(async (v) => {
+          await this.plugin.settingsManager.setPaneEnabled(v);
+          this.plugin.applyPaneEnabled();
         }),
       );
 
@@ -392,11 +382,6 @@ export class TagCuratorSettingTab extends PluginSettingTab {
       e.preventDefault();
       onClick();
     });
-  }
-
-  /** Close the Settings window so a leaf opened from here is not hidden behind it. */
-  private closeSettings(): void {
-    (this.app as unknown as { setting?: { close?: () => void } }).setting?.close?.();
   }
 
   private openPluginSettings(tabId: string): void {
