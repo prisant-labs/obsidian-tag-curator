@@ -121,6 +121,7 @@ export class CurationWorkspaceView extends ItemView {
   /** Pre-filter the table to a single rule or preset (settings deep-link intent). */
   setRuleFilter(ruleId: string): void {
     if (this.mode !== 'tags') this.setMode('tags');
+    this.setPaneMode('manage');
     this.model.setFilter('all');
     this.model.setRuleFilter(ruleId);
     this.refresh();
