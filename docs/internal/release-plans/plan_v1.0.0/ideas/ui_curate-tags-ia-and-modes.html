@@ -1,0 +1,616 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tag Curator - Curate Tags tab (Manage) + Pane View/Manage</title>
+<style>
+  :root[data-theme="dark"] {
+    --background-primary: #1e1e1e;
+    --background-primary-alt: #1a1a1a;
+    --background-secondary: #252525;
+    --background-secondary-alt: #2a2a2a;
+    --background-tertiary: #151515;
+    --background-modifier-hover: #2f2f2f;
+    --background-modifier-border: #333;
+    --background-modifier-border-hover: #444;
+    --background-modifier-success: #25522a;
+    --background-modifier-form-field: #1a1a1a;
+    --text-normal: #dcddde;
+    --text-muted: #999;
+    --text-faint: #6e6e6e;
+    --text-on-accent: #ffffff;
+    --text-accent: #a78bfa;
+    --text-success: #67d391;
+    --text-warning: #f5c97c;
+    --interactive-accent: #7c3aed;
+    --interactive-accent-hover: #8b5cf6;
+    --divider-color: #2a2a2a;
+    --shadow-s: 0 1px 2px rgba(0,0,0,0.4);
+    --shadow-m: 0 4px 12px rgba(0,0,0,0.4);
+    --shadow-l: 0 12px 28px rgba(0,0,0,0.5);
+    --code-bg: #161616;
+    --selection: rgba(124, 58, 237, 0.35);
+  }
+  :root[data-theme="light"] {
+    --background-primary: #ffffff;
+    --background-primary-alt: #fafafa;
+    --background-secondary: #f5f6f8;
+    --background-secondary-alt: #ebedf0;
+    --background-tertiary: #e6e8eb;
+    --background-modifier-hover: #eef0f3;
+    --background-modifier-border: #d9dce0;
+    --background-modifier-border-hover: #c2c6cb;
+    --background-modifier-success: #d1fae5;
+    --background-modifier-form-field: #ffffff;
+    --text-normal: #1f2328;
+    --text-muted: #5b6168;
+    --text-faint: #8a9098;
+    --text-on-accent: #ffffff;
+    --text-accent: #6d28d9;
+    --text-success: #047857;
+    --text-warning: #b45309;
+    --interactive-accent: #7c3aed;
+    --interactive-accent-hover: #6d28d9;
+    --divider-color: #e6e8eb;
+    --shadow-s: 0 1px 2px rgba(0,0,0,0.08);
+    --shadow-m: 0 4px 12px rgba(0,0,0,0.08);
+    --shadow-l: 0 12px 28px rgba(0,0,0,0.12);
+    --code-bg: #f5f6f8;
+    --selection: rgba(124, 58, 237, 0.18);
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: var(--background-tertiary);
+    color: var(--text-normal);
+    font-family: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    font-size: 14px; line-height: 1.5; -webkit-font-smoothing: antialiased;
+  }
+  ::selection { background: var(--selection); }
+  code { background: var(--code-bg); padding: 1px 5px; border-radius: 4px; font-size: 0.92em; font-family: "SFMono-Regular", Consolas, Menlo, monospace; }
+
+  .canvas { padding: 40px 48px 120px; max-width: 1120px; margin: 0 auto; }
+
+  .page-head { display: flex; align-items: flex-start; gap: 24px; margin-bottom: 18px; }
+  .page-head .ph-text { flex: 1; min-width: 0; }
+  .ph-eyebrow { font-size: 11px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-faint); margin-bottom: 7px; }
+  .ph-title { font-size: 27px; font-weight: 700; letter-spacing: -0.01em; margin: 0 0 10px; }
+  .ph-thesis { color: var(--text-muted); font-size: 15px; max-width: 900px; }
+  .ph-thesis strong { color: var(--text-normal); }
+
+  .theme-toggle { display: flex; background: var(--background-secondary); border: 1px solid var(--divider-color); border-radius: 8px; padding: 3px; gap: 2px; flex-shrink: 0; }
+  .theme-toggle button { background: transparent; border: 0; color: var(--text-muted); font: inherit; font-size: 12px; padding: 6px 13px; border-radius: 5px; cursor: pointer; }
+  .theme-toggle button.is-active { background: var(--background-primary); color: var(--text-normal); box-shadow: var(--shadow-s); }
+
+  h2.sec { font-size: 13px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-faint); margin: 38px 0 14px; padding-bottom: 8px; border-bottom: 1px solid var(--divider-color); }
+  .sec-lead { color: var(--text-muted); font-size: 14px; max-width: 880px; margin: -6px 0 16px; }
+  .sec-lead b { color: var(--text-normal); }
+
+  /* Two-surface split summary */
+  .ba { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-bottom: 8px; }
+  .ba-card { background: var(--background-secondary); border: 1px solid var(--divider-color); border-radius: 10px; padding: 14px 16px; }
+  .ba-card.s1 { border-left: 3px solid var(--text-accent); }
+  .ba-card.s2 { border-left: 3px solid var(--text-success); }
+  .ba-lab { font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-faint); margin-bottom: 4px; }
+  .ba-h { font-size: 15px; font-weight: 650; margin-bottom: 8px; }
+  .ba-card ul { margin: 0; padding-left: 18px; font-size: 13px; color: var(--text-muted); }
+  .ba-card li { margin: 4px 0; } .ba-card b { color: var(--text-normal); }
+  .pill { display: inline-block; font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.05em; padding: 2px 8px; border-radius: 999px; }
+  .pill.manage { color: var(--text-accent); background: rgba(124,58,237,0.14); border: 1px solid rgba(124,58,237,0.3); }
+  .pill.modes { color: var(--text-success); background: rgba(103,211,145,0.12); border: 1px solid rgba(103,211,145,0.3); }
+
+  /* Settings window mock */
+  .win { width: 660px; max-width: 100%; background: var(--background-primary); border: 1px solid var(--background-modifier-border); border-radius: 12px; overflow: hidden; box-shadow: var(--shadow-l); }
+  .win-titlebar { display: flex; align-items: center; gap: 8px; padding: 9px 13px; background: var(--background-secondary); border-bottom: 1px solid var(--divider-color); font-size: 12px; color: var(--text-muted); }
+  .traffic { display: flex; gap: 6px; }
+  .traffic span { width: 11px; height: 11px; border-radius: 50%; }
+  .traffic span:nth-child(1){ background:#ff5f57; } .traffic span:nth-child(2){ background:#febc2e; } .traffic span:nth-child(3){ background:#28c840; }
+  .win-title { flex: 1; text-align: center; font-weight: 500; color: var(--text-normal); font-size: 12px; }
+
+  .tabbar { display: flex; gap: 1px; padding: 0 12px; background: var(--background-secondary); border-bottom: 1px solid var(--divider-color); overflow-x: auto; }
+  .tab { font-size: 12.5px; padding: 10px 13px; color: var(--text-muted); cursor: pointer; border-bottom: 2px solid transparent; white-space: nowrap; }
+  .tab:hover { color: var(--text-normal); }
+  .tab.on { color: var(--text-accent); border-bottom-color: var(--text-accent); font-weight: 600; }
+  .tab.new::after { content: "new"; font-size: 8.5px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-on-accent); background: var(--interactive-accent); border-radius: 999px; padding: 0 5px; margin-left: 6px; vertical-align: middle; }
+  .tab .badge { font-size: 10px; color: var(--text-faint); background: var(--background-modifier-hover); border-radius: 999px; padding: 0 6px; margin-left: 5px; }
+
+  .panel { padding: 16px 18px 20px; min-height: 430px; }
+  .panel.hidden { display: none; }
+
+  .setrow { display: flex; align-items: center; gap: 14px; padding: 12px 0; border-bottom: 1px solid var(--divider-color); }
+  .setrow:last-child { border-bottom: 0; }
+  .setrow .st { flex: 1; min-width: 0; }
+  .setrow .st .nm { font-size: 13.5px; font-weight: 600; }
+  .setrow .st .ds { font-size: 12px; color: var(--text-muted); margin-top: 3px; }
+  .switch { width: 38px; height: 22px; border-radius: 999px; background: var(--background-modifier-border); position: relative; cursor: pointer; flex-shrink: 0; transition: background 0.15s; }
+  .switch::after { content: ""; position: absolute; top: 2px; left: 2px; width: 18px; height: 18px; border-radius: 50%; background: #fff; transition: left 0.15s; box-shadow: var(--shadow-s); }
+  .switch.on { background: var(--interactive-accent); } .switch.on::after { left: 18px; }
+  .btn-ghost { font-size: 12.5px; padding: 6px 12px; border-radius: 7px; border: 1px solid var(--background-modifier-border); background: var(--background-secondary); color: var(--text-muted); cursor: default; }
+  .btn-warn { color: var(--text-warning); border-color: rgba(245,201,124,0.4); }
+
+  .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin: 14px 0 4px; }
+  .stat { background: var(--background-secondary); border: 1px solid var(--divider-color); border-radius: 9px; padding: 11px 13px; }
+  .stat .l { font-size: 10px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-faint); }
+  .stat .v { font-size: 21px; font-weight: 700; font-variant-numeric: tabular-nums; margin-top: 3px; }
+  .stat .v.accent { color: var(--text-accent); }
+
+  .hint { font-size: 11.5px; color: var(--text-faint); background: var(--background-primary-alt); border: 1px dashed var(--divider-color); border-radius: 7px; padding: 8px 11px; margin-top: 12px; }
+  .hint b { color: var(--text-muted); }
+
+  /* Curate Tags surface (always Manage) */
+  .surface-top { display: flex; align-items: center; gap: 10px; margin-bottom: 11px; }
+  .surface-top .lead { font-size: 12px; color: var(--text-muted); flex: 1; }
+  .surface-top .lead b { color: var(--text-normal); }
+  .colbtn { position: relative; }
+  .btn { font-size: 12px; padding: 7px 11px; border-radius: 7px; border: 1px solid var(--background-modifier-border); background: var(--background-secondary); color: var(--text-muted); cursor: pointer; white-space: nowrap; display: inline-flex; align-items: center; gap: 6px; }
+  .btn:hover { border-color: var(--background-modifier-border-hover); color: var(--text-normal); }
+  .popover { position: absolute; right: 0; top: calc(100% + 6px); z-index: 30; background: var(--background-secondary); border: 1px solid var(--background-modifier-border); border-radius: 9px; box-shadow: var(--shadow-m); padding: 7px; width: 180px; display: none; }
+  .popover.open { display: block; }
+  .popover .pop-h { font-size: 10px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-faint); padding: 4px 7px 6px; }
+  .popover label { display: flex; align-items: center; gap: 9px; font-size: 12.5px; padding: 5px 7px; border-radius: 5px; cursor: pointer; }
+  .popover label:hover { background: var(--background-modifier-hover); }
+  .popover label.locked { color: var(--text-faint); cursor: default; }
+
+  .toolbar-top { display: flex; align-items: center; gap: 8px; margin-bottom: 9px; }
+  .search { display: flex; align-items: center; gap: 8px; background: var(--background-modifier-form-field); border: 1px solid var(--background-modifier-border); border-radius: 7px; padding: 7px 11px; color: var(--text-faint); font-size: 13px; flex: 1; }
+
+  .chip-row { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin-bottom: 11px; }
+  .chip { font-size: 11.5px; padding: 4px 10px; border-radius: 999px; border: 1px solid var(--background-modifier-border); background: var(--background-secondary); color: var(--text-muted); cursor: pointer; white-space: nowrap; }
+  .chip:hover { border-color: var(--background-modifier-border-hover); color: var(--text-normal); }
+  .chip.active { background: rgba(124,58,237,0.16); border-color: rgba(124,58,237,0.4); color: var(--text-accent); }
+
+  .bulk { display: flex; align-items: center; gap: 10px; padding: 8px 12px; background: rgba(124,58,237,0.1); border: 1px solid rgba(124,58,237,0.3); border-radius: 8px; margin-bottom: 11px; font-size: 12.5px; }
+  .bulk .c { font-weight: 600; color: var(--text-accent); }
+  .bulk .sp { flex: 1; }
+  .bulk .ba2 { font-size: 11.5px; color: var(--text-muted); border: 1px solid var(--divider-color); border-radius: 6px; padding: 3px 8px; }
+
+  table.tags { width: 100%; border-collapse: collapse; font-size: 13px; }
+  table.tags thead th { text-align: left; font-size: 10px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-faint); font-weight: 600; padding: 7px 9px; border-bottom: 1px solid var(--background-modifier-border); white-space: nowrap; }
+  table.tags td { padding: 8px 9px; border-bottom: 1px solid var(--divider-color); vertical-align: middle; }
+  table.tags tbody tr:hover td { background: var(--background-modifier-hover); }
+  table.tags tbody tr.is-hidden td .tagname { color: var(--text-faint); text-decoration: line-through; }
+  .tagname { font-weight: 500; } .tag-hash { color: var(--text-faint); }
+  .num { font-variant-numeric: tabular-nums; color: var(--text-muted); }
+  .src { font-size: 10px; color: var(--text-faint); border: 1px solid var(--divider-color); border-radius: 4px; padding: 1px 5px; }
+  .rulecell { font-size: 11.5px; color: var(--text-muted); } .rulecell.none { color: var(--text-faint); }
+  .vdot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+  .vdot.shown { background: var(--text-success); } .vdot.hidden { background: var(--text-accent); } .vdot.flagged { background: var(--text-warning); }
+  th.col-actions, td.col-actions { width: 22px; text-align: center; color: var(--text-faint); cursor: pointer; }
+  th.col-sel, td.col-sel { width: 26px; }
+  .hide-lastSeen .col-lastSeen, .hide-source .col-source, .hide-rule .col-rule { display: none; }
+
+  .leaf-foot { font-size: 11px; color: var(--text-faint); padding: 9px 0 0; }
+
+  /* Pane demo: where View / Manage lives */
+  .pane-demo { display: grid; grid-template-columns: 330px 232px; gap: 0; border: 1px solid var(--background-modifier-border); border-radius: 11px; overflow: hidden; box-shadow: var(--shadow-l); width: 564px; max-width: 100%; }
+  .pane-curator { background: var(--background-primary); border-right: 2px solid var(--background-modifier-border); display: flex; flex-direction: column; }
+  .pane-native { background: var(--background-secondary); }
+  .pane-head { display: flex; align-items: center; gap: 8px; padding: 8px 10px; background: var(--background-secondary); border-bottom: 1px solid var(--divider-color); }
+  .pane-head .pn { font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-faint); }
+  .pane-head .sp { flex: 1; }
+  .modeswitch { display: flex; background: var(--background-primary); border: 1px solid var(--divider-color); border-radius: 7px; padding: 2px; gap: 2px; }
+  .modeswitch button { background: transparent; border: 0; color: var(--text-muted); font: inherit; font-size: 11px; padding: 3px 9px; border-radius: 5px; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; }
+  .modeswitch button.on { background: var(--interactive-accent); color: var(--text-on-accent); }
+  .col-head { font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-faint); padding: 8px 12px; background: var(--background-secondary); border-bottom: 1px solid var(--divider-color); }
+  .pane-search { margin: 9px 10px 4px; display: flex; align-items: center; gap: 7px; background: var(--background-modifier-form-field); border: 1px solid var(--background-modifier-border); border-radius: 6px; padding: 5px 9px; color: var(--text-faint); font-size: 12px; }
+  .pane-chips { display: flex; gap: 5px; flex-wrap: wrap; margin: 6px 10px 8px; }
+  .pchip { font-size: 10.5px; padding: 2px 8px; border-radius: 999px; border: 1px solid var(--background-modifier-border); background: var(--background-secondary); color: var(--text-muted); }
+  .pchip.active { background: rgba(124,58,237,0.16); border-color: rgba(124,58,237,0.4); color: var(--text-accent); }
+  .pane-chips.collapsed { display: none; }
+  .pane-filterbar { display: flex; align-items: center; gap: 8px; margin: 5px 10px 3px; }
+  .pane-filter-toggle { background: transparent; border: 0; color: var(--text-muted); font: inherit; font-size: 11.5px; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; padding: 2px 0; }
+  .pane-filter-toggle:hover { color: var(--text-normal); }
+  .pane-filter-toggle .caret { transition: transform 0.12s; display: inline-block; font-size: 10px; }
+  .pane-filter-toggle.open .caret { transform: rotate(90deg); color: var(--text-accent); }
+  .pane-active-filter { font-size: 10px; color: var(--text-faint); border: 1px solid var(--divider-color); border-radius: 999px; padding: 1px 8px; }
+  .pane-body { padding: 2px 6px 10px; }
+  .prow { display: flex; align-items: center; gap: 8px; padding: 6px 8px; font-size: 12.5px; border-radius: 6px; }
+  .prow:hover { background: var(--background-modifier-hover); }
+  .prow .ptag { flex: 1; } .prow .pcount { color: var(--text-muted); font-variant-numeric: tabular-nums; }
+  .prow .pkebab { color: var(--text-faint); cursor: pointer; }
+  .prow.is-hidden .ptag { color: var(--text-faint); text-decoration: line-through; }
+  /* view hides the manage-only bits in the pane */
+  .pane-curator.view .pane-manage-only { display: none; }
+  .pane-curator.view .ptag { color: var(--text-accent); cursor: pointer; }
+  .pane-curator.view .ptag:hover { text-decoration: underline; }
+  .pane-curator.view .prow.is-hidden .ptag { color: var(--text-faint); }
+  .prow .psel { accent-color: var(--interactive-accent); margin: 0; }
+  .pane-bulk { display: flex; align-items: center; gap: 8px; margin: 6px 10px 8px; padding: 6px 9px; background: rgba(124,58,237,0.1); border: 1px solid rgba(124,58,237,0.3); border-radius: 7px; font-size: 11.5px; }
+  .pane-bulk .c { font-weight: 600; color: var(--text-accent); }
+  .pane-bulk .sp { flex: 1; }
+  .pane-bulk .ba3 { border: 1px solid var(--divider-color); border-radius: 5px; padding: 2px 7px; color: var(--text-muted); }
+  .search-banner { margin-top: 12px; display: inline-flex; align-items: center; gap: 9px; background: var(--background-secondary); border: 1px solid var(--background-modifier-border); border-left: 3px solid var(--text-accent); border-radius: 8px; padding: 9px 13px; font-size: 13px; color: var(--text-muted); }
+  .search-banner code { color: var(--text-accent); }
+  .search-banner b { color: var(--text-normal); }
+  .pane-native .col-head { }
+  .nrow { display: flex; align-items: center; gap: 8px; padding: 5px 10px; font-size: 12.5px; color: var(--text-muted); }
+  .nrow .nh { color: var(--text-faint); }
+  .pane-off { color: var(--text-faint); font-size: 12.5px; font-style: italic; padding: 18px 12px; }
+  .pane-mode-note { font-size: 11.5px; color: var(--text-faint); margin: 12px 0 0; max-width: 564px; }
+
+  .notes { background: var(--background-secondary); border: 1px solid var(--divider-color); border-radius: 10px; padding: 4px 18px; }
+  .notes .nrow2 { display: grid; grid-template-columns: 200px 1fr; gap: 16px; padding: 13px 0; border-bottom: 1px solid var(--divider-color); font-size: 13px; }
+  .notes .nrow2:last-child { border-bottom: 0; }
+  .notes .nk { color: var(--text-accent); font-weight: 600; }
+  .notes .nv { color: var(--text-muted); } .notes .nv b { color: var(--text-normal); }
+
+  .legend { display: flex; gap: 16px; flex-wrap: wrap; font-size: 11.5px; color: var(--text-muted); margin-top: 12px; }
+  .legend .li { display: flex; align-items: center; gap: 6px; }
+
+  /* Help tab - compact commands */
+  .help-h { font-size: 13px; font-weight: 650; margin: 4px 0 8px; }
+  .help-h .muted { font-weight: 400; font-size: 11.5px; color: var(--text-faint); margin-left: 8px; }
+  table.cmd-table { width: 100%; border-collapse: collapse; font-size: 12.5px; margin-bottom: 16px; }
+  table.cmd-table td { padding: 4px 8px; border-bottom: 1px solid var(--divider-color); vertical-align: top; }
+  table.cmd-table td.cmd { font-weight: 600; color: var(--text-normal); white-space: nowrap; width: 1%; }
+  table.cmd-table td.cmd-d { color: var(--text-muted); }
+  details.faq { font-size: 12.5px; color: var(--text-muted); margin-bottom: 4px; border-bottom: 1px solid var(--divider-color); padding: 6px 2px; }
+  details.faq summary { cursor: pointer; color: var(--text-normal); font-weight: 500; }
+
+  /* Filter glossary */
+  .glossary { background: var(--background-secondary); border: 1px solid var(--divider-color); border-radius: 10px; padding: 4px 18px; margin-bottom: 8px; }
+  .glossary .grow2 { display: grid; grid-template-columns: 150px 1fr; gap: 16px; padding: 11px 0; border-bottom: 1px solid var(--divider-color); font-size: 13px; }
+  .glossary .grow2:last-child { border-bottom: 0; }
+  .glossary .gk { color: var(--text-accent); font-weight: 600; }
+  .glossary .gv { color: var(--text-muted); } .glossary .gv b { color: var(--text-normal); }
+  .glossary .warn { color: var(--text-warning); font-weight: 600; }
+</style>
+</head>
+<body>
+<div class="canvas">
+
+  <div class="page-head">
+    <div class="ph-text">
+      <div class="ph-eyebrow">Tag Curator &middot; v1.0.0 &middot; design exploration (rev 4)</div>
+      <h1 class="ph-title">Two surfaces, two jobs</h1>
+      <p class="ph-thesis">A first-class <strong>Curate Tags</strong> settings tab replaces the "Open Tag Curator" button (more discoverable, and the hidden-pane bug disappears). Because Settings is a deliberate, sit-down context, the tab is <strong>always Manage</strong> - the full grid. The <strong>View / Manage</strong> switch lives only on the optional <strong>Tag Curator Pane</strong>, the ambient sidebar leaf you keep open while you write. Click through both below.</p>
+    </div>
+    <div class="theme-toggle">
+      <button data-theme-set="dark" class="is-active">Dark</button>
+      <button data-theme-set="light">Light</button>
+    </div>
+  </div>
+
+  <div class="ba">
+    <div class="ba-card s1">
+      <div class="ba-lab">Surface 1 &middot; in Settings</div>
+      <div class="ba-h">Curate Tags tab <span class="pill manage">always Manage</span></div>
+      <ul>
+        <li>A permanent tab right of <b>General</b> - you go here on purpose</li>
+        <li>Full grid: select, bulk actions, overrides, per-row menu</li>
+        <li>Density handled by the <b>Columns</b> picker + chips below search</li>
+        <li>No mode toggle - Settings is inherently a manage context</li>
+      </ul>
+    </div>
+    <div class="ba-card s2">
+      <div class="ba-lab">Surface 2 &middot; opt-in sidebar leaf</div>
+      <div class="ba-h">Tag Curator Pane <span class="pill modes">View / Manage</span></div>
+      <ul>
+        <li>Enabled by a toggle in General - ambient, lives in the sidebar</li>
+        <li><b>View</b>: click a tag to search its notes; glance at state</li>
+        <li><b>Manage</b>: per-row + bulk actions and overrides (full parity)</li>
+        <li>The only surface that sits live beside the native tag pane</li>
+      </ul>
+    </div>
+  </div>
+
+  <h2 class="sec">Surface 1 &middot; the Curate Tags settings tab (always Manage)</h2>
+  <p class="sec-lead">Click between <b>General</b> and <b>Curate Tags</b>. The Curate Tags tab opens straight into the full management grid - no view mode. Use the <b>Columns</b> menu to trim what is on screen.</p>
+  <div class="win">
+    <div class="win-titlebar"><span class="traffic"><span></span><span></span><span></span></span><span class="win-title">Settings - Tag Curator</span><span style="width:42px"></span></div>
+    <div class="tabbar" id="tabbar">
+      <span class="tab" data-tab="general">General</span>
+      <span class="tab on new" data-tab="curate">Curate Tags</span>
+      <span class="tab" data-tab="scopes">Scopes</span>
+      <span class="tab" data-tab="presets">Presets <span class="badge">5</span></span>
+      <span class="tab" data-tab="custom">Custom rules <span class="badge">1</span></span>
+      <span class="tab" data-tab="advanced">Advanced</span>
+      <span class="tab" data-tab="help">Help</span>
+    </div>
+
+    <!-- GENERAL -->
+    <div class="panel hidden" data-panel="general">
+      <div class="stats">
+        <div class="stat"><div class="l">Total tags</div><div class="v">247</div></div>
+        <div class="stat"><div class="l">Hidden now</div><div class="v accent">169</div></div>
+        <div class="stat"><div class="l">Active rules</div><div class="v">5</div></div>
+        <div class="stat"><div class="l">Orphans</div><div class="v">88</div></div>
+      </div>
+      <div class="setrow">
+        <div class="st"><div class="nm">Enable Tag Curator</div><div class="ds">Master switch. When off, every tag shows normally and no DOM is touched.</div></div>
+        <div class="switch on" data-switch></div>
+      </div>
+      <div class="setrow">
+        <div class="st"><div class="nm">Enable Tag Curator Pane</div><div class="ds">Also surface curation as a dockable sidebar pane, so you can keep it open beside the native tag pane and watch rules apply live. Curation always lives in the Curate Tags tab; this just adds the docked, View/Manage option.</div></div>
+        <div class="switch on" id="enablePane" data-switch></div>
+      </div>
+      <div class="setrow">
+        <div class="st"><div class="nm">Preview mode</div><div class="ds">Flag matched tags instead of hiding them, so you can see what a rule would hide before committing. This is what populates the "Flagged" filter.</div></div>
+        <div class="switch" data-switch></div>
+      </div>
+      <div class="hint">Dashboard metrics restored to the top. No "Open Tag Curator" button - the workspace is the <b>Curate Tags</b> tab; the pane toggle above controls the docked sidebar view.</div>
+    </div>
+
+    <!-- CURATE TAGS (always Manage) -->
+    <div class="panel" data-panel="curate">
+      <div class="surface manage hide-lastSeen hide-source" id="surface">
+        <div class="surface-top">
+          <div class="lead"><b>Manage tags</b> - select, bulk-act, set overrides, and edit rules. Everything in one grid.</div>
+          <div class="colbtn">
+            <button class="btn" data-pop="C">Columns &#9662;</button>
+            <div class="popover" id="popC">
+              <div class="pop-h">Show columns</div>
+              <label class="locked"><input type="checkbox" checked disabled> Tag</label>
+              <label class="locked"><input type="checkbox" checked disabled> Count</label>
+              <label class="locked"><input type="checkbox" checked disabled> Visible</label>
+              <label><input type="checkbox" data-col="rule" checked> Rule</label>
+              <label><input type="checkbox" data-col="lastSeen"> Last used</label>
+              <label><input type="checkbox" data-col="source"> Source</label>
+            </div>
+          </div>
+        </div>
+
+        <div class="toolbar-top">
+          <div class="search"><span>&#128269;</span> Search tags...</div>
+        </div>
+        <div class="chip-row">
+          <span class="chip active">All</span>
+          <span class="chip">Shown</span>
+          <span class="chip">Hidden</span>
+          <span class="chip">Flagged</span>
+          <span class="chip">Orphans</span>
+          <span class="chip">Frontmatter</span>
+          <span class="chip">Inline</span>
+          <span class="chip">Unreviewed</span>
+        </div>
+
+        <div class="bulk"><span class="c">2</span> <span>selected</span><span class="sp"></span><span class="ba2">Always hide</span><span class="ba2">Always show</span><span class="ba2">Mark reviewed</span><span class="ba2">Clear</span></div>
+
+        <table class="tags" id="tableC">
+          <thead><tr>
+            <th class="col-sel"><input type="checkbox" aria-label="select all"></th>
+            <th>Tag</th><th>Count</th>
+            <th class="col-lastSeen">Last used</th>
+            <th class="col-source">Source</th>
+            <th>Visible</th>
+            <th class="col-rule">Rule</th>
+            <th class="col-actions"></th>
+          </tr></thead>
+          <tbody>
+            <tr><td class="col-sel"><input type="checkbox"></td><td><span class="tag-hash">#</span><span class="tagname">daily</span></td><td class="num">993</td><td class="col-lastSeen num">6/2/2026</td><td class="col-source"><span class="src">both</span></td><td><span class="vdot shown"></span></td><td class="col-rule rulecell none">none</td><td class="col-actions">&#8942;</td></tr>
+            <tr><td class="col-sel"><input type="checkbox"></td><td><span class="tag-hash">#</span><span class="tagname">reference</span></td><td class="num">396</td><td class="col-lastSeen num">6/2/2026</td><td class="col-source"><span class="src">both</span></td><td><span class="vdot shown"></span></td><td class="col-rule rulecell none">none</td><td class="col-actions">&#8942;</td></tr>
+            <tr><td class="col-sel"><input type="checkbox"></td><td><span class="tag-hash">#</span><span class="tagname">area/health/diet/keto</span></td><td class="num">115</td><td class="col-lastSeen num">6/2/2026</td><td class="col-source"><span class="src">both</span></td><td><span class="vdot shown"></span></td><td class="col-rule rulecell none">none</td><td class="col-actions">&#8942;</td></tr>
+            <tr class="is-hidden"><td class="col-sel"><input type="checkbox" checked></td><td><span class="tag-hash">#</span><span class="tagname">x</span></td><td class="num">27</td><td class="col-lastSeen num">5/31/2026</td><td class="col-source"><span class="src">inline</span></td><td><span class="vdot hidden"></span></td><td class="col-rule rulecell">3 or fewer</td><td class="col-actions">&#8942;</td></tr>
+            <tr class="is-hidden"><td class="col-sel"><input type="checkbox" checked></td><td><span class="tag-hash">#</span><span class="tagname">a</span></td><td class="num">26</td><td class="col-lastSeen num">5/31/2026</td><td class="col-source"><span class="src">inline</span></td><td><span class="vdot hidden"></span></td><td class="col-rule rulecell">Single-character</td><td class="col-actions">&#8942;</td></tr>
+            <tr class="is-hidden"><td class="col-sel"><input type="checkbox"></td><td><span class="tag-hash">#</span><span class="tagname">tmp</span></td><td class="num">1</td><td class="col-lastSeen num">5/12/2026</td><td class="col-source"><span class="src">inline</span></td><td><span class="vdot hidden"></span></td><td class="col-rule rulecell">Orphan tags</td><td class="col-actions">&#8942;</td></tr>
+          </tbody>
+        </table>
+        <div class="leaf-foot" id="surfaceFoot">Manage &middot; 247 tags &middot; 4 columns (Last used + Source hidden by default - add them from Columns)</div>
+      </div>
+    </div>
+
+    <div class="panel hidden" data-panel="scopes"><div class="hint">Scopes tab (tag pane, properties, autocomplete, Notebook Navigator) - unchanged by this proposal.</div></div>
+
+    <!-- PRESETS (split out of Rules) -->
+    <div class="panel hidden" data-panel="presets">
+      <p class="sec-lead" style="margin:0 0 12px">Built-in presets - toggle on or off. Not editable; copy one into a custom rule to change it.</p>
+      <div class="setrow"><div class="st"><div class="nm">Hide hex color codes</div><div class="ds">e.g. #FFAA00, #abcdef &middot; 75 tags affected</div></div><div class="switch on" data-switch></div></div>
+      <div class="setrow"><div class="st"><div class="nm">Hide URL anchor fragments</div><div class="ds">e.g. #section-3, #top &middot; 41 tags affected</div></div><div class="switch on" data-switch></div></div>
+      <div class="setrow"><div class="st"><div class="nm">Hide single-character tags</div><div class="ds">e.g. #a, #x &middot; 10 tags affected</div></div><div class="switch on" data-switch></div></div>
+      <div class="setrow"><div class="st"><div class="nm">Hide purely numeric tags</div><div class="ds">0 tags affected</div></div><div class="switch on" data-switch></div></div>
+      <div class="setrow"><div class="st"><div class="nm">Hide orphan tags (count &le; 1)</div><div class="ds">would hide 88 tags</div></div><div class="switch" data-switch></div></div>
+    </div>
+
+    <!-- CUSTOM RULES (split out of Rules) -->
+    <div class="panel hidden" data-panel="custom">
+      <p class="sec-lead" style="margin:0 0 12px">Your own rules. Edit, preview the affected tags, and reorder.</p>
+      <div class="setrow"><div class="st"><div class="nm">3 or fewer</div><div class="ds">frequency &middot; when count &le; 3 &middot; 100 tags affected</div></div><div class="switch on" data-switch></div></div>
+      <div style="margin-top:14px"><span class="btn">+ New rule</span></div>
+    </div>
+
+    <div class="panel hidden" data-panel="advanced"><div class="hint">Advanced tab - index maintenance, performance, debug - unchanged.</div></div>
+
+    <!-- HELP (compact commands) -->
+    <div class="panel hidden" data-panel="help">
+      <div class="help-h">Commands <span class="muted">shown as "Tag Curator: ..." in the palette - bind hotkeys in Obsidian's settings</span></div>
+      <table class="cmd-table">
+        <tr><td class="cmd">Open the panel</td><td class="cmd-d">Open or reveal the Tag Curator pane in the sidebar</td></tr>
+        <tr><td class="cmd">Open beside the tag pane</td><td class="cmd-d">Dock the pane next to the native tag pane for live preview</td></tr>
+        <tr><td class="cmd">Toggle enable</td><td class="cmd-d">Master kill switch on or off</td></tr>
+        <tr><td class="cmd">Toggle preview mode</td><td class="cmd-d">Flag matches instead of hiding them</td></tr>
+        <tr><td class="cmd">Panic disable</td><td class="cmd-d">Remove all DOM effects now and disable</td></tr>
+        <tr><td class="cmd">Rescan vault tags</td><td class="cmd-d">Rebuild the tag index across all notes</td></tr>
+      </table>
+      <div class="help-h">FAQ</div>
+      <details class="faq"><summary>Does Tag Curator change my notes?</summary>No. It is display-only - it hides or flags tags in the UI and never edits note content. Disabling or uninstalling restores every tag.</details>
+      <details class="faq"><summary>Where did a tag go?</summary>A preset, rule, or override is hiding it. Use "Why is this affected?" on its row, or run Panic disable to clear all effects at once.</details>
+      <div class="help-h" style="margin-top:14px">About</div>
+      <div style="font-size:12.5px;color:var(--text-muted)">Tag Curator 1.0.0-rc &middot; display-only, file-safe, fully reversible &middot; <span style="color:var(--text-accent)">GitHub</span> &middot; <span style="color:var(--text-accent)">Report an issue</span> &middot; <span style="color:var(--text-accent)">Sponsor</span></div>
+    </div>
+  </div>
+
+  <h2 class="sec">Surface 2 &middot; the Tag Curator Pane (where View / Manage lives)</h2>
+  <p class="sec-lead">Toggle <b>Enable Tag Curator Pane</b> in General above to show or hide this. Inside the pane, the <b>View / Manage</b> switch is the density lever: <b>View</b> is a calm glance you keep docked while writing; <b>Manage</b> lets you act without opening Settings. Try the switch.</p>
+  <div id="paneOn">
+    <div class="pane-demo">
+      <div class="pane-curator view" id="paneCurator">
+        <div class="pane-head">
+          <span class="pn">Tag Curator pane</span><span class="sp"></span>
+          <div class="modeswitch" id="paneMode">
+            <button class="on" data-pmode="view">&#128065; View</button>
+            <button data-pmode="manage">&#9881; Manage</button>
+          </div>
+        </div>
+        <div class="pane-search"><span>&#128269;</span> Search tags...</div>
+        <div class="pane-filterbar">
+          <button class="pane-filter-toggle" id="paneFilterToggle"><span class="caret">&#9656;</span> Filters</button>
+          <span class="pane-active-filter">All</span>
+        </div>
+        <div class="pane-chips collapsed" id="paneChips">
+          <span class="pchip active">All</span><span class="pchip">Shown</span><span class="pchip">Hidden</span><span class="pchip">Flagged</span><span class="pchip">Orphans</span><span class="pchip">Unreviewed</span>
+        </div>
+        <div class="pane-bulk pane-manage-only"><span class="c">2 selected</span><span class="sp"></span><span class="ba3">Always hide</span><span class="ba3">Always show</span><span class="ba3">Mark reviewed</span><span class="ba3">Clear</span></div>
+        <div class="pane-body" id="paneBody">
+          <div class="prow"><input type="checkbox" class="psel pane-manage-only"><span class="vdot shown"></span><span class="ptag" data-tag="daily" data-count="993">#daily</span><span class="pcount">993</span><span class="pkebab pane-manage-only">&#8942;</span></div>
+          <div class="prow"><input type="checkbox" class="psel pane-manage-only"><span class="vdot shown"></span><span class="ptag" data-tag="research" data-count="342">#research</span><span class="pcount">342</span><span class="pkebab pane-manage-only">&#8942;</span></div>
+          <div class="prow"><input type="checkbox" class="psel pane-manage-only"><span class="vdot shown"></span><span class="ptag" data-tag="review" data-count="326">#review</span><span class="pcount">326</span><span class="pkebab pane-manage-only">&#8942;</span></div>
+          <div class="prow is-hidden"><input type="checkbox" class="psel pane-manage-only" checked><span class="vdot hidden"></span><span class="ptag" data-tag="x" data-count="27">#x</span><span class="pcount">27</span><span class="pkebab pane-manage-only">&#8942;</span></div>
+          <div class="prow is-hidden"><input type="checkbox" class="psel pane-manage-only" checked><span class="vdot hidden"></span><span class="ptag" data-tag="a" data-count="26">#a</span><span class="pcount">26</span><span class="pkebab pane-manage-only">&#8942;</span></div>
+        </div>
+      </div>
+      <div class="pane-native">
+        <div class="col-head">Native tag pane (live)</div>
+        <div class="pane-body" style="padding-top:6px">
+          <div class="nrow"><span class="nh">#</span> daily</div>
+          <div class="nrow"><span class="nh">#</span> research</div>
+          <div class="nrow"><span class="nh">#</span> review</div>
+          <div class="nrow" style="color:var(--text-faint)"><span class="nh">#</span> <i>x, a hidden</i></div>
+        </div>
+      </div>
+    </div>
+    <p class="pane-mode-note" id="paneModeNote">View mode: click any tag to open an Obsidian search for every note that uses it (just like the native tag pane). The pane also mirrors each tag's curation state. No editing.</p>
+    <div class="search-banner" id="searchBanner" style="display:none"></div>
+  </div>
+  <div id="paneOff" style="display:none">
+    <div class="pane-demo" style="grid-template-columns:1fr; width:330px">
+      <div class="pane-curator" style="border-right:0">
+        <div class="col-head">Tag Curator pane</div>
+        <div class="pane-off">Pane disabled. Curation still lives in the <b>Curate Tags</b> settings tab - the pane is just the optional docked view, now hidden.</div>
+      </div>
+    </div>
+  </div>
+
+  <h2 class="sec">Where each control lives</h2>
+  <div class="notes">
+    <div class="nrow2"><div class="nk">Curate Tags tab</div><div class="nv"><b>Always Manage.</b> Full grid: select + bulk bar, overrides, per-row menu, all columns (trim with the Columns picker), full chip set, chips below search. No view mode - you opened Settings to do work.</div></div>
+    <div class="nrow2"><div class="nk">Tag Curator Pane - View</div><div class="nv"><b>Navigate, do not curate.</b> Click a tag to open an Obsidian search for every note using it (native-pane behavior). Each row also shows the curation state dot. Read-only otherwise.</div></div>
+    <div class="nrow2"><div class="nk">Tag Curator Pane - Manage</div><div class="nv"><b>Full parity with the Settings grid.</b> Per-row menu AND selection + bulk bar + overrides. Just narrower and ambient - act on tags without leaving your note.</div></div>
+    <div class="nrow2"><div class="nk">The principle</div><div class="nv"><b>View navigates, Manage curates.</b> One two-mode pane answers both "take me to this tag's notes" and "change how this tag behaves" without ever opening Settings.</div></div>
+  </div>
+
+  <h2 class="sec">Filter glossary + open decisions</h2>
+  <div class="glossary">
+    <div class="grow2"><div class="gk">Shown (new)</div><div class="gv"><b>Tags currently visible</b> - the inverse of Hidden. Your "Visible only" request. Added to both surfaces.</div></div>
+    <div class="grow2"><div class="gk">Hidden</div><div class="gv">Tags a rule or override is currently removing from view.</div></div>
+    <div class="grow2"><div class="gk">Flagged</div><div class="gv">A matched tag while <b>Preview mode</b> is ON - marked, not hidden, so you can preview a rule before committing. <span class="warn">Empty unless Preview mode is on.</span></div></div>
+    <div class="grow2"><div class="gk">Orphans</div><div class="gv">Tags used in one note or fewer - cleanup candidates.</div></div>
+    <div class="grow2"><div class="gk">Frontmatter / Inline</div><div class="gv">Tags coming ONLY from the note's <code>tags:</code> property, or ONLY from inline <code>#tags</code> in the body. ("both" = appears in each.)</div></div>
+    <div class="grow2"><div class="gk">Unreviewed</div><div class="gv"><b>Decision: build it for v1.0.</b> A "Mark reviewed" action (per-row + bulk) plus a persisted reviewed flag turns this into a real triage inbox - new tags land here until you clear them.</div></div>
+  </div>
+
+  <div class="legend">
+    <span class="li"><span class="vdot shown"></span> shown</span>
+    <span class="li"><span class="vdot hidden"></span> hidden</span>
+    <span class="li"><span class="vdot flagged"></span> flagged (preview mode)</span>
+  </div>
+
+</div>
+
+<script>
+  document.querySelectorAll('[data-theme-set]').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      document.documentElement.setAttribute('data-theme', btn.getAttribute('data-theme-set'));
+      document.querySelectorAll('[data-theme-set]').forEach(function (b) { b.classList.remove('is-active'); });
+      btn.classList.add('is-active');
+    });
+  });
+
+  // Settings tab switching
+  document.querySelectorAll('#tabbar .tab').forEach(function (tab) {
+    tab.addEventListener('click', function () {
+      var which = tab.getAttribute('data-tab');
+      document.querySelectorAll('#tabbar .tab').forEach(function (t) { t.classList.remove('on'); });
+      tab.classList.add('on');
+      document.querySelectorAll('.panel').forEach(function (p) {
+        p.classList.toggle('hidden', p.getAttribute('data-panel') !== which);
+      });
+    });
+  });
+
+  // Generic switch toggles
+  document.querySelectorAll('[data-switch]').forEach(function (sw) {
+    sw.addEventListener('click', function () { sw.classList.toggle('on'); });
+  });
+
+  // Columns picker (Curate Tags tab)
+  document.querySelectorAll('[data-pop]').forEach(function (btn) {
+    btn.addEventListener('click', function (e) {
+      e.stopPropagation();
+      var pop = document.getElementById('pop' + btn.getAttribute('data-pop'));
+      if (pop) pop.classList.toggle('open');
+    });
+  });
+  document.addEventListener('click', function () {
+    document.querySelectorAll('.popover.open').forEach(function (p) { p.classList.remove('open'); });
+  });
+  document.querySelectorAll('#popC input[data-col]').forEach(function (cb) {
+    cb.addEventListener('click', function (e) { e.stopPropagation(); });
+    cb.addEventListener('change', function () {
+      var table = document.getElementById('tableC');
+      table.classList.toggle('hide-' + cb.getAttribute('data-col'), !cb.checked);
+      var shown = 3 + ['rule','lastSeen','source'].filter(function (k) { return !table.classList.contains('hide-' + k); }).length;
+      document.getElementById('surfaceFoot').innerHTML = 'Manage &middot; 247 tags &middot; ' + shown + ' columns';
+    });
+  });
+
+  // Pane View / Manage
+  document.querySelectorAll('#paneMode button').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var mode = btn.getAttribute('data-pmode');
+      document.querySelectorAll('#paneMode button').forEach(function (b) { b.classList.remove('on'); });
+      btn.classList.add('on');
+      var cur = document.getElementById('paneCurator');
+      cur.classList.toggle('view', mode === 'view');
+      cur.classList.toggle('manage', mode === 'manage');
+      document.getElementById('paneModeNote').textContent = mode === 'view'
+        ? 'View mode: click any tag to open an Obsidian search for every note that uses it (just like the native tag pane). The pane also mirrors each tag\'s curation state. No editing.'
+        : 'Manage mode: search, chips, selection + bulk bar, and a per-row menu appear - full parity with the Settings grid, but ambient and narrower.';
+      if (mode === 'manage') {
+        var sb = document.getElementById('searchBanner');
+        if (sb) sb.style.display = 'none';
+      }
+    });
+  });
+
+  // Pane: collapsible filter pills (both modes)
+  var paneFilterToggle = document.getElementById('paneFilterToggle');
+  if (paneFilterToggle) {
+    paneFilterToggle.addEventListener('click', function () {
+      paneFilterToggle.classList.toggle('open');
+      var chips = document.getElementById('paneChips');
+      if (chips) chips.classList.toggle('collapsed');
+    });
+  }
+
+  // View mode: clicking a tag opens a (mock) Obsidian search for its notes
+  var paneBody = document.getElementById('paneBody');
+  if (paneBody) {
+    paneBody.addEventListener('click', function (e) {
+      var tagEl = e.target.closest ? e.target.closest('.ptag') : null;
+      if (!tagEl) return;
+      var cur = document.getElementById('paneCurator');
+      if (!cur.classList.contains('view')) return;
+      var tag = tagEl.getAttribute('data-tag');
+      var count = tagEl.getAttribute('data-count');
+      var sb = document.getElementById('searchBanner');
+      if (sb) {
+        sb.innerHTML = '&#128269; Obsidian search opened: <code>tag:#' + tag + '</code> &nbsp;<b>' + count + ' notes</b>';
+        sb.style.display = 'inline-flex';
+      }
+    });
+  }
+
+  // Enable Pane toggle drives the pane demo
+  var enablePane = document.getElementById('enablePane');
+  if (enablePane) {
+    enablePane.addEventListener('click', function () {
+      var on = enablePane.classList.contains('on');
+      document.getElementById('paneOn').style.display = on ? 'block' : 'none';
+      document.getElementById('paneOff').style.display = on ? 'none' : 'block';
+    });
+  }
+</script>
+</body>
+</html>

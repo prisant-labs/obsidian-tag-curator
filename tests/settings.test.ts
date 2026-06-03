@@ -455,3 +455,55 @@ describe('SettingsManager.setSeenNnTooOldNotice', () => {
     expect((plugin.data as { seenNnTooOldNotice: boolean }).seenNnTooOldNotice).toBe(true);
   });
 });
+
+describe('SettingsManager.load - v5 to v6 migration (paneEnabled)', () => {
+  // A v5 fixture must NOT carry paneEnabled so the migration is what fills it.
+  function v5Fixture(extra: Record<string, unknown> = {}): unknown {
+    const v5 = { ...DEFAULT_SETTINGS, schemaVersion: 5 } as Record<string, unknown>;
+    delete v5.paneEnabled;
+    return { ...v5, ...extra };
+  }
+
+  it('defaults paneEnabled to true when absent from v5 data', async () => {
+    const mgr = new SettingsManager(pluginWith(v5Fixture()));
+    await mgr.load();
+    expect(mgr.get().schemaVersion).toBe(SCHEMA_VERSION);
+    expect(mgr.get().paneEnabled).toBe(true);
+  });
+
+  it('preserves an explicit paneEnabled false across migration', async () => {
+    const fixture = v5Fixture({ paneEnabled: false });
+    const mgr = new SettingsManager(pluginWith(fixture));
+    await mgr.load();
+    expect(mgr.get().paneEnabled).toBe(false);
+  });
+
+  it('persists the v6 schemaVersion + paneEnabled to disk', async () => {
+    const plugin = pluginWith(v5Fixture());
+    const mgr = new SettingsManager(plugin);
+    await mgr.load();
+    const onDisk = plugin.data as { schemaVersion: number; paneEnabled?: boolean };
+    expect(onDisk.schemaVersion).toBe(SCHEMA_VERSION);
+    expect(onDisk.paneEnabled).toBe(true);
+  });
+});
+
+describe('SettingsManager.setPaneEnabled', () => {
+  it('defaults paneEnabled to true on a fresh install', async () => {
+    const mgr = new SettingsManager(pluginWith(null));
+    await mgr.load();
+    expect(mgr.get().paneEnabled).toBe(true);
+  });
+
+  it('setPaneEnabled toggles the flag and persists', async () => {
+    const plugin = pluginWith(null);
+    const mgr = new SettingsManager(plugin);
+    await mgr.load();
+    expect(mgr.get().paneEnabled).toBe(true);
+    await mgr.setPaneEnabled(false);
+    expect(mgr.get().paneEnabled).toBe(false);
+    expect((plugin.data as { paneEnabled: boolean }).paneEnabled).toBe(false);
+    await mgr.setPaneEnabled(true);
+    expect(mgr.get().paneEnabled).toBe(true);
+  });
+});

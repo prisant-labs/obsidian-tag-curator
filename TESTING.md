@@ -40,6 +40,7 @@ Walk this before tagging v1.0. It is the current gate; the v0.1 checklist furthe
 - [ ] **Live reaction.** With the two panes visible, create or edit a rule in the workspace (for example a regex that matches a hex-code tag). The affected-tags list in the workspace updates as you type, AND the native tag pane reacts live (matched tags hide, or flag in preview mode) without closing or reopening anything.
 - [ ] **Per-row diagnostics.** On an affected row, use "why is this hidden?" and confirm it names the exact preset, rule, or override responsible.
 - [ ] **Bulk actions.** Select several tags and confirm hide / unhide / flag / add description / send to Tag Wrangler operate on the selection.
+- [ ] **Launcher closes Settings.** Open Settings, go to General, click "Open Tag Curator": Settings closes and the pane is visible in the right sidebar (not hidden behind a modal). Repeat with "Open beside the tag pane".
 
 ### B. Each scope hides/flags
 
@@ -306,6 +307,10 @@ git push origin main
 git push origin 0.1.0
 ```
 
+### 16. Pane View/Manage modes (Task 16)
+
+Pane opens in View: tag names are links that open a tag search; no checkboxes/bulk bar/row menu; a Filters disclosure expands/collapses the chip row. Switch to Manage: checkboxes, bulk bar, and row menus return and chips show normally. The Curate Tags settings tab is unaffected (always full Manage). Header and rows stay column-aligned in View.
+
 The tag push triggers `.github/workflows/release.yml`, which uploads `manifest.json`, `main.js`, `styles.css`, and `versions.json` to the GitHub release.
 
 ## Debugging
@@ -359,6 +364,14 @@ Before tagging:
 7. Update `CHANGELOG.md` with any post-merge fixes.
 8. Confirm `manifest.json` version + `versions.json` entry + `package.json` version all match.
 
+### 16. Split Rules tabs
+
+- [ ] Settings shows Presets and Custom rules as separate tabs, each with a count badge; the old combined Rules tab is gone.
+
+### 17. Help tab compact command table
+
+- [ ] Help tab shows commands as a compact two-column table (name + description), not a tall list of setting rows; FAQ and About still present.
+
 ## Reporting Issues
 
 If you find issues during testing:
@@ -379,3 +392,33 @@ Verify on:
 - iOS Obsidian Mobile (cell 4)
 
 The plugin is **not** desktop-only (`isDesktopOnly: false`), so mobile must work; the only desktop-specific surface is the status bar (Obsidian doesn't render one on mobile).
+
+### 18. Workspace toolbar layout
+
+- [ ] Workspace toolbar shows the search box on top and the filter chips on their own row directly beneath it (not side by side).
+
+### 19. Row menu: Mark reviewed / Mark unreviewed
+
+- [ ] Row menu shows "Mark reviewed"; after clicking it, re-opening the same row's menu shows "Mark unreviewed", and the tag leaves the Unreviewed filter.
+
+### 20. Bulk bar: Mark reviewed
+
+- [ ] Select 2 or more tags, click Mark reviewed in the bulk bar: all selected tags leave the Unreviewed filter.
+
+### 21. Settings Curate Tags tab
+
+- [ ] Settings -> Curate Tags shows the full Manage grid (search, chips, selection, bulk bar, row menu, virtual scroll). Switching to another tab and back, and closing/reopening Settings, does not duplicate rows or leak scroll listeners.
+
+### 22. Enable Tag Curator Pane toggle
+
+- [ ] General has no Open button. Toggling Enable Tag Curator Pane OFF removes the ribbon icon and closes any open Tag Curator pane; toggling ON restores the ribbon. With the pane OFF, the 'Open the panel' / 'Open beside the tag pane' commands show a Notice. The Presets-tab 'N tags affected' deep-link and the status-bar click still open the pane regardless (they are not gated).
+
+### 23. Rule deep-link opens pane in Manage mode
+
+- [ ] Clicking a Presets 'N tags affected' deep-link opens the pane in Manage mode (checkboxes/bulk available) filtered to that rule's tags. The status-bar click still opens in the default View.
+
+### 24. Phase 3 adversarial review fixes (F-1, F-2, F-3)
+
+- [ ] After a preset deep-link (clicking "N tags affected" in Presets tab), clicking the status bar shows ALL hidden tags (the rule filter is cleared, not narrowed to the prior rule).
+- [ ] With the Curate Tags settings tab open, external changes (toggling a rule, rescanning vault tags) refresh the table without closing and reopening Settings.
+- [ ] Switching between Custom rules and Curate Tags tabs repeatedly does not leak editor or table subscriptions (confirmed via zero extra settingsManager listener warnings in the console).

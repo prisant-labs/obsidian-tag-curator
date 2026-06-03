@@ -57,6 +57,7 @@ export default class TagCuratorPlugin extends Plugin {
   private observers: ObserverBase[] = [];
   // Disposer for the NN reapply subscription; called on unload / panic / teardown.
   private nnUnsubscribe: (() => void) | null = null;
+  private ribbonEl: HTMLElement | null = null;
   private statusBarEl: HTMLElement | null = null;
 
   async onload(): Promise<void> {
@@ -113,10 +114,6 @@ export default class TagCuratorPlugin extends Plugin {
       CURATION_VIEW_TYPE,
       (leaf: WorkspaceLeaf) => new CurationWorkspaceView(leaf, this),
     );
-
-    this.addRibbonIcon('tags', 'Open Tag Curator', () => {
-      void this.openCurationWorkspace();
-    });
 
     this.statusBarEl = this.addStatusBarItem();
     this.statusBarEl.addClass('tag-curator-status');
@@ -195,6 +192,10 @@ export default class TagCuratorPlugin extends Plugin {
       id: 'open-curation-workspace',
       name: 'Open the panel',
       callback: () => {
+        if (!this.settingsManager.get().paneEnabled) {
+          new Notice('Enable the Tag Curator Pane in Settings -> General to dock it.');
+          return;
+        }
         void this.openCurationWorkspace();
       },
     });
@@ -202,6 +203,10 @@ export default class TagCuratorPlugin extends Plugin {
       id: 'open-curation-workspace-beside-tag-pane',
       name: 'Open beside the tag pane',
       callback: () => {
+        if (!this.settingsManager.get().paneEnabled) {
+          new Notice('Enable the Tag Curator Pane in Settings -> General to dock it.');
+          return;
+        }
         void this.openBesideTagPane();
       },
     });
@@ -234,6 +239,25 @@ export default class TagCuratorPlugin extends Plugin {
     });
 
     this.refreshStatusBar();
+    this.applyPaneEnabled();
+  }
+
+  /** Add or remove the ribbon icon and close open panes based on paneEnabled. */
+  applyPaneEnabled(): void {
+    const on = this.settingsManager.get().paneEnabled;
+    if (on && !this.ribbonEl) {
+      this.ribbonEl = this.addRibbonIcon('tags', 'Open Tag Curator', () => {
+        void this.openCurationWorkspace();
+      });
+    } else if (!on && this.ribbonEl) {
+      this.ribbonEl.remove();
+      this.ribbonEl = null;
+    }
+    if (!on) {
+      for (const leaf of this.app.workspace.getLeavesOfType(CURATION_VIEW_TYPE)) {
+        leaf.detach();
+      }
+    }
   }
 
   /**

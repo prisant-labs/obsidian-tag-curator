@@ -123,6 +123,16 @@ describe('TagListModel filtering and search', () => {
     expect(model.rows().map((r) => r.meta.tag)).toEqual(['drop']);
   });
 
+  it('shown chip keeps only rows whose visibility is shown', () => {
+    const model = new TagListModel(
+      source([meta('keep'), meta('drop')], { customRules: [hideRule('drop')] }),
+    );
+    model.setFilter('shown');
+    const rows = model.rows();
+    expect(rows.length).toBeGreaterThan(0);
+    expect(rows.every((r) => r.visibility === 'shown')).toBe(true);
+  });
+
   it('inline chip keeps only inline-only rows (not frontmatter)', () => {
     const model = new TagListModel(
       source([

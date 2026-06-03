@@ -158,6 +158,31 @@ export class TagMetaManager extends Events {
     return this.store.get(tag);
   }
 
+  /** Mark a single tag reviewed / unreviewed. Delegates to the batched path. */
+  setReviewed(tag: string, value: boolean): void {
+    this.setReviewedBulk([tag], value);
+  }
+
+  /**
+   * Mark many tags reviewed / unreviewed in one pass (the triage inbox). Skips
+   * tags not in the store and tags already at `value`, then persists once via the
+   * debounced save and fires a single `changed` so views repaint once. Tag keys
+   * carry no leading '#'.
+   */
+  setReviewedBulk(tags: string[], value: boolean): void {
+    let changed = false;
+    for (const tag of tags) {
+      const existing = this.store.get(tag);
+      if (!existing) continue;
+      if (existing.reviewed === value) continue;
+      existing.reviewed = value;
+      changed = true;
+    }
+    if (!changed) return;
+    this.scheduleSave();
+    this.trigger('changed');
+  }
+
   all(): Map<string, TagMeta> {
     return new Map(this.store);
   }
