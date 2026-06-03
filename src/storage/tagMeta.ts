@@ -158,6 +158,19 @@ export class TagMetaManager extends Events {
     return this.store.get(tag);
   }
 
+  /**
+   * Mark a tag reviewed / unreviewed (the triage inbox). No-op if the tag is
+   * not in the store. Persists via the debounced sidecar save and announces via
+   * `changed` so open views re-render. Tag keys carry no leading '#'.
+   */
+  setReviewed(tag: string, value: boolean): void {
+    const existing = this.store.get(tag);
+    if (!existing) return;
+    existing.reviewed = value;
+    this.scheduleSave();
+    this.trigger('changed');
+  }
+
   all(): Map<string, TagMeta> {
     return new Map(this.store);
   }
