@@ -92,6 +92,7 @@ export class CurationWorkspaceView extends ItemView {
         return Boolean(commands?.executeCommandById?.(id));
       },
       setOverride: (tag, value) => this.plugin.settingsManager.setOverride(tag, value),
+      setReviewed: (tag, value) => this.plugin.tagMetaManager.setReviewed(tag, value),
     };
     this.actions = new TagActions(host);
 

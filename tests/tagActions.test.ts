@@ -6,6 +6,7 @@ function host(overrides: Partial<TagActionsHost> = {}): TagActionsHost {
     isPluginEnabled: () => true,
     executeCommand: () => true,
     setOverride: () => {},
+    setReviewed: () => {},
     ...overrides,
   };
 }
@@ -106,5 +107,43 @@ describe('TagActions visibility and bulk', () => {
     );
     expect(await actions.applyBulk(['a'], 'unhide')).toEqual({ applied: 1, deferred: 0 });
     expect(calls).toEqual([['a', 'show']]);
+  });
+});
+
+describe('TagActions markReviewed', () => {
+  it('markReviewed calls setReviewed once per tag and returns applied count', async () => {
+    const calls: Array<[string, boolean]> = [];
+    const actions = new TagActions(
+      host({ setReviewed: (tag, value) => void calls.push([tag, value]) }),
+    );
+    expect(await actions.markReviewed(['a', 'b'], true)).toEqual({ applied: 2, deferred: 0 });
+    expect(calls).toEqual([['a', true], ['b', true]]);
+  });
+
+  it('markReviewed with false marks tags as unreviewed', async () => {
+    const calls: Array<[string, boolean]> = [];
+    const actions = new TagActions(
+      host({ setReviewed: (tag, value) => void calls.push([tag, value]) }),
+    );
+    expect(await actions.markReviewed(['a'], false)).toEqual({ applied: 1, deferred: 0 });
+    expect(calls).toEqual([['a', false]]);
+  });
+
+  it('applyBulk routes mark-reviewed to markReviewed with true', async () => {
+    const calls: Array<[string, boolean]> = [];
+    const actions = new TagActions(
+      host({ setReviewed: (tag, value) => void calls.push([tag, value]) }),
+    );
+    expect(await actions.applyBulk(['a', 'b'], 'mark-reviewed')).toEqual({ applied: 2, deferred: 0 });
+    expect(calls).toEqual([['a', true], ['b', true]]);
+  });
+
+  it('applyBulk routes mark-unreviewed to markReviewed with false', async () => {
+    const calls: Array<[string, boolean]> = [];
+    const actions = new TagActions(
+      host({ setReviewed: (tag, value) => void calls.push([tag, value]) }),
+    );
+    expect(await actions.applyBulk(['a'], 'mark-unreviewed')).toEqual({ applied: 1, deferred: 0 });
+    expect(calls).toEqual([['a', false]]);
   });
 });

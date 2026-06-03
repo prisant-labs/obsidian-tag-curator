@@ -1,6 +1,11 @@
 import { TagOverride } from '../../types';
 
-export type BulkAction = 'hide' | 'unhide' | 'send-to-tag-wrangler';
+export type BulkAction =
+  | 'hide'
+  | 'unhide'
+  | 'mark-reviewed'
+  | 'mark-unreviewed'
+  | 'send-to-tag-wrangler';
 
 /** Visibility verbs the action layer accepts. 'clear' removes any pin. */
 export type VisibilityIntent = 'hide' | 'show' | 'clear';
@@ -19,6 +24,8 @@ export interface TagActionsHost {
    * ahead of rules; see SettingsManager.setOverride / RuleEngine.resolveVisibility.
    */
   setOverride(tag: string, value: TagOverride | null): void | Promise<void>;
+  /** Persist a per-tag reviewed flag (the triage inbox). Keys carry no leading '#'. */
+  setReviewed(tag: string, value: boolean): void | Promise<void>;
 }
 
 export class TagActions {
@@ -47,6 +54,13 @@ export class TagActions {
     return { applied: tags.length, deferred: 0 };
   }
 
+  async markReviewed(tags: string[], value: boolean): Promise<VisibilityResult> {
+    for (const tag of tags) {
+      await this.hostApi.setReviewed(tag, value);
+    }
+    return { applied: tags.length, deferred: 0 };
+  }
+
   async applyBulk(tags: string[], action: BulkAction): Promise<number | VisibilityResult> {
     switch (action) {
       case 'send-to-tag-wrangler':
@@ -55,6 +69,10 @@ export class TagActions {
         return this.setVisibility(tags, 'hide');
       case 'unhide':
         return this.setVisibility(tags, 'show');
+      case 'mark-reviewed':
+        return this.markReviewed(tags, true);
+      case 'mark-unreviewed':
+        return this.markReviewed(tags, false);
     }
   }
 }
