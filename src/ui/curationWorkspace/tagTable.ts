@@ -32,6 +32,7 @@ const SEARCH_DEBOUNCE_MS = 120;
 
 const CHIPS: Array<[FilterChip, string]> = [
   ['all', 'All'],
+  ['shown', 'Shown'],
   ['hidden', 'Hidden'],
   ['flagged', 'Flagged'],
   ['orphans', 'Orphans'],
