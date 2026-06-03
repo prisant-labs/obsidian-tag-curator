@@ -313,6 +313,55 @@ describe('TagMetaManager debounced persistence', () => {
   });
 });
 
+describe('TagMetaManager.setReviewed', () => {
+  it('sets reviewed to true and fires changed', () => {
+    const app = makeApp();
+    const file = addFile(app, 'a.md', ['inbox']);
+    const mgr = new TagMetaManager(app as never, makePlugin());
+    mgr.indexFile(file);
+
+    let fired = 0;
+    mgr.on('changed', () => {
+      fired += 1;
+    });
+
+    mgr.setReviewed('inbox', true);
+    expect(mgr.get('inbox')?.reviewed).toBe(true);
+    expect(fired).toBe(1);
+  });
+
+  it('sets reviewed to false and fires changed', () => {
+    const app = makeApp();
+    const file = addFile(app, 'a.md', ['inbox']);
+    const mgr = new TagMetaManager(app as never, makePlugin());
+    mgr.indexFile(file);
+
+    mgr.setReviewed('inbox', true);
+    let fired = 0;
+    mgr.on('changed', () => {
+      fired += 1;
+    });
+
+    mgr.setReviewed('inbox', false);
+    expect(mgr.get('inbox')?.reviewed).toBe(false);
+    expect(fired).toBe(1);
+  });
+
+  it('is a no-op for a tag not in the store', () => {
+    const app = makeApp();
+    const mgr = new TagMetaManager(app as never, makePlugin());
+
+    let fired = 0;
+    mgr.on('changed', () => {
+      fired += 1;
+    });
+
+    mgr.setReviewed('ghost', true);
+    expect(mgr.get('ghost')).toBeUndefined();
+    expect(fired).toBe(0);
+  });
+});
+
 describe('TagMetaManager.unload', () => {
   it('flushes pending changes synchronously and clears the timer', async () => {
     const app = makeApp();
