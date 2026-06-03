@@ -14,10 +14,10 @@
  */
 import { ItemView, WorkspaceLeaf } from 'obsidian';
 import TagCuratorPlugin from '../../main';
-import { resolveActiveRules } from '../../engine/presets';
 import { StateBanner } from '../stateBanner';
-import { TagListModel, TagListDataSource } from '../tagList/tagListModel';
-import { TagActions, TagActionsHost } from '../tagList/tagActions';
+import { TagListModel } from '../tagList/tagListModel';
+import { TagActions } from '../tagList/tagActions';
+import { makeTagTableDeps } from '../tagList/tagTableDeps';
 import { RuleEditor } from '../ruleEditor';
 import { TagTable } from './tagTable';
 import { TagListDiagnosticsHost } from './tagTableHost';
@@ -70,39 +70,10 @@ export class CurationWorkspaceView extends ItemView {
     this.plugin = plugin;
     this.container = this.containerEl.children[1] as HTMLElement;
 
-    const dataSource: TagListDataSource = {
-      getSettings: () => this.plugin.settingsManager.get(),
-      getMeta: () => this.plugin.tagMetaManager.all(),
-    };
-    this.model = new TagListModel(dataSource);
-
-    const isPluginEnabled = (id: string): boolean => {
-      const plugins = (this.app as unknown as {
-        plugins?: { enabledPlugins?: Set<string> };
-      }).plugins;
-      return Boolean(plugins?.enabledPlugins?.has(id));
-    };
-
-    const host: TagActionsHost = {
-      isPluginEnabled,
-      executeCommand: (id) => {
-        const commands = (this.app as unknown as {
-          commands?: { executeCommandById?: (id: string) => boolean };
-        }).commands;
-        return Boolean(commands?.executeCommandById?.(id));
-      },
-      setOverride: (tag, value) => this.plugin.settingsManager.setOverride(tag, value),
-      setReviewedBulk: (tags, value) => this.plugin.tagMetaManager.setReviewedBulk(tags, value),
-    };
-    this.actions = new TagActions(host);
-
-    this.tableHost = {
-      getSettings: () => this.plugin.settingsManager.get(),
-      getMeta: () => this.plugin.tagMetaManager.all(),
-      getActiveRules: () => resolveActiveRules(this.plugin.settingsManager.get()),
-      isPluginEnabled,
-      requestRefresh: () => this.refresh(),
-    };
+    const deps = makeTagTableDeps(this.plugin, this.app, () => this.refresh());
+    this.model = deps.model;
+    this.actions = deps.actions;
+    this.tableHost = deps.host;
   }
 
   getViewType(): string {
