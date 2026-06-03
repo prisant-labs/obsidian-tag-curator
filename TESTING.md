@@ -416,3 +416,9 @@ The plugin is **not** desktop-only (`isDesktopOnly: false`), so mobile must work
 ### 23. Rule deep-link opens pane in Manage mode
 
 - [ ] Clicking a Presets 'N tags affected' deep-link opens the pane in Manage mode (checkboxes/bulk available) filtered to that rule's tags. The status-bar click still opens in the default View.
+
+### 24. Phase 3 adversarial review fixes (F-1, F-2, F-3)
+
+- [ ] After a preset deep-link (clicking "N tags affected" in Presets tab), clicking the status bar shows ALL hidden tags (the rule filter is cleared, not narrowed to the prior rule).
+- [ ] With the Curate Tags settings tab open, external changes (toggling a rule, rescanning vault tags) refresh the table without closing and reopening Settings.
+- [ ] Switching between Custom rules and Curate Tags tabs repeatedly does not leak editor or table subscriptions (confirmed via zero extra settingsManager listener warnings in the console).

@@ -6,7 +6,7 @@
  *
  * The persistent state banner (D-007) sits above whichever panel is active.
  */
-import { App, Notice, PluginSettingTab, Setting } from 'obsidian';
+import { App, EventRef, Notice, PluginSettingTab, Setting } from 'obsidian';
 import TagCuratorPlugin from '../main';
 import { PRESETS, resolveActiveRules } from '../engine/presets';
 import { RuleEditor } from './ruleEditor';
@@ -34,6 +34,9 @@ export class TagCuratorSettingTab extends PluginSettingTab {
   private tabBar: HTMLElement | null = null;
   private panelHost: HTMLElement | null = null;
   private curateTable: TagTable | null = null;
+  private curateOffSettings: (() => void) | null = null;
+  private curateMetaRef: EventRef | null = null;
+  private ruleEditor: RuleEditor | null = null;
 
   constructor(app: App, plugin: TagCuratorPlugin) {
     super(app, plugin);
@@ -45,9 +48,11 @@ export class TagCuratorSettingTab extends PluginSettingTab {
     containerEl.empty();
     containerEl.addClass('tag-curator-settings');
 
-    // Tear down the curate table before rebuilding DOM (avoids leaked scroll listeners).
-    this.curateTable?.destroy();
-    this.curateTable = null;
+    // Tear down curate table + its subscriptions and the rule editor before
+    // rebuilding DOM (avoids leaked listeners and scroll listeners).
+    this.teardownCurate();
+    this.ruleEditor?.destroy();
+    this.ruleEditor = null;
 
     // Persistent state banner above everything (D-007).
     if (this.banner) {
@@ -83,12 +88,24 @@ export class TagCuratorSettingTab extends PluginSettingTab {
   }
 
   hide(): void {
-    this.curateTable?.destroy();
-    this.curateTable = null;
+    this.teardownCurate();
+    this.ruleEditor?.destroy();
+    this.ruleEditor = null;
     if (this.banner) {
       this.banner.destroy();
       this.banner = null;
     }
+  }
+
+  private teardownCurate(): void {
+    this.curateOffSettings?.();
+    this.curateOffSettings = null;
+    if (this.curateMetaRef) {
+      this.plugin.tagMetaManager.offref(this.curateMetaRef);
+      this.curateMetaRef = null;
+    }
+    this.curateTable?.destroy();
+    this.curateTable = null;
   }
 
   // -----------------------------------------------------------------
@@ -220,10 +237,16 @@ export class TagCuratorSettingTab extends PluginSettingTab {
   // -----------------------------------------------------------------
 
   private renderCurate(panel: HTMLElement): void {
-    this.curateTable?.destroy();
+    // Dispose any previous table and its subscriptions before (re)mounting.
+    this.teardownCurate();
     const host = panel.createDiv({ cls: 'tcst-curate-host' });
     const deps = makeTagTableDeps(this.plugin, this.app, () => this.curateTable?.refresh());
     this.curateTable = new TagTable(host, deps.model, deps.actions, deps.host);
+    // Subscribe to shared state so the table live-updates from external changes
+    // (e.g. a rule toggle in the workspace, a metadata rescan) - F-1.
+    const refreshCurate = (): void => { this.curateTable?.refresh(); };
+    this.curateOffSettings = this.plugin.settingsManager.onChange(refreshCurate);
+    this.curateMetaRef = this.plugin.tagMetaManager.on('changed', refreshCurate);
   }
 
   // -----------------------------------------------------------------
@@ -548,10 +571,10 @@ export class TagCuratorSettingTab extends PluginSettingTab {
   // -----------------------------------------------------------------
 
   private renderCustomRules(panel: HTMLElement): void {
-    // The RuleEditor manages its own DOM (workspace shell + preview dock)
-    // and subscribes to settings changes for live updates. Each display()
-    // call constructs a fresh editor inside the new panel.
-    new RuleEditor(panel, this.plugin);
+    // Destroy any prior instance to release its settingsManager subscription
+    // before constructing a new one (F-2: prevents leak on tab switch).
+    this.ruleEditor?.destroy();
+    this.ruleEditor = new RuleEditor(panel, this.plugin);
   }
 
   // -----------------------------------------------------------------
