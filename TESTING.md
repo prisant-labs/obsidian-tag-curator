@@ -40,6 +40,7 @@ Walk this before tagging v1.0. It is the current gate; the v0.1 checklist furthe
 - [ ] **Live reaction.** With the two panes visible, create or edit a rule in the workspace (for example a regex that matches a hex-code tag). The affected-tags list in the workspace updates as you type, AND the native tag pane reacts live (matched tags hide, or flag in preview mode) without closing or reopening anything.
 - [ ] **Per-row diagnostics.** On an affected row, use "why is this hidden?" and confirm it names the exact preset, rule, or override responsible.
 - [ ] **Bulk actions.** Select several tags and confirm hide / unhide / flag / add description / send to Tag Wrangler operate on the selection.
+- [ ] **Launcher closes Settings.** Open Settings, go to General, click "Open Tag Curator": Settings closes and the pane is visible in the right sidebar (not hidden behind a modal). Repeat with "Open beside the tag pane".
 
 ### B. Each scope hides/flags
 

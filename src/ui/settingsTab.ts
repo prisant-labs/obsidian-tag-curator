@@ -134,11 +134,13 @@ export class TagCuratorSettingTab extends PluginSettingTab {
           .setButtonText('Open Tag Curator')
           .setCta()
           .onClick(() => {
+            this.closeSettings();
             void this.plugin.openCurationWorkspace();
           }),
       )
       .addButton((b) =>
         b.setButtonText('Open beside the tag pane').onClick(() => {
+          this.closeSettings();
           void this.plugin.openBesideTagPane();
         }),
       );
@@ -362,6 +364,11 @@ export class TagCuratorSettingTab extends PluginSettingTab {
       e.preventDefault();
       onClick();
     });
+  }
+
+  /** Close the Settings window so a leaf opened from here is not hidden behind it. */
+  private closeSettings(): void {
+    (this.app as unknown as { setting?: { close?: () => void } }).setting?.close?.();
   }
 
   private openPluginSettings(tabId: string): void {
