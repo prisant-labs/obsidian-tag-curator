@@ -55,6 +55,8 @@ export class TagTable {
   private searchInput!: HTMLInputElement;
   private headerCells = new Map<SortKey, HTMLElement>();
   private selectAllCb!: HTMLInputElement;
+  private filtersToggle!: HTMLElement;
+  private chipBar!: HTMLElement;
 
   private scrollEl!: HTMLElement;
   private spacerEl!: HTMLElement;
@@ -68,6 +70,8 @@ export class TagTable {
 
   private searchTimer: number | null = null;
 
+  private mode: 'view' | 'manage';
+
   // Stable reference so the same function pointer can be removed in destroy().
   private readonly onScroll = (): void => { this.renderWindow(); };
 
@@ -76,11 +80,22 @@ export class TagTable {
     private model: TagListModel,
     private actions: TagActions,
     private host: TagListDiagnosticsHost,
+    initialMode: 'view' | 'manage' = 'manage',
   ) {
+    this.mode = initialMode;
     this.root = parent.createDiv({ cls: 'tct-root' });
     this.buildToolbar();
     this.bulkBar = new BulkBar(this.root, this.model, this.actions, this.host);
     this.buildBody();
+    this.root.toggleClass('tct-view', this.mode === 'view');
+    this.refresh();
+  }
+
+  /** Switch between view (read-only browse) and manage (full edit) mode. */
+  setMode(mode: 'view' | 'manage'): void {
+    if (mode === this.mode) return;
+    this.mode = mode;
+    this.root.toggleClass('tct-view', mode === 'view');
     this.refresh();
   }
 
@@ -106,9 +121,20 @@ export class TagTable {
       }, SEARCH_DEBOUNCE_MS);
     });
 
-    const chipBar = toolbar.createDiv({ cls: 'tct-chips' });
+    this.filtersToggle = toolbar.createEl('button', { cls: 'tct-filters-toggle' });
+    this.filtersToggle.createSpan({ cls: 'tct-filters-caret', text: '▸' }); // right-pointing triangle
+    this.filtersToggle.createSpan({ text: ' Filters' });
+    this.filtersToggle.addEventListener('click', () => {
+      const collapsed = this.chipBar.hasClass('tct-chips-collapsed');
+      this.chipBar.toggleClass('tct-chips-collapsed', !collapsed);
+      this.filtersToggle.toggleClass('open', collapsed);
+    });
+
+    this.chipBar = toolbar.createDiv({ cls: 'tct-chips' });
+    // Collapsed state is only honored by CSS under .tct-view; harmless in manage mode.
+    this.chipBar.addClass('tct-chips-collapsed');
     for (const [id, label] of CHIPS) {
-      const chip = chipBar.createDiv({ cls: 'tct-chip', text: label });
+      const chip = this.chipBar.createDiv({ cls: 'tct-chip', text: label });
       this.chipEls.set(id, chip);
       chip.addEventListener('click', () => {
         this.model.setFilter(id);
@@ -262,6 +288,10 @@ export class TagTable {
       mark.setAttribute('aria-label', 'Reviewed');
       mark.setAttribute('title', 'Reviewed');
       setIcon(mark, 'check');
+    }
+    if (this.mode === 'view') {
+      nameCell.addClass('tct-tagname-link');
+      nameCell.addEventListener('click', () => this.host.searchTag(row.meta.tag));
     }
 
     // Count.
