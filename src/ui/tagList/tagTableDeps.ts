@@ -53,6 +53,14 @@ export function makeTagTableDeps(
     getActiveRules: () => resolveActiveRules(plugin.settingsManager.get()),
     isPluginEnabled,
     requestRefresh,
+    searchTag: (tag) => {
+      const search = (app as unknown as {
+        internalPlugins?: {
+          getPluginById?: (id: string) => { instance?: { openGlobalSearch?: (q: string) => void } } | null;
+        };
+      }).internalPlugins?.getPluginById?.('global-search')?.instance;
+      search?.openGlobalSearch?.(`tag:#${tag}`);
+    },
   };
 
   return { model, actions, host };

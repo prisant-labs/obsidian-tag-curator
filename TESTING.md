@@ -307,6 +307,10 @@ git push origin main
 git push origin 0.1.0
 ```
 
+### 16. Pane View/Manage modes (Task 16)
+
+Pane opens in View: tag names are links that open a tag search; no checkboxes/bulk bar/row menu; a Filters disclosure expands/collapses the chip row. Switch to Manage: checkboxes, bulk bar, and row menus return and chips show normally. The Curate Tags settings tab is unaffected (always full Manage). Header and rows stay column-aligned in View.
+
 The tag push triggers `.github/workflows/release.yml`, which uploads `manifest.json`, `main.js`, `styles.css`, and `versions.json` to the GitHub release.
 
 ## Debugging

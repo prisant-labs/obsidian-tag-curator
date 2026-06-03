@@ -45,6 +45,10 @@ export class CurationWorkspaceView extends ItemView {
   // Active content surface. Defaults to the tag table; the header segmented
   // control switches to the inline rule editor (Phase 3B-2, D-010 + D-012).
   private mode: WorkspaceMode = 'tags';
+  // View/Manage mode for the tag table in this pane. Opens calm (View).
+  private paneMode: 'view' | 'manage' = 'view';
+  // Segmented-control buttons for the View/Manage switch.
+  private viewButtons = new Map<'view' | 'manage', HTMLElement>();
   // Host element the active component mounts into. Cleared and repopulated on
   // every mode switch so only one component owns the DOM at a time. Named
   // contentHost (not contentEl) to avoid shadowing ItemView.contentEl.
@@ -136,6 +140,7 @@ export class CurationWorkspaceView extends ItemView {
     this.banner?.destroy();
     this.banner = null;
     this.modeButtons.clear();
+    this.viewButtons.clear();
 
     this.container.empty();
     this.container.addClass('tag-curator-workspace');
@@ -153,6 +158,13 @@ export class CurationWorkspaceView extends ItemView {
     seg.setAttribute('role', 'tablist');
     this.addModeButton(seg, 'tags', 'Tags');
     this.addModeButton(seg, 'rules', 'Rules');
+
+    // Segmented control: switch the tag table between View (calm read-only
+    // browse) and Manage (full edit with checkboxes, bulk bar, row menus).
+    const viewSeg = header.createDiv({ cls: 'tcw-viewswitch' });
+    viewSeg.setAttribute('role', 'tablist');
+    this.addViewButton(viewSeg, 'view', 'View');
+    this.addViewButton(viewSeg, 'manage', 'Manage');
 
     // Single host the active component mounts into. Mode switches clear this
     // element and mount the relevant component; the inactive one is destroyed.
@@ -177,6 +189,22 @@ export class CurationWorkspaceView extends ItemView {
     this.modeButtons.set(mode, btn);
   }
 
+  private addViewButton(
+    parent: HTMLElement,
+    mode: 'view' | 'manage',
+    label: string,
+  ): void {
+    const btn = parent.createEl('button', {
+      cls: 'tcw-viewswitch-btn',
+      text: label,
+    });
+    btn.setAttribute('role', 'tab');
+    btn.toggleClass('active', this.paneMode === mode);
+    btn.setAttribute('aria-selected', String(this.paneMode === mode));
+    btn.addEventListener('click', () => this.setPaneMode(mode));
+    this.viewButtons.set(mode, btn);
+  }
+
   /** Switch the active surface, tearing down the inactive component cleanly. */
   private setMode(mode: WorkspaceMode): void {
     if (mode === this.mode) return;
@@ -186,6 +214,17 @@ export class CurationWorkspaceView extends ItemView {
       btn.setAttribute('aria-selected', String(m === mode));
     }
     this.mountActiveMode();
+  }
+
+  /** Switch the tag table between View and Manage pane modes. */
+  private setPaneMode(mode: 'view' | 'manage'): void {
+    if (mode === this.paneMode) return;
+    this.paneMode = mode;
+    for (const [m, btn] of this.viewButtons) {
+      btn.toggleClass('active', m === mode);
+      btn.setAttribute('aria-selected', String(m === mode));
+    }
+    this.table?.setMode(mode);
   }
 
   /**
@@ -210,8 +249,7 @@ export class CurationWorkspaceView extends ItemView {
     if (this.mode === 'tags') {
       // The virtualized sortable tag table. Owns its own toolbar (chips +
       // search + sort), bulk bar, and rows.
-      this.table = new TagTable(host, this.model, this.actions, this.tableHost);
-      this.table.refresh();
+      this.table = new TagTable(host, this.model, this.actions, this.tableHost, this.paneMode);
     } else {
       // The EXISTING card-view rule editor (right-docked preview included),
       // constructed exactly as the settings Custom-rules tab does: a plain
