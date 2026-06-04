@@ -1358,11 +1358,13 @@ settings:
   align-items: stretch;
   gap: 8px;
 }
-/* align-self: stretch + flex centering makes the button exactly the search-box
- * height in the align-items:stretch toolbar row (item 3). */
+/* height:auto clears the height Obsidian sets on <button>, so align-self:stretch
+ * actually applies and the button matches the search-box height in the
+ * align-items:stretch toolbar row (item 1). */
 .tct-cols-btn {
   flex-shrink: 0;
   align-self: stretch;
+  height: auto;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1383,15 +1385,20 @@ settings:
 /* Filter-by-rule dropdown in the toolbar (settings surface only). */
 .tct-rulefilter {
   display: flex;
-  align-items: center;
+  align-items: stretch;
   gap: 6px;
   flex-shrink: 0;
 }
 .tct-rulefilter-label {
+  display: flex;
+  align-items: center;
   font-size: 12px;
   color: var(--text-muted);
 }
+/* Same height trick so the native select lines up with the search + button. */
 .tct-rulefilter-select {
+  align-self: stretch;
+  height: auto;
   font-size: 12px;
   max-width: 220px;
 }
@@ -1576,9 +1583,12 @@ settings:
 .tct-cell-count {
   text-align: right;
 }
-/* Visibility column: center the dot (and the eye header) in the column (item 5). */
+/* Visibility column: dot (and the eye header) dead-center via flex - text-align
+ * did not reliably center the inline-block dot in the grid cell (items 4 + 5). */
 .tct-cell-visible {
-  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 /* Eye-icon header for the Visible column so the label never truncates (2-4). */
 .tct-head-ic {
@@ -1833,7 +1843,12 @@ settings:
   background: var(--background-modifier-hover);
   color: var(--text-normal);
 }
-.tag-curator-workspace .tcw-gear svg {
+.tag-curator-workspace .tcw-gear-ic {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.tag-curator-workspace .tcw-gear-ic svg {
   width: 16px;
   height: 16px;
 }

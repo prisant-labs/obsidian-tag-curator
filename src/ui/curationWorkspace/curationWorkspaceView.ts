@@ -136,7 +136,10 @@ export class CurationWorkspaceView extends ItemView {
     const gear = right.createEl('button', { cls: 'tcw-gear' });
     gear.setAttribute('aria-label', 'Open Tag Curator settings');
     gear.setAttribute('title', 'Open Tag Curator settings');
-    setIcon(gear, 'settings');
+    // setIcon must target a span, not the <button> itself: a direct setIcon on a
+    // button element does not render in some Obsidian builds (item 2).
+    const gearIc = gear.createSpan({ cls: 'tcw-gear-ic' });
+    setIcon(gearIc, 'settings');
     gear.addEventListener('click', () => this.openPluginSettings());
 
     this.contentHost = this.container.createDiv({ cls: 'tcw-content' });
