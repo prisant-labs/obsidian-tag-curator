@@ -9,7 +9,15 @@ import {
   TagOverride,
 } from '../types';
 
-const DEFAULT_COLUMN_PREFS: TableColumnPrefs = { lastSeen: true, source: true, rule: true };
+// Per-surface column defaults (item 3): the pane opens lean (tag/count/visibility
+// only), the settings tab shows every column.
+const PANE_DEFAULT_COLS: TableColumnPrefs = { lastSeen: false, source: false, rule: false };
+const SETTINGS_DEFAULT_COLS: TableColumnPrefs = { lastSeen: true, source: true, rule: true };
+
+/** Fallback default for a surface that has no stored prefs yet. */
+function defaultColsFor(surface: TableSurface): TableColumnPrefs {
+  return surface === 'pane' ? { ...PANE_DEFAULT_COLS } : { ...SETTINGS_DEFAULT_COLS };
+}
 
 /** True when v is a flat {lastSeen, source, rule} column-prefs object. */
 function isColumnPrefs(v: unknown): v is TableColumnPrefs {
@@ -22,18 +30,19 @@ function isColumnPrefs(v: unknown): v is TableColumnPrefs {
 }
 
 /**
- * Normalize any stored tableColumns value to the per-surface shape (schema v8).
- * A flat v7 value is applied to both surfaces; a malformed/missing value falls
- * back to the all-on default per surface.
+ * Normalize any stored tableColumns value to the per-surface shape. A flat v7
+ * value predates per-surface prefs, so it is honored for the settings tab (where
+ * it was set) and the pane takes its lean default; a malformed/missing value
+ * falls back to each surface's default.
  */
 function normalizeTableColumns(value: unknown): Record<TableSurface, TableColumnPrefs> {
   if (isColumnPrefs(value)) {
-    return { pane: { ...value }, settings: { ...value } };
+    return { pane: { ...PANE_DEFAULT_COLS }, settings: { ...value } };
   }
   const v = (value ?? {}) as { pane?: unknown; settings?: unknown };
   return {
-    pane: isColumnPrefs(v.pane) ? { ...v.pane } : { ...DEFAULT_COLUMN_PREFS },
-    settings: isColumnPrefs(v.settings) ? { ...v.settings } : { ...DEFAULT_COLUMN_PREFS },
+    pane: isColumnPrefs(v.pane) ? { ...v.pane } : { ...PANE_DEFAULT_COLS },
+    settings: isColumnPrefs(v.settings) ? { ...v.settings } : { ...SETTINGS_DEFAULT_COLS },
   };
 }
 
@@ -139,9 +148,16 @@ export class SettingsManager {
       }
     }
     if (inferred < 8) {
-      // v8: column prefs are kept per surface (item 8a). Convert a flat v7 value
-      // to both surfaces; repair anything malformed to the per-surface default.
+      // v8: column prefs are kept per surface (item 8a). Normalize the stored
+      // value to the per-surface shape.
       merged.tableColumns = normalizeTableColumns(merged.tableColumns);
+    }
+    if (inferred < 9) {
+      // v9: the pane now opens lean (item 3). Reset the pane's (one-release-old)
+      // column prefs to the lean default on upgrade so existing testers get it;
+      // the settings surface keeps its own columns.
+      const tc = normalizeTableColumns(merged.tableColumns);
+      merged.tableColumns = { pane: { ...PANE_DEFAULT_COLS }, settings: tc.settings };
     }
     return merged;
   }
@@ -214,7 +230,7 @@ export class SettingsManager {
 
   /** Column visibility prefs for one table surface (pane or settings). */
   getTableColumns(surface: TableSurface): TableColumnPrefs {
-    return this.settings.tableColumns[surface] ?? { ...DEFAULT_COLUMN_PREFS };
+    return this.settings.tableColumns[surface] ?? defaultColsFor(surface);
   }
 
   /**

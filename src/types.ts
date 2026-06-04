@@ -1,4 +1,4 @@
-export const SCHEMA_VERSION = 8;
+export const SCHEMA_VERSION = 9;
 
 export type Mode = 'default' | 'allow-only' | 'inbox';
 
@@ -138,8 +138,10 @@ export const DEFAULT_SETTINGS: TagCuratorSettings = {
   seenWelcomeModal: false,
   seenNnTooOldNotice: false,
   paneEnabled: true,
+  // The narrow docked pane opens lean - tag / count / visibility only (item 3) -
+  // while the wide Curate Tags settings tab shows every column.
   tableColumns: {
-    pane: { lastSeen: true, source: true, rule: true },
+    pane: { lastSeen: false, source: false, rule: false },
     settings: { lastSeen: true, source: true, rule: true },
   },
   debugLog: false,
