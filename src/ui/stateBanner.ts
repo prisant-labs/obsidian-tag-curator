@@ -56,7 +56,7 @@ export class StateBanner {
     if (variant === 'preview') {
       msg.createEl('strong', { text: 'Preview mode is on. ' });
       msg.appendText(
-        'Matched tags are flagged in place, not hidden. The same banner appears above the tag list and rule editor whenever this state is active.',
+        'Matched tags are flagged in place, not hidden, so you can see exactly what a rule would affect before committing.',
       );
       action.setText('Turn off preview');
       action.addEventListener('click', () => {

@@ -20,6 +20,8 @@ export interface TagListDiagnosticsHost {
   requestRefresh(): void;
   /** Open Obsidian's core global search filtered to the given tag (no-op if unavailable). */
   searchTag(tag: string): void;
-  /** Persist which optional data columns are visible (Last used / Source / Rule). */
+  /** This surface's persisted column-visibility prefs (Last used / Source / Rule). */
+  getColumns(): TableColumnPrefs;
+  /** Persist this surface's column-visibility prefs. Independent per surface (item 8a). */
   setColumns(cols: TableColumnPrefs): void;
 }

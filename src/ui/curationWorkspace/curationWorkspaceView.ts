@@ -1,31 +1,26 @@
 /**
  * Curation Workspace view (D-012).
  *
- * The primary surface for Tag Curator: a dedicated leaf where you see, edit,
- * preview, and act on tags. Settings holds set-once config and launches this
- * workspace. This view renders the shared host-agnostic core (TagListModel +
- * TagActions) that the rule engine and observers already route through, so the
- * workspace and the live tag pane stay in lockstep.
+ * The dockable tag surface: a leaf where you see, browse, and act on tags. It
+ * hosts the shared host-agnostic core (TagListModel + TagActions) that the rule
+ * engine and observers route through, so the pane and the live tag pane stay in
+ * lockstep.
  *
- * Phase 2 ships the shell only: a state banner above a minimal table (tag,
- * count, visibility) proving the leaf renders live data. Phase 3 replaces the
- * minimal table with the virtualized sortable table, inline editor, and
- * per-row actions.
+ * Rules are NOT edited here (item 1): rule management lives in Settings, reached
+ * via the header gear (item 2). The pane is tags-only, with a View / Manage
+ * toggle - View browses (tag names open a tag search), Manage curates (full
+ * per-row + bulk).
  */
-import { ItemView, WorkspaceLeaf } from 'obsidian';
+import { ItemView, WorkspaceLeaf, setIcon } from 'obsidian';
 import TagCuratorPlugin from '../../main';
 import { StateBanner } from '../stateBanner';
 import { TagListModel } from '../tagList/tagListModel';
 import { TagActions } from '../tagList/tagActions';
 import { makeTagTableDeps } from '../tagList/tagTableDeps';
-import { RuleEditor } from '../ruleEditor';
 import { TagTable } from './tagTable';
 import { TagListDiagnosticsHost } from './tagTableHost';
 
 export const CURATION_VIEW_TYPE = 'tag-curator-workspace';
-
-/** Which surface the workspace content area is showing. */
-type WorkspaceMode = 'tags' | 'rules';
 
 export interface CurationWorkspaceOptions {
   /** When true, the table opens pre-filtered to currently non-shown tags. */
@@ -42,31 +37,15 @@ export class CurationWorkspaceView extends ItemView {
   private model: TagListModel;
   private actions: TagActions;
 
-  // Active content surface. Defaults to the tag table; the header segmented
-  // control switches to the inline rule editor (Phase 3B-2, D-010 + D-012).
-  private mode: WorkspaceMode = 'tags';
   // View/Manage mode for the tag table in this pane. Opens calm (View).
   private paneMode: 'view' | 'manage' = 'view';
-  // Segmented-control buttons for the View/Manage switch.
   private viewButtons = new Map<'view' | 'manage', HTMLElement>();
-  // Host element the active component mounts into. Cleared and repopulated on
-  // every mode switch so only one component owns the DOM at a time. Named
-  // contentHost (not contentEl) to avoid shadowing ItemView.contentEl.
+  // Host element the table mounts into.
   private contentHost: HTMLElement | null = null;
-  // Segmented-control buttons, keyed by mode, for active-state styling.
-  private modeButtons = new Map<WorkspaceMode, HTMLElement>();
 
-  // The virtualized tag table (Phase 3B-1). Built when "Tags" mode mounts,
-  // repainted by refresh, torn down when leaving the mode or closing the leaf.
   private table: TagTable | null = null;
-  // The inline rule editor (Phase 3B-2). The SAME component the settings
-  // Custom-rules tab uses; mounted when "Rules" mode is active, torn down
-  // otherwise. Reused verbatim, never duplicated.
-  private editor: RuleEditor | null = null;
-  // Host surface the table uses for diagnostics + refresh.
   private tableHost: TagListDiagnosticsHost;
 
-  // Unsubscribe handle returned by settingsManager.onChange; called in onClose.
   private unsubscribeSettings: (() => void) | null = null;
 
   constructor(leaf: WorkspaceLeaf, plugin: TagCuratorPlugin) {
@@ -74,7 +53,7 @@ export class CurationWorkspaceView extends ItemView {
     this.plugin = plugin;
     this.container = this.containerEl.children[1] as HTMLElement;
 
-    const deps = makeTagTableDeps(this.plugin, this.app, () => this.refresh());
+    const deps = makeTagTableDeps(this.plugin, this.app, () => this.refresh(), 'pane');
     this.model = deps.model;
     this.actions = deps.actions;
     this.tableHost = deps.host;
@@ -104,26 +83,21 @@ export class CurationWorkspaceView extends ItemView {
     this.unsubscribeSettings = null;
     this.table?.destroy();
     this.table = null;
-    this.editor?.destroy();
-    this.editor = null;
     this.banner?.destroy();
     this.banner = null;
   }
 
   /** Pre-filter the table to currently non-shown tags (status-bar intent). */
   setHiddenOnly(v: boolean): void {
-    // This intent targets the tag table; ensure it is the active surface.
-    if (this.mode !== 'tags') this.setMode('tags');
     this.model.setFilter(v ? 'hidden' : 'all');
-    // Clear any rule filter from a prior preset deep-link so the status-bar
-    // hidden view shows ALL hidden tags, not a narrowed rule subset (F-3).
+    // Clear any rule filter from a prior deep-link so the hidden view shows ALL
+    // hidden tags, not a narrowed rule subset (F-3).
     this.model.setRuleFilter(null);
     this.refresh();
   }
 
-  /** Pre-filter the table to a single rule or preset (settings deep-link intent). */
+  /** Pre-filter the table to a single rule or preset (deep-link intent). */
   setRuleFilter(ruleId: string): void {
-    if (this.mode !== 'tags') this.setMode('tags');
     this.setPaneMode('manage');
     this.model.setFilter('all');
     this.model.setRuleFilter(ruleId);
@@ -135,62 +109,38 @@ export class CurationWorkspaceView extends ItemView {
   // -----------------------------------------------------------------
 
   private buildUI(): void {
-    // Destroy any existing components and banner before rebuilding so repeated
-    // open/close cycles do not accumulate DOM nodes or scroll listeners.
     this.table?.destroy();
     this.table = null;
-    this.editor?.destroy();
-    this.editor = null;
     this.banner?.destroy();
     this.banner = null;
-    this.modeButtons.clear();
     this.viewButtons.clear();
 
     this.container.empty();
     this.container.addClass('tag-curator-workspace');
 
-    // Persistent state banner above the content (D-007). Stays above both the
-    // Tags and Rules surfaces.
+    // Persistent state banner above the content (D-007).
     this.banner = new StateBanner(this.container, this.plugin);
 
     const header = this.container.createDiv({ cls: 'tcw-header' });
     header.createEl('h2', { text: 'Tag Curator' });
 
-    // Segmented control: switch the content area between the tag table and the
-    // inline rule editor without leaving the leaf (D-010 + D-012).
-    const seg = header.createDiv({ cls: 'tcw-modeswitch' });
-    seg.setAttribute('role', 'tablist');
-    this.addModeButton(seg, 'tags', 'Tags');
-    this.addModeButton(seg, 'rules', 'Rules');
+    // Right-hand header group: the View/Manage switch, then a gear that opens
+    // Settings (where rules and everything else live - items 1 + 2).
+    const right = header.createDiv({ cls: 'tcw-header-right' });
 
-    // Segmented control: switch the tag table between View (calm read-only
-    // browse) and Manage (full edit with checkboxes, bulk bar, row menus).
-    const viewSeg = header.createDiv({ cls: 'tcw-viewswitch' });
+    const viewSeg = right.createDiv({ cls: 'tcw-viewswitch' });
     viewSeg.setAttribute('role', 'tablist');
     this.addViewButton(viewSeg, 'view', 'View');
     this.addViewButton(viewSeg, 'manage', 'Manage');
 
-    // Single host the active component mounts into. Mode switches clear this
-    // element and mount the relevant component; the inactive one is destroyed.
+    const gear = right.createEl('button', { cls: 'tcw-gear' });
+    gear.setAttribute('aria-label', 'Open Tag Curator settings');
+    gear.setAttribute('title', 'Open Tag Curator settings');
+    setIcon(gear, 'settings');
+    gear.addEventListener('click', () => this.openPluginSettings());
+
     this.contentHost = this.container.createDiv({ cls: 'tcw-content' });
-
-    this.mountActiveMode();
-  }
-
-  private addModeButton(
-    parent: HTMLElement,
-    mode: WorkspaceMode,
-    label: string,
-  ): void {
-    const btn = parent.createEl('button', {
-      cls: 'tcw-modeswitch-btn',
-      text: label,
-    });
-    btn.setAttribute('role', 'tab');
-    btn.toggleClass('active', this.mode === mode);
-    btn.setAttribute('aria-selected', String(this.mode === mode));
-    btn.addEventListener('click', () => this.setMode(mode));
-    this.modeButtons.set(mode, btn);
+    this.mountTable();
   }
 
   private addViewButton(
@@ -209,17 +159,6 @@ export class CurationWorkspaceView extends ItemView {
     this.viewButtons.set(mode, btn);
   }
 
-  /** Switch the active surface, tearing down the inactive component cleanly. */
-  private setMode(mode: WorkspaceMode): void {
-    if (mode === this.mode) return;
-    this.mode = mode;
-    for (const [m, btn] of this.modeButtons) {
-      btn.toggleClass('active', m === mode);
-      btn.setAttribute('aria-selected', String(m === mode));
-    }
-    this.mountActiveMode();
-  }
-
   /** Switch the tag table between View and Manage pane modes. */
   private setPaneMode(mode: 'view' | 'manage'): void {
     if (mode === this.paneMode) return;
@@ -231,36 +170,27 @@ export class CurationWorkspaceView extends ItemView {
     this.table?.setMode(mode);
   }
 
-  /**
-   * Mount the component for the current mode into the content host and destroy
-   * the other one. Only one component owns the DOM at a time, so there are no
-   * leaked listeners or duplicate nodes across switches.
-   */
-  private mountActiveMode(): void {
+  private mountTable(): void {
     const host = this.contentHost;
     if (!host) return;
-
-    // Tear down whichever component is not the active mode, then clear the host.
-    if (this.mode === 'tags') {
-      this.editor?.destroy();
-      this.editor = null;
-    } else {
-      this.table?.destroy();
-      this.table = null;
-    }
+    this.table?.destroy();
+    this.table = null;
     host.empty();
+    this.table = new TagTable(host, this.model, this.actions, this.tableHost, {
+      initialMode: this.paneMode,
+      surface: 'pane',
+    });
+  }
 
-    if (this.mode === 'tags') {
-      // The virtualized sortable tag table. Owns its own toolbar (chips +
-      // search + sort), bulk bar, and rows.
-      this.table = new TagTable(host, this.model, this.actions, this.tableHost, this.paneMode);
-    } else {
-      // The EXISTING card-view rule editor (right-docked preview included),
-      // constructed exactly as the settings Custom-rules tab does: a plain
-      // host element plus the plugin. It persists via the same settingsManager
-      // rule mutators and lives entirely inside this leaf.
-      this.editor = new RuleEditor(host, this.plugin);
-    }
+  /** Open the plugin's own settings tab (the header gear, item 2). */
+  private openPluginSettings(): void {
+    const setting = (
+      this.app as unknown as {
+        setting?: { open?: () => void; openTabById?: (id: string) => void };
+      }
+    ).setting;
+    setting?.open?.();
+    setting?.openTabById?.(this.plugin.manifest.id);
   }
 
   // -----------------------------------------------------------------
@@ -268,8 +198,6 @@ export class CurationWorkspaceView extends ItemView {
   // -----------------------------------------------------------------
 
   private refresh(): void {
-    // Only the tag table needs explicit repaint on settings/meta changes. The
-    // rule editor subscribes to settingsManager.onChange itself and self-renders.
     this.table?.refresh();
   }
 }

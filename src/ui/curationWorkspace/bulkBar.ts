@@ -33,9 +33,10 @@ export class BulkBar {
     private actions: TagActions,
     private host: TagListDiagnosticsHost,
   ) {
+    // No flex spacer: the bar wraps its buttons in a narrow pane (item 6), and a
+    // growing spacer would force awkward line breaks. The count just leads.
     this.root = parent.createDiv({ cls: 'tct-bulk-bar' });
     this.countEl = this.root.createSpan({ cls: 'tct-bulk-count' });
-    this.root.createDiv({ cls: 'tct-bulk-spacer' });
 
     this.addButton('Hide', 'eye-off', () => this.runBulk('hide'));
     this.addButton('Unhide', 'eye', () => this.runBulk('unhide'));
@@ -43,7 +44,9 @@ export class BulkBar {
 
     // Tag Wrangler gate is intentionally NOT evaluated here; update() checks
     // isPluginEnabled() on every call so the button reflects current state.
-    this.twBtn = this.addButton('Send to Tag Wrangler', 'pencil', () =>
+    // Short label ("Tag Wrangler") keeps the bar compact; the pencil icon and
+    // tooltip convey the rename action.
+    this.twBtn = this.addButton('Tag Wrangler', 'pencil', () =>
       this.runBulk('send-to-tag-wrangler'),
     );
 

@@ -4,9 +4,38 @@ import {
   Rule,
   SCHEMA_VERSION,
   TableColumnPrefs,
+  TableSurface,
   TagCuratorSettings,
   TagOverride,
 } from '../types';
+
+const DEFAULT_COLUMN_PREFS: TableColumnPrefs = { lastSeen: true, source: true, rule: true };
+
+/** True when v is a flat {lastSeen, source, rule} column-prefs object. */
+function isColumnPrefs(v: unknown): v is TableColumnPrefs {
+  return (
+    !!v &&
+    typeof v === 'object' &&
+    !Array.isArray(v) &&
+    typeof (v as TableColumnPrefs).lastSeen === 'boolean'
+  );
+}
+
+/**
+ * Normalize any stored tableColumns value to the per-surface shape (schema v8).
+ * A flat v7 value is applied to both surfaces; a malformed/missing value falls
+ * back to the all-on default per surface.
+ */
+function normalizeTableColumns(value: unknown): Record<TableSurface, TableColumnPrefs> {
+  if (isColumnPrefs(value)) {
+    return { pane: { ...value }, settings: { ...value } };
+  }
+  const v = (value ?? {}) as { pane?: unknown; settings?: unknown };
+  return {
+    pane: isColumnPrefs(v.pane) ? { ...v.pane } : { ...DEFAULT_COLUMN_PREFS },
+    settings: isColumnPrefs(v.settings) ? { ...v.settings } : { ...DEFAULT_COLUMN_PREFS },
+  };
+}
 
 type LegacyV0Settings = Partial<TagCuratorSettings> & {
   rules?: Rule[];
@@ -99,17 +128,20 @@ export class SettingsManager {
       }
     }
     if (inferred < 7) {
-      // Added persisted tag-table column prefs (2-5). The spread above already
-      // fills this from DEFAULT_SETTINGS when absent; this guard only repairs a
-      // present-but-malformed value (e.g. a hand-edited data.json), defaulting
-      // all three optional columns ON.
+      // v7 first added persisted tag-table column prefs (a flat shape). The v8
+      // step below normalizes it, so here we only ensure the field exists.
       if (
         !merged.tableColumns ||
         typeof merged.tableColumns !== 'object' ||
         Array.isArray(merged.tableColumns)
       ) {
-        merged.tableColumns = { ...DEFAULT_SETTINGS.tableColumns };
+        merged.tableColumns = normalizeTableColumns(undefined);
       }
+    }
+    if (inferred < 8) {
+      // v8: column prefs are kept per surface (item 8a). Convert a flat v7 value
+      // to both surfaces; repair anything malformed to the per-surface default.
+      merged.tableColumns = normalizeTableColumns(merged.tableColumns);
     }
     return merged;
   }
@@ -180,12 +212,21 @@ export class SettingsManager {
     await this.persist();
   }
 
+  /** Column visibility prefs for one table surface (pane or settings). */
+  getTableColumns(surface: TableSurface): TableColumnPrefs {
+    return this.settings.tableColumns[surface] ?? { ...DEFAULT_COLUMN_PREFS };
+  }
+
   /**
-   * Persist the tag-table column visibility prefs (2-5). Replaces the whole map
-   * so the single onChange fan-out repaints every table surface at once.
+   * Persist the column visibility prefs for ONE surface (item 8a), leaving the
+   * other surface's prefs untouched. The single onChange fan-out repaints the
+   * affected table; the unaffected surface re-reads its own (unchanged) slot.
    */
-  async setTableColumns(columns: TableColumnPrefs): Promise<void> {
-    this.settings.tableColumns = { ...columns };
+  async setTableColumns(surface: TableSurface, columns: TableColumnPrefs): Promise<void> {
+    this.settings.tableColumns = {
+      ...this.settings.tableColumns,
+      [surface]: { ...columns },
+    };
     await this.persist();
   }
 
