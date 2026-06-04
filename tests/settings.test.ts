@@ -508,55 +508,68 @@ describe('SettingsManager.setPaneEnabled', () => {
   });
 });
 
-describe('SettingsManager.load - v6 to v7 migration (tableColumns)', () => {
-  // A v6 fixture must NOT carry tableColumns so the migration is what fills it.
+describe('SettingsManager.load - tableColumns migration (per surface, v8)', () => {
+  const ALL_ON = { lastSeen: true, source: true, rule: true };
+
+  // A v6 fixture predates tableColumns entirely, so the migration fills it.
   function v6Fixture(extra: Record<string, unknown> = {}): unknown {
     const v6 = { ...DEFAULT_SETTINGS, schemaVersion: 6 } as Record<string, unknown>;
     delete v6.tableColumns;
     return { ...v6, ...extra };
   }
 
-  it('defaults tableColumns with all three optional columns on when absent', async () => {
+  it('defaults per-surface columns all-on when absent (v6 data)', async () => {
     const mgr = new SettingsManager(pluginWith(v6Fixture()));
     await mgr.load();
     expect(mgr.get().schemaVersion).toBe(SCHEMA_VERSION);
-    expect(mgr.get().tableColumns).toEqual({ lastSeen: true, source: true, rule: true });
+    expect(mgr.get().tableColumns).toEqual({ pane: ALL_ON, settings: ALL_ON });
   });
 
-  it('preserves an explicit tableColumns map across migration', async () => {
-    const fixture = v6Fixture({ tableColumns: { lastSeen: false, source: true, rule: false } });
-    const mgr = new SettingsManager(pluginWith(fixture));
+  it('converts a flat v7 value to both surfaces', async () => {
+    const flat = { lastSeen: false, source: true, rule: false };
+    const v7 = { ...DEFAULT_SETTINGS, schemaVersion: 7, tableColumns: flat } as unknown;
+    const mgr = new SettingsManager(pluginWith(v7));
     await mgr.load();
-    expect(mgr.get().tableColumns).toEqual({ lastSeen: false, source: true, rule: false });
+    expect(mgr.get().tableColumns).toEqual({ pane: flat, settings: flat });
   });
 
-  it('repairs a malformed (array) tableColumns to the default map', async () => {
-    const fixture = v6Fixture({ tableColumns: [] as unknown });
-    const mgr = new SettingsManager(pluginWith(fixture));
+  it('preserves an explicit per-surface map across migration', async () => {
+    const explicit = { pane: { lastSeen: false, source: false, rule: true }, settings: ALL_ON };
+    const v7 = { ...DEFAULT_SETTINGS, schemaVersion: 7, tableColumns: explicit } as unknown;
+    const mgr = new SettingsManager(pluginWith(v7));
     await mgr.load();
-    expect(mgr.get().tableColumns).toEqual(DEFAULT_SETTINGS.tableColumns);
+    expect(mgr.get().tableColumns).toEqual(explicit);
   });
 
-  it('persists the v7 schemaVersion + tableColumns to disk', async () => {
+  it('repairs a malformed (array) value to per-surface defaults', async () => {
+    const v7 = { ...DEFAULT_SETTINGS, schemaVersion: 7, tableColumns: [] as unknown };
+    const mgr = new SettingsManager(pluginWith(v7));
+    await mgr.load();
+    expect(mgr.get().tableColumns).toEqual({ pane: ALL_ON, settings: ALL_ON });
+  });
+
+  it('persists the v8 schemaVersion + per-surface columns to disk', async () => {
     const plugin = pluginWith(v6Fixture());
     const mgr = new SettingsManager(plugin);
     await mgr.load();
     const onDisk = plugin.data as { schemaVersion: number; tableColumns?: unknown };
     expect(onDisk.schemaVersion).toBe(SCHEMA_VERSION);
-    expect(onDisk.tableColumns).toEqual({ lastSeen: true, source: true, rule: true });
+    expect(onDisk.tableColumns).toEqual({ pane: ALL_ON, settings: ALL_ON });
   });
 });
 
-describe('SettingsManager.setTableColumns', () => {
-  it('replaces the column map and persists', async () => {
+describe('SettingsManager.get/setTableColumns (per surface)', () => {
+  it('sets one surface without touching the other, and persists', async () => {
     const plugin = pluginWith(null);
     const mgr = new SettingsManager(plugin);
     await mgr.load();
-    expect(mgr.get().tableColumns).toEqual({ lastSeen: true, source: true, rule: true });
-    await mgr.setTableColumns({ lastSeen: false, source: false, rule: true });
-    expect(mgr.get().tableColumns).toEqual({ lastSeen: false, source: false, rule: true });
+    expect(mgr.getTableColumns('pane')).toEqual({ lastSeen: true, source: true, rule: true });
+    await mgr.setTableColumns('pane', { lastSeen: false, source: false, rule: true });
+    expect(mgr.getTableColumns('pane')).toEqual({ lastSeen: false, source: false, rule: true });
+    // The other surface is untouched.
+    expect(mgr.getTableColumns('settings')).toEqual({ lastSeen: true, source: true, rule: true });
     expect(
-      (plugin.data as { tableColumns: { lastSeen: boolean } }).tableColumns.lastSeen,
+      (plugin.data as { tableColumns: { pane: { lastSeen: boolean } } }).tableColumns.pane.lastSeen,
     ).toBe(false);
   });
 });

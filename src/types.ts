@@ -1,4 +1,4 @@
-export const SCHEMA_VERSION = 7;
+export const SCHEMA_VERSION = 8;
 
 export type Mode = 'default' | 'allow-only' | 'inbox';
 
@@ -54,14 +54,20 @@ export type TagOverride = 'show' | 'hide';
 /**
  * Which optional data columns the tag table shows (2-5). Tag, Count, and
  * Visible are always shown; these three are user-toggleable via the column
- * selector and persisted so the choice sticks across remounts. Applies to both
- * surfaces that host the table (the Curate Tags settings tab and the pane).
+ * selector and persisted so the choice sticks across remounts.
  */
 export interface TableColumnPrefs {
   lastSeen: boolean;
   source: boolean;
   rule: boolean;
 }
+
+/**
+ * The two surfaces that host the tag table. Column visibility is kept
+ * independently per surface (a narrow docked pane and the wide Curate Tags
+ * settings tab want different column sets - item 8a).
+ */
+export type TableSurface = 'pane' | 'settings';
 
 export interface TagMeta {
   tag: string;
@@ -107,9 +113,9 @@ export interface TagCuratorSettings {
   // always lives in the Curate Tags settings tab; this only governs the sidebar
   // leaf, its ribbon icon, and the open-pane commands. Schema v6 added this.
   paneEnabled: boolean;
-  // Which optional tag-table columns are visible (2-5). Shared by both table
-  // surfaces. Schema v7 added this; v6->v7 defaults all three on.
-  tableColumns: TableColumnPrefs;
+  // Which optional tag-table columns are visible (2-5), kept independently per
+  // surface (item 8a). Schema v7 added a flat shape; v8 reshaped it per surface.
+  tableColumns: Record<TableSurface, TableColumnPrefs>;
 }
 
 export const DEFAULT_SETTINGS: TagCuratorSettings = {
@@ -132,7 +138,10 @@ export const DEFAULT_SETTINGS: TagCuratorSettings = {
   seenWelcomeModal: false,
   seenNnTooOldNotice: false,
   paneEnabled: true,
-  tableColumns: { lastSeen: true, source: true, rule: true },
+  tableColumns: {
+    pane: { lastSeen: true, source: true, rule: true },
+    settings: { lastSeen: true, source: true, rule: true },
+  },
   debugLog: false,
   sidecarDebounceMs: 5000,
 };

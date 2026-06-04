@@ -63,16 +63,20 @@ settings:
  * State banner (D-007) - persistent above Tag Curator surfaces
  * whenever the plugin is in a non-default state.
  * ========================================================= */
+/* Both variants read as proper callouts (item 8b): a color-coded left accent
+ * bar, a tinted wash, a filled round icon, and a clean solid action button. */
 .tag-curator-state-banner {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 9px 16px;
-  font-size: 12.5px;
+  padding: 11px 16px;
+  font-size: 13px;
   border-bottom: 1px solid var(--divider-color);
+  border-left: 3px solid transparent;
 }
 .tag-curator-state-banner[data-variant="preview"] {
-  background: rgba(245, 201, 124, 0.1);
+  background: rgba(245, 201, 124, 0.12);
+  border-left-color: var(--text-warning);
 }
 .tag-curator-state-banner[data-variant="preview"] .sb-ic {
   background: var(--text-warning);
@@ -81,12 +85,9 @@ settings:
 .tag-curator-state-banner[data-variant="preview"] .sb-msg {
   color: var(--text-warning);
 }
-/* Off state reads as a real callout (1-4): a distinct wash plus a left accent
- * bar and a filled accent icon, so it does not blend into the panel like the
- * old gray-on-gray strip. The accent draws the eye to the "Turn on" action. */
 .tag-curator-state-banner[data-variant="off"] {
   background: var(--background-modifier-hover);
-  border-left: 3px solid var(--text-accent);
+  border-left-color: var(--text-accent);
 }
 .tag-curator-state-banner[data-variant="off"] .sb-ic {
   background: var(--text-accent);
@@ -96,35 +97,36 @@ settings:
   color: var(--text-muted);
 }
 .tag-curator-state-banner .sb-ic {
-  width: 18px;
-  height: 18px;
+  width: 20px;
+  height: 20px;
   border-radius: 50%;
   display: grid;
   place-items: center;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 700;
   flex-shrink: 0;
 }
 .tag-curator-state-banner .sb-msg {
   flex: 1;
-  line-height: 1.4;
+  line-height: 1.45;
 }
 .tag-curator-state-banner .sb-msg strong {
   color: var(--text-normal);
 }
 .tag-curator-state-banner .sb-action {
-  background: transparent;
-  border: 1px solid currentColor;
-  color: inherit;
+  flex-shrink: 0;
+  background: var(--background-primary);
+  border: 1px solid var(--background-modifier-border);
+  color: var(--text-normal);
   font: inherit;
   font-size: 11.5px;
-  padding: 4px 10px;
-  border-radius: 5px;
+  font-weight: 500;
+  padding: 4px 12px;
+  border-radius: 6px;
   cursor: pointer;
-  opacity: 0.85;
 }
 .tag-curator-state-banner .sb-action:hover {
-  opacity: 1;
+  background: var(--background-modifier-hover);
 }
 
 /* =========================================================
@@ -475,21 +477,6 @@ settings:
   color: var(--text-faint);
   font-style: italic;
   margin: 8px 0 12px;
-}
-
-/* Curate Tags "Filter by rule" selector (3-1). */
-.tcst-curate-filterbar {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 10px;
-}
-.tcst-curate-filterlabel {
-  font-size: 12px;
-  color: var(--text-muted);
-}
-.tcst-curate-ruleselect {
-  font-size: 12px;
 }
 
 /* Preset cards */
@@ -1371,8 +1358,14 @@ settings:
   align-items: stretch;
   gap: 8px;
 }
+/* align-self: stretch + flex centering makes the button exactly the search-box
+ * height in the align-items:stretch toolbar row (item 3). */
 .tct-cols-btn {
   flex-shrink: 0;
+  align-self: stretch;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   font: inherit;
   font-size: 12px;
   padding: 0 12px;
@@ -1386,6 +1379,21 @@ settings:
 .tct-cols-btn:hover {
   background: var(--interactive-hover);
   color: var(--text-normal);
+}
+/* Filter-by-rule dropdown in the toolbar (settings surface only). */
+.tct-rulefilter {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+.tct-rulefilter-label {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+.tct-rulefilter-select {
+  font-size: 12px;
+  max-width: 220px;
 }
 .tct-search {
   flex: 1;
@@ -1429,12 +1437,43 @@ settings:
   border-color: var(--interactive-accent);
   color: var(--text-accent);
 }
+/* More/Less toggle (pane only) that reveals the secondary filter chips (item 4).
+ * The wrap uses display:contents so its chips flow inline with the primary ones,
+ * wrapping naturally; tc-hidden (display:none) collapses it. */
+.tct-chips-more {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font: inherit;
+  font-size: 12px;
+  padding: 5px 8px;
+  border: 0;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+}
+.tct-chips-more:hover {
+  color: var(--text-normal);
+}
+.tct-chips-more-caret {
+  font-size: 9px;
+  transition: transform 0.12s ease;
+}
+.tct-chips-more.open .tct-chips-more-caret {
+  transform: rotate(180deg);
+  color: var(--text-accent);
+}
+.tct-chips-secondary {
+  display: contents;
+}
 
-/* Bulk-action bar: contextual, hidden when no selection. */
+/* Bulk-action bar: contextual, hidden when no selection. Wraps so the buttons
+ * stay usable in a narrow pane (item 6). */
 .tct-bulk-bar {
   display: flex;
   align-items: center;
-  gap: 10px;
+  flex-wrap: wrap;
+  gap: 6px 8px;
   margin-bottom: 10px;
   padding: 9px 12px;
   background: var(--background-secondary);
@@ -1445,9 +1484,6 @@ settings:
 .tct-bulk-count {
   font-weight: 600;
   color: var(--text-accent);
-}
-.tct-bulk-spacer {
-  flex: 1;
 }
 .tct-bulk-btn {
   display: inline-flex;
@@ -1540,6 +1576,10 @@ settings:
 .tct-cell-count {
   text-align: right;
 }
+/* Visibility column: center the dot (and the eye header) in the column (item 5). */
+.tct-cell-visible {
+  text-align: center;
+}
 /* Eye-icon header for the Visible column so the label never truncates (2-4). */
 .tct-head-ic {
   display: inline-flex;
@@ -1600,16 +1640,29 @@ settings:
   border-radius: 4px;
   padding: 1px 5px;
 }
-.tct-rule-name {
+/* Rule as a subtle pill: reads more intentionally than truncated link text and
+ * ellipsizes within the cell, with the full name on hover (item 10). */
+.tct-rule-pill {
+  display: inline-block;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  vertical-align: middle;
+  padding: 1px 9px;
+  border-radius: 999px;
+  background: var(--background-modifier-hover);
   color: var(--text-accent);
-  font-size: 12px;
+  font-size: 11.5px;
 }
 .tct-rule-none {
   color: var(--text-faint);
   font-size: 12px;
 }
 
-/* Visibility dot: shown = success, hidden = accent, flagged = warning. */
+/* Visibility dot: shown = green, hidden = medium gray, flagged = amber (items
+ * 5 + 11). Gray (not blue) reads as "suppressed" and keeps the three states
+ * visually distinct. */
 .tct-vis-dot {
   display: inline-block;
   width: 9px;
@@ -1621,12 +1674,13 @@ settings:
   background: var(--text-success);
 }
 .tct-vis-hidden {
-  background: var(--text-accent);
+  background: var(--text-muted);
 }
 .tct-vis-flagged {
   background: var(--tag-curator-flag-color);
 }
 
+/* Renders a literal vertical-ellipsis glyph (item 7), so font-size sizes it. */
 .tct-more-btn {
   display: inline-flex;
   align-items: center;
@@ -1637,14 +1691,12 @@ settings:
   border-radius: 5px;
   background: transparent;
   color: var(--text-muted);
+  font-size: 18px;
+  line-height: 1;
 }
 .tct-more-btn:hover {
   background: var(--background-modifier-hover);
   color: var(--text-normal);
-}
-.tct-more-btn svg {
-  width: 16px;
-  height: 16px;
 }
 
 .tct-empty {
@@ -1699,29 +1751,6 @@ settings:
 .tct-view .tct-bulk-bar { display: none; }
 .tct-tagname-link { cursor: pointer; color: var(--text-accent); }
 .tct-tagname-link:hover .tct-tagname { text-decoration: underline; }
-/* Filters disclosure: toggle button hidden by default, visible only in view mode */
-.tct-filters-toggle {
-  background: transparent;
-  border: 0;
-  color: var(--text-muted);
-  font: inherit;
-  font-size: 12px;
-  cursor: pointer;
-  display: none;
-  align-items: center;
-  gap: 5px;
-  padding: 2px 0;
-}
-.tct-filters-toggle .tct-filters-caret {
-  display: inline-block;
-  transition: transform 0.12s;
-}
-.tct-filters-toggle.open .tct-filters-caret {
-  transform: rotate(90deg);
-  color: var(--text-accent);
-}
-.tct-view .tct-filters-toggle { display: inline-flex; }
-.tct-view .tct-chips-collapsed { display: none; }
 
 /* View/Manage segmented control in the workspace header. */
 .tag-curator-workspace .tcw-viewswitch {
@@ -1756,9 +1785,10 @@ settings:
 
 /* -----------------------------------------------------------------
  * Curation Workspace leaf shell (Phase 3B-2).
- * The leaf is a flex column: banner, header (title + Tags/Rules mode
- * switch), then a single content host that mounts either the tag table
- * or the inline rule editor. Colors come from Obsidian theme variables.
+ * The leaf is a flex column: banner, header (title + View/Manage switch +
+ * settings gear), then a single content host that mounts the tag table.
+ * Rules are managed in Settings, not here (item 1). Colors come from Obsidian
+ * theme variables.
  * ----------------------------------------------------------------- */
 .tag-curator-workspace {
   display: flex;
@@ -1780,35 +1810,32 @@ settings:
   font-weight: 700;
 }
 
-/* Segmented Tags/Rules switch in the workspace header. */
-.tag-curator-workspace .tcw-modeswitch {
-  display: inline-flex;
-  border: 1px solid var(--background-modifier-border);
-  border-radius: 8px;
-  overflow: hidden;
-  background: var(--background-secondary);
+/* Right-hand header group: the View/Manage switch plus the settings gear (item 2). */
+.tag-curator-workspace .tcw-header-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
-.tag-curator-workspace .tcw-modeswitch-btn {
-  appearance: none;
+.tag-curator-workspace .tcw-gear {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
   border: 0;
+  border-radius: 6px;
   background: transparent;
   color: var(--text-muted);
-  padding: 4px 14px;
-  font-size: 13px;
-  font-weight: 500;
   cursor: pointer;
   box-shadow: none;
 }
-.tag-curator-workspace .tcw-modeswitch-btn:not(:last-child) {
-  border-right: 1px solid var(--background-modifier-border);
-}
-.tag-curator-workspace .tcw-modeswitch-btn:hover {
-  color: var(--text-normal);
+.tag-curator-workspace .tcw-gear:hover {
   background: var(--background-modifier-hover);
+  color: var(--text-normal);
 }
-.tag-curator-workspace .tcw-modeswitch-btn.active {
-  color: var(--text-on-accent);
-  background: var(--interactive-accent);
+.tag-curator-workspace .tcw-gear svg {
+  width: 16px;
+  height: 16px;
 }
 
 /* Content host that the active component mounts into. */

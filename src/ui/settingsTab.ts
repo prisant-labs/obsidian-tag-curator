@@ -11,7 +11,7 @@ import TagCuratorPlugin from '../main';
 import { PRESETS, resolveActiveRules } from '../engine/presets';
 import { RuleEditor } from './ruleEditor';
 import { StateBanner } from './stateBanner';
-import { Mode, Rule } from '../types';
+import { Mode } from '../types';
 import { detectNotebookNavigator, MIN_API_VERSION } from '../integrations/notebookNavigator';
 import { TagTable } from './curationWorkspace/tagTable';
 import { TagListModel } from './tagList/tagListModel';
@@ -283,40 +283,37 @@ export class TagCuratorSettingTab extends PluginSettingTab {
       this.curateRuleFilter = null;
     }
 
-    this.renderCurateFilterBar(panel, activeRules);
-
     const host = panel.createDiv({ cls: 'tcst-curate-host' });
-    const deps = makeTagTableDeps(this.plugin, this.app, () => this.curateTable?.refresh());
+    const deps = makeTagTableDeps(
+      this.plugin,
+      this.app,
+      () => this.curateTable?.refresh(),
+      'settings',
+    );
     this.curateModel = deps.model;
     deps.model.setRuleFilter(this.curateRuleFilter);
-    this.curateTable = new TagTable(host, deps.model, deps.actions, deps.host);
+    // The "Filter by rule" control now lives in the table's own toolbar (item 9),
+    // unifying it with search + chips. It lists the active rule set (enabled
+    // presets + custom rules) the engine applies; this is what the Presets
+    // deep-link needed.
+    this.curateTable = new TagTable(host, deps.model, deps.actions, deps.host, {
+      initialMode: 'manage',
+      surface: 'settings',
+      ruleFilter: {
+        options: activeRules.map((r) => ({ id: r.id, name: r.name })),
+        current: this.curateRuleFilter,
+        onChange: (id) => {
+          this.curateRuleFilter = id;
+          this.curateModel?.setRuleFilter(id);
+          this.curateTable?.refresh();
+        },
+      },
+    });
     // Subscribe to shared state so the table live-updates from external changes
     // (e.g. a rule toggle in the workspace, a metadata rescan) - F-1.
     const refreshCurate = (): void => { this.curateTable?.refresh(); };
     this.curateOffSettings = this.plugin.settingsManager.onChange(refreshCurate);
     this.curateMetaRef = this.plugin.tagMetaManager.on('changed', refreshCurate);
-  }
-
-  /**
-   * The "Filter by rule" selector above the Curate Tags table (3-1). Lists every
-   * active rule (enabled presets + enabled custom rules, the exact set the engine
-   * applies) plus an "All tags" reset. Picking one narrows the table to the tags
-   * that rule affects; this is the selector the deep-link from Presets needed.
-   */
-  private renderCurateFilterBar(panel: HTMLElement, activeRules: Rule[]): void {
-    const bar = panel.createDiv({ cls: 'tcst-curate-filterbar' });
-    bar.createSpan({ cls: 'tcst-curate-filterlabel', text: 'Filter by rule' });
-    const sel = bar.createEl('select', { cls: 'dropdown tcst-curate-ruleselect' });
-    sel.createEl('option', { value: '', text: 'All tags' });
-    for (const r of activeRules) {
-      sel.createEl('option', { value: r.id, text: r.name });
-    }
-    sel.value = this.curateRuleFilter ?? '';
-    sel.addEventListener('change', () => {
-      this.curateRuleFilter = sel.value || null;
-      this.curateModel?.setRuleFilter(this.curateRuleFilter);
-      this.curateTable?.refresh();
-    });
   }
 
   // -----------------------------------------------------------------
