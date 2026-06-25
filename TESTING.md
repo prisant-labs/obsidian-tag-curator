@@ -12,7 +12,7 @@ How to verify Tag Curator before tagging a release. The **v1.0 manual smoke matr
 
 ### Build and Install
 
-1. Clone the repository: `git clone https://github.com/jprisant/obsidian-tag-curator.git`
+1. Clone the repository: `git clone https://github.com/prisant-labs/obsidian-tag-curator.git`
 2. Install dependencies: `npm ci`
 3. Build the plugin: `npm run build`
 4. Copy artifacts to the test vault:
@@ -26,7 +26,7 @@ How to verify Tag Curator before tagging a release. The **v1.0 manual smoke matr
 ### BRAT pre-release install (recommended for tester walks)
 
 1. Install the BRAT plugin in the test vault.
-2. Add this repo as a beta plugin: `https://github.com/jprisant/obsidian-tag-curator`.
+2. Add this repo as a beta plugin: `https://github.com/prisant-labs/obsidian-tag-curator`.
 3. Pick the latest tag (the `release.yml` workflow attaches `main.js`, `manifest.json`, `styles.css`, `versions.json` to every tagged release).
 
 ## v1.0 manual BRAT smoke matrix

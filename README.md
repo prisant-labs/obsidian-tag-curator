@@ -69,7 +69,7 @@ You can also write your own rules: regex patterns, frequency thresholds, or expl
 ## Install (BRAT, until directory submission)
 
 1. Install the BRAT plugin from the Obsidian Community Plugins directory.
-2. In BRAT settings, click **Add Beta Plugin** and add `https://github.com/jprisant/obsidian-tag-curator`.
+2. In BRAT settings, click **Add Beta Plugin** and add `https://github.com/prisant-labs/obsidian-tag-curator`.
 3. Pick the latest release tag when prompted.
 4. Enable Tag Curator under Community Plugins.
 
@@ -167,5 +167,5 @@ Apache 2.0.
 
 ## Support
 
-- Issues: https://github.com/jprisant/obsidian-tag-curator/issues
-- Repository: https://github.com/jprisant/obsidian-tag-curator
+- Issues: https://github.com/prisant-labs/obsidian-tag-curator/issues
+- Repository: https://github.com/prisant-labs/obsidian-tag-curator

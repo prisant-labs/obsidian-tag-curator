@@ -6,6 +6,6 @@
   "description": "Hide, flag, and curate noisy tags across Obsidian's UI. Display-only, file-safe, fully reversible.",
   "author": "JP Prisant",
   "authorUrl": "https://github.com/jprisant",
-  "helpUrl": "https://github.com/jprisant/obsidian-tag-curator#readme",
+  "helpUrl": "https://github.com/prisant-labs/obsidian-tag-curator#readme",
   "isDesktopOnly": false
 }
