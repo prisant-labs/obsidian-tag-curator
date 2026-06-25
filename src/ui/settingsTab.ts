@@ -715,17 +715,12 @@ export class TagCuratorSettingTab extends PluginSettingTab {
       .setDesc('Display-only, file-safe, fully reversible tag curation.')
       .addButton((b) =>
         b.setButtonText('GitHub').onClick(() => {
-          window.open('https://github.com/jprisant/obsidian-tag-curator');
+          window.open('https://github.com/prisant-labs/obsidian-tag-curator');
         }),
       )
       .addButton((b) =>
         b.setButtonText('Report an issue').onClick(() => {
-          window.open('https://github.com/jprisant/obsidian-tag-curator/issues/new');
-        }),
-      )
-      .addButton((b) =>
-        b.setButtonText('Sponsor').onClick(() => {
-          window.open('https://github.com/sponsors/jprisant');
+          window.open('https://github.com/prisant-labs/obsidian-tag-curator/issues/new');
         }),
       );
   }
