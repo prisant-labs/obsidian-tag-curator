@@ -12,6 +12,7 @@ Desktop.ini
 
 # Project
 _LOCAL/
+_agent-context/
 .env
 .env.local
 .env.*.local

@@ -10,25 +10,26 @@
 
 ### claude
 
-- **Context:** `AGENTS/claude/CONTEXT.md`
-- **Tasks:** `AGENTS/claude/TODO.md`
-- **Session Log:** `AGENTS/session-log/` (centralized - all agents write here)
+- **Context:** `_agent-context/claude/CONTEXT.md`
+- **Tasks:** `_agent-context/claude/TODO.md`
+- **Session Log:** `_LOCAL/session-log/` (centralized - all agents write here)
 
 ### codex
 
-- **Context:** `AGENTS/codex/CONTEXT.md`
-- **Tasks:** `AGENTS/codex/TODO.md`
-- **Session Log:** `AGENTS/session-log/` (centralized - all agents write here)
+- **Context:** `_agent-context/codex/CONTEXT.md`
+- **Tasks:** `_agent-context/codex/TODO.md`
+- **Session Log:** `_LOCAL/session-log/` (centralized - all agents write here)
 
 ## Conventions
 
 - Use conventional commits (`feat:`, `fix:`, `docs:`, `chore:`)
 - See `CLAUDE.md` for detailed project rules and conventions
-- Record architectural decisions as MADR v4 ADRs in `docs/internal/decisions/` (see that directory's `README.md`)
+- Record architectural decisions as MADR v4 ADRs in `docs/decisions/` (see that directory's `README.md`)
 
 ## Key Files
 
 - `CLAUDE.md` - Project instructions (Claude Code)
 - `CHANGELOG.md` - Version history
-- `docs/internal/decisions/` - Architecture Decision Records (MADR v4)
-- `_LOCAL/` - Gitignored scratch directory (per-machine, not shared)
+- `docs/decisions/` - Architecture Decision Records (MADR v4)
+- `_agent-context/` - Gitignored agent working context (claude/, codex/)
+- `_LOCAL/` - Gitignored local docs, internal planning, and session logs

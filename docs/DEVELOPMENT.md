@@ -35,7 +35,7 @@ Tags are evaluated against active rules using a **highest-priority-match-wins** 
 3. The **first** matching rule (= the highest-priority match) determines visibility.
 4. If no rules match, the default behavior applies.
 
-> An earlier implementation sorted priority-descending but then kept the **last** match in the loop, which inverted the semantics to lowest-priority-wins. That was a silent bug; it was fixed 2026-05-28 (see Q-005 in `docs/internal/scope-and-decisions.md`).
+> An earlier implementation sorted priority-descending but then kept the **last** match in the loop, which inverted the semantics to lowest-priority-wins. That was a silent bug; it was fixed 2026-05-28.
 >
 > For v0.1 the priority value is **hidden from the UI** (D-009): new custom rules default to `priority: 50`; built-in presets keep their values (80-100). v0.2 will surface a drag-to-reorder card list (B012).
 

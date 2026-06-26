@@ -37,7 +37,13 @@ All code must pass linting before merging:
 npm run lint
 ```
 
-We use ESLint with TypeScript support. Configuration is in `.eslintrc.json`.
+We use ESLint with TypeScript support. Configuration is in `.eslintrc.cjs`.
+
+## Project documentation
+
+- [`docs/DESIGN.md`](docs/DESIGN.md) - design overview and core concepts.
+- [`docs/DEVELOPMENT.md`](docs/DEVELOPMENT.md) - architecture and the rule-evaluation model.
+- [`docs/TESTING.md`](docs/TESTING.md) - the QA smoke matrix and manual test plan.
 
 ## Commit Messages
 
