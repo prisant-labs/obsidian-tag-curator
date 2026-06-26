@@ -1,16 +1,142 @@
+<a id="readme-top"></a>
+
 # Tag Curator
 
-A vault-wide tag visibility and curation engine for Obsidian. Hide, flag, and surface noisy tags across the places they actually appear, without modifying a single note.
+**A vault-wide tag visibility and curation engine for Obsidian.** Hide, flag, and surface noisy tags across the places they actually appear, without modifying a single note.
 
 > Display-only. File-safe. Fully reversible.
 
-## What it does
+<p>
+  <a href="https://github.com/prisant-labs/obsidian-tag-curator/issues/new?labels=bug">Report a bug</a>
+  &nbsp;&middot;&nbsp;
+  <a href="https://github.com/prisant-labs/obsidian-tag-curator/issues/new?labels=enhancement">Request a feature</a>
+  &nbsp;&middot;&nbsp;
+  <a href="https://github.com/prisant-labs/obsidian-tag-curator/discussions">Ask a question</a>
+</p>
+
+<p>
+  <a href="https://github.com/prisant-labs/obsidian-tag-curator/releases"><img src="https://img.shields.io/github/v/release/prisant-labs/obsidian-tag-curator?include_prereleases&sort=semver&style=flat-square&label=release&color=orange" alt="Latest release"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-Apache%202.0-blue?style=flat-square" alt="License: Apache 2.0"></a>
+  <img src="https://img.shields.io/badge/Obsidian-1.9.10%2B-7c3aed?style=flat-square&logo=obsidian&logoColor=white" alt="Obsidian 1.9.10+">
+  <a href="#contributing"><img src="https://img.shields.io/badge/PRs-welcome-brightgreen?style=flat-square" alt="PRs welcome"></a>
+</p>
+
+<p>
+  <img src="https://img.shields.io/badge/mode-display--only-success?style=flat-square" alt="Display-only">
+  <img src="https://img.shields.io/badge/your%20notes-never%20modified-success?style=flat-square" alt="Notes never modified">
+  <img src="https://img.shields.io/badge/network%20%26%20telemetry-none-success?style=flat-square" alt="No network or telemetry">
+</p>
+
+<p>
+  <a href="https://github.com/prisant-labs/obsidian-tag-curator/stargazers"><img src="https://badgen.net/github/stars/prisant-labs/obsidian-tag-curator" alt="Stars"></a>
+  <a href="https://github.com/prisant-labs/obsidian-tag-curator/network/members"><img src="https://badgen.net/github/forks/prisant-labs/obsidian-tag-curator" alt="Forks"></a>
+  <a href="https://github.com/prisant-labs/obsidian-tag-curator/issues"><img src="https://badgen.net/github/open-issues/prisant-labs/obsidian-tag-curator" alt="Open issues"></a>
+  <a href="https://github.com/prisant-labs/obsidian-tag-curator/commits/main"><img src="https://badgen.net/github/last-commit/prisant-labs/obsidian-tag-curator" alt="Last commit"></a>
+</p>
+
+<p>
+  <a href="#about">About</a> &middot;
+  <a href="#getting-started">Install</a> &middot;
+  <a href="#usage">Usage</a> &middot;
+  <a href="#scopes">Scopes</a> &middot;
+  <a href="#safety-contract">Safety</a> &middot;
+  <a href="#compatibility">Compatibility</a> &middot;
+  <a href="#roadmap">Roadmap</a> &middot;
+  <a href="#license">License</a>
+</p>
+
+---
+
+<details>
+<summary><strong>Table of contents</strong></summary>
+
+- [About](#about)
+  - [Key features](#key-features)
+- [Getting started](#getting-started)
+  - [Prerequisites](#prerequisites)
+  - [Installation](#installation)
+- [Usage](#usage)
+  - [Quick start](#quick-start)
+  - [The Curation Workspace](#the-curation-workspace)
+  - [Scopes](#scopes)
+  - [Per-tag overrides](#per-tag-overrides)
+  - [Presets](#presets)
+  - [Commands](#commands)
+  - [Modes](#modes)
+  - [Settings](#settings)
+  - [Files and storage](#files-and-storage)
+- [Safety contract](#safety-contract)
+- [Compatibility](#compatibility)
+- [Performance](#performance)
+- [Roadmap](#roadmap)
+- [Non-goals](#non-goals)
+- [Contributing](#contributing)
+- [License](#license)
+- [Support](#support)
+- [Acknowledgments](#acknowledgments)
+
+</details>
+
+---
+
+## About
 
 Tag Curator gives you a rule engine that controls which tags appear across Obsidian's UI. Your notes are never touched. Disabling or uninstalling the plugin restores every tag immediately, because nothing was ever written to your files.
 
 The heart of v1.0 is the **Curation Workspace**: a real, dockable workspace leaf (not a settings screen) where you see every change land live. Open it beside the native tag pane and your loop becomes a single continuous glance: edit a rule on one side, watch tags hide or flag on the other, in the same breath.
 
-## The Curation Workspace
+<!-- IMAGE PENDING (capture): docs/assets/hero-pane-beside-tagpane.gif - the Curation Workspace docked beside the native tag pane, mid-edit -->
+
+### Key features
+
+- **Display-only and reversible.** Tags are hidden or flagged in the UI only; note content is never modified, and turning the plugin off restores everything instantly.
+- **The Curation Workspace.** A dockable leaf with a virtualized tag table, an inline rule editor, live preview, bulk actions, and per-row "why is this hidden?" diagnostics.
+- **Side-by-side loop.** One command docks the workspace beside the native tag pane, so a rule edit and its effect are a single glance apart.
+- **Four scopes, independently switchable.** Tag pane, Notebook Navigator, Properties, and Autocomplete, each with its own kill switch.
+- **Per-tag overrides.** Pin any single tag to always-show (the safety net) or always-hide, ahead of every rule.
+- **Five presets plus custom rules.** Regex, frequency, or list rules, with a live preview as you type.
+- **Plays well with others.** Dataview, Tasks, and Bases see the real tag set; Tag Wrangler, Style Settings, and Notebook Navigator are optional enhancements.
+
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
+
+## Getting started
+
+### Prerequisites
+
+- Obsidian 1.9.10 or newer.
+- Optional companions that unlock extra integration when present: [Tag Wrangler](https://github.com/pjeby/tag-wrangler) (rename delegation), [Style Settings](https://github.com/mgmeyers/obsidian-style-settings) (GUI styling), and [Notebook Navigator](https://github.com/johansan/notebook-navigator) (tag-tree scope). None is required.
+
+### Installation
+
+**BRAT (until the directory listing is live):**
+
+1. Install the BRAT plugin from the Obsidian Community Plugins directory.
+2. In BRAT settings, click **Add Beta Plugin** and add `https://github.com/prisant-labs/obsidian-tag-curator`.
+3. Pick the latest release tag when prompted.
+4. Enable Tag Curator under Community Plugins.
+
+BRAT offers updates automatically whenever a new beta is published.
+
+**Manual:**
+
+1. Download `main.js`, `manifest.json`, and `styles.css` from the [latest release](https://github.com/prisant-labs/obsidian-tag-curator/releases).
+2. Copy them to `<your-vault>/.obsidian/plugins/tag-curator/`.
+3. Reload Obsidian and enable Tag Curator under Community Plugins.
+
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
+
+## Usage
+
+### Quick start
+
+1. Enable Tag Curator. The welcome modal opens once: it states the file-safe contract, then offers **Start curating** (apply rules normally) or **Start in preview mode** (flag matched tags instead of hiding them).
+2. Run **Tag Curator: Open beside the tag pane** from the command palette (Cmd/Ctrl+P). The workspace and the native tag pane sit side by side.
+3. Click `+ New rule`, give it a name, pick a Type (Pattern match / Count threshold / Specific tags), and watch the live preview and the real tag pane react as you type.
+4. If a rule catches one tag too many, find its row and pin it to **always-show**. It pops back and is safe from every rule.
+5. The status bar shows the current state. Click it to open the workspace filtered to hidden tags.
+6. If anything looks wrong: **Settings > General > Run panic disable**, or run **Tag Curator: Panic disable** from the command palette. Every effect across every scope is removed instantly; nothing in your notes changes.
+
+### The Curation Workspace
 
 The Curation Workspace is where you actually curate. It holds:
 
@@ -21,18 +147,14 @@ The Curation Workspace is where you actually curate. It holds:
 - **Bulk actions.** Select several tags, then hide, unhide, flag, add a description, or send them to Tag Wrangler in one action.
 - **Per-row diagnostics.** On any row, ask "why is this hidden?" and Tag Curator names the exact preset, rule, or override responsible. A tag is never hidden without a traceable reason.
 
-### Open it beside the tag pane
+Two commands open it:
 
-Two commands open the workspace:
+- **Tag Curator: Open the panel** opens the Curation Workspace on its own.
+- **Tag Curator: Open beside the tag pane** opens the workspace and the native tag pane side by side, arranged for you in one move. This is the side-by-side loop that is the whole point of v1.0.
 
-- **Tag Curator: Open Curation Workspace** opens the workspace on its own.
-- **Tag Curator: Open Curation Workspace beside the tag pane** opens the workspace and the native tag pane side by side, arranged for you in one move. This is the side-by-side loop that is the whole point of v1.0.
+You can also open it from the status bar, or from Settings.
 
-You can also open it from the status bar or the **Open Curation Workspace** button in Settings.
-
-<!-- screenshot placeholder: Curation Workspace docked beside the native tag pane, mid-edit -->
-
-## Scopes: where curation shows up
+### Scopes
 
 A scope is a place in Obsidian where tags appear and where Tag Curator can act. v1.0 covers the four surfaces where tags actually render:
 
@@ -43,9 +165,9 @@ A scope is a place in Obsidian where tags appear and where Tag Curator can act. 
 
 By default, hiding a tag hides it consistently across all four places. Each scope is **independent and reversible on its own**: go to **Settings, then Scopes**, and toggle any scope off with its per-scope kill switch. If a single surface ever misbehaves, switch off just that scope; the others keep working and the plugin stays on.
 
-<!-- screenshot placeholder: Settings > Scopes section with the four scope toggles -->
+<!-- IMAGE PENDING (capture): docs/assets/settings-scopes.png - Settings > Scopes with the four scope toggles -->
 
-## Per-tag overrides (the safety net)
+### Per-tag overrides
 
 Sometimes you do not want a whole rule, just one specific tag handled a certain way. That is an **override**, a per-tag decision that beats every rule:
 
@@ -54,7 +176,7 @@ Sometimes you do not want a whole rule, just one specific tag handled a certain 
 
 Set an override from a tag's row in the workspace. Overrides persist and resolve ahead of rules.
 
-## Presets
+### Presets
 
 Five built-in presets ship enabled or disabled to taste:
 
@@ -66,35 +188,54 @@ Five built-in presets ship enabled or disabled to taste:
 
 You can also write your own rules: regex patterns, frequency thresholds, or explicit tag lists, with a live preview as you type.
 
-## Install (BRAT, until directory submission)
+### Commands
 
-1. Install the BRAT plugin from the Obsidian Community Plugins directory.
-2. In BRAT settings, click **Add Beta Plugin** and add `https://github.com/prisant-labs/obsidian-tag-curator`.
-3. Pick the latest release tag when prompted.
-4. Enable Tag Curator under Community Plugins.
+Obsidian lists these under the **Tag Curator** prefix in the command palette:
 
-BRAT offers updates automatically whenever a new beta is published.
+- Tag Curator: Toggle enable
+- Tag Curator: Panic disable (remove all DOM effects now)
+- Tag Curator: Toggle preview mode
+- Tag Curator: Open the panel
+- Tag Curator: Open beside the tag pane
+- Tag Curator: Rescan vault tags
 
-## Install (manual)
+### Modes
 
-1. Download `main.js`, `manifest.json`, and `styles.css` from the latest release.
-2. Copy them to `<your-vault>/.obsidian/plugins/tag-curator/`.
-3. Reload Obsidian and enable Tag Curator under Community Plugins.
+- Default: rules hide matching tags.
+- Preview mode: rules visibly flag matching tags instead of hiding them, so you can see a rule's impact before committing.
 
-## Quick start
+### Settings
 
-1. Enable Tag Curator. The welcome modal opens once: it states the file-safe contract, then offers **Start curating** (apply rules normally) or **Start in preview mode** (flag matched tags instead of hiding them).
-2. Run **Tag Curator: Open Curation Workspace beside the tag pane** from the command palette (Cmd/Ctrl+P). The workspace and the native tag pane sit side by side.
-3. Click `+ New rule`, give it a name, pick a Type (Pattern match / Count threshold / Specific tags), and watch the live preview and the real tag pane react as you type.
-4. If a rule catches one tag too many, find its row and pin it to **always-show**. It pops back and is safe from every rule.
-5. The status bar shows the current state. Click it to open the workspace filtered to hidden tags.
-6. If anything looks wrong: **Settings > General > Run panic disable**, or run "Tag Curator: Panic disable" from the command palette. Every effect across every scope is removed instantly; nothing in your notes changes.
+Settings is set-once config, not a workbench. The work happens in the Curation Workspace. Settings holds:
+
+- **General**: the safety row (panic disable), master enable, preview mode, and a button to open the Curation Workspace.
+- **Scopes**: a per-scope kill switch for each of the four scopes.
+- **Presets** and **Custom rules**: manage the rule set.
+- **Integrations**: Tag Wrangler, Style Settings, and Notebook Navigator status.
+- **Advanced**: index maintenance, sidecar debounce, debug logging.
+
+Profiles and Aliases tabs are present as placeholders for later releases (v1.1 and v1.2).
+
+### Files and storage
+
+What lives in `.obsidian/plugins/tag-curator/`:
+
+- `data.json`: settings, presets, custom rules, and per-tag overrides.
+- `tags.json`: per-tag metadata (count, first seen, last seen, source).
+
+Both are pretty-printed JSON for easy git diffing.
+
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 ## Safety contract
 
 Tag Curator never modifies note content. It does not patch `metadataCache.getTags()` or any other internal Obsidian API. Dataview, Tasks, and Bases see the real, unfiltered tag data.
 
-If the plugin behaves unexpectedly, run "Tag Curator: Panic disable" from the command palette. This is a one-shot action that produces the "off" state: every Tag Curator display effect is removed immediately across all scopes, the plugin disables itself, and a persistent banner shows "Tag Curator is off" at the top of every Tag Curator surface until you re-enable. The same banner shows "Preview mode is on" whenever preview mode is active, so you always know the plugin's current state.
+Tag Curator makes no network requests of any kind: nothing is fetched, nothing is sent, and there is no telemetry.
+
+If the plugin behaves unexpectedly, run **Tag Curator: Panic disable** from the command palette. This is a one-shot action that produces the "off" state: every Tag Curator display effect is removed immediately across all scopes, the plugin disables itself, and a persistent banner shows "Tag Curator is off" at the top of every Tag Curator surface until you re-enable. The same banner shows "Preview mode is on" whenever preview mode is active, so you always know the plugin's current state.
+
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 ## Compatibility
 
@@ -107,51 +248,22 @@ Tag Curator is display-only and file-safe, so it plays well with the rest of you
 
 None of these plugins is required. Tag Curator works fully standalone; each integration is an optional enhancement that activates only when the partner plugin is enabled.
 
-## Commands
-
-- Tag Curator: Toggle enable
-- Tag Curator: Panic disable (remove all DOM effects now)
-- Tag Curator: Toggle preview mode
-- Tag Curator: Open Curation Workspace
-- Tag Curator: Open Curation Workspace beside the tag pane
-- Tag Curator: Open tag list view
-- Tag Curator: Open tag list (hidden tags only)
-- Tag Curator: Rescan vault tags
-
-## Modes
-
-- Default: rules hide matching tags.
-- Preview mode: rules visibly flag matching tags instead of hiding them, so you can see a rule's impact before committing.
-
-## Settings
-
-Settings is set-once config, not a workbench. The work happens in the Curation Workspace. Settings holds:
-
-- **General**: the safety row (panic disable), master enable, preview mode, and an **Open Curation Workspace** button.
-- **Scopes**: a per-scope kill switch for each of the four scopes.
-- **Presets** and **Custom rules**: manage the rule set.
-- **Integrations**: Tag Wrangler, Style Settings, and Notebook Navigator status.
-- **Advanced**: index maintenance, sidecar debounce, debug logging.
-
-Profiles and Aliases tabs are present as placeholders for later releases (v1.1 and v1.2).
-
-## What lives in `.obsidian/plugins/tag-curator/`
-
-- `data.json`: settings, presets, custom rules, and per-tag overrides.
-- `tags.json`: per-tag metadata (count, first seen, last seen, source).
-
-Both are pretty-printed JSON for easy git diffing.
-
 ## Performance
 
 For typical vaults (under 10k notes, under 1,500 unique tags), Tag Curator's overhead is imperceptible. Each scope observer is scoped to its container, coalesced through `requestAnimationFrame`, and applies class-based hiding rather than DOM removal.
 
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
+
 ## Roadmap
 
-- **v1.0** (current): the Curation Workspace leaf, open-beside-the-tag-pane command, four scopes (tag pane, Notebook Navigator, Properties, Autocomplete) with per-scope kill switches, per-tag overrides, five presets, custom rules, thin Settings, Tag Wrangler delegation, Style Settings registration, and the trust layer (welcome modal, state banner, panic disable, status bar).
+- **v1.0** (current): the Curation Workspace leaf, the open-beside-the-tag-pane command, four scopes (tag pane, Notebook Navigator, Properties, Autocomplete) with per-scope kill switches, per-tag overrides, five presets, custom rules, thin Settings, Tag Wrangler delegation, Style Settings registration, and the trust layer (welcome modal, state banner, panic disable, status bar).
 - **v1.1** (planned): aliases / display-merge, stale and near-duplicate detection, suggested-merges panel, inbox mode, graph view scope.
 - **v1.2** (planned): profiles, export / import, community rule packs, compound criteria (AND/OR/NOT), drag-to-reorder rules.
-- **v2.0+**: Bases scope, larger-vault storage, localization, community plugin directory submission.
+- **v2.0+**: Bases scope, larger-vault storage, localization.
+
+See the [open issues](https://github.com/prisant-labs/obsidian-tag-curator/issues) for the live list.
+
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 ## Non-goals
 
@@ -161,11 +273,31 @@ For typical vaults (under 10k notes, under 1,500 unique tags), Tag Curator's ove
 - Filtering query results in Dataview, Tasks, or Bases.
 - Telemetry of any kind.
 
+## Contributing
+
+Tag Curator is open source under Apache 2.0, and issues and pull requests are welcome.
+
+- **Found a bug?** [Open a bug report](https://github.com/prisant-labs/obsidian-tag-curator/issues/new?labels=bug).
+- **Have an idea?** [Request a feature](https://github.com/prisant-labs/obsidian-tag-curator/issues/new?labels=enhancement) or start a [discussion](https://github.com/prisant-labs/obsidian-tag-curator/discussions).
+- **Sending a PR?** Fork the repo, branch from `main`, keep `npm run lint && npm run typecheck && npm test && npm run build` green, and use [Conventional Commits](https://www.conventionalcommits.org/) for your messages.
+
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
+
 ## License
 
-Apache 2.0.
+Distributed under the Apache License 2.0. See [`LICENSE`](LICENSE) for details.
 
 ## Support
 
-- Issues: https://github.com/prisant-labs/obsidian-tag-curator/issues
-- Repository: https://github.com/prisant-labs/obsidian-tag-curator
+- **Issues:** https://github.com/prisant-labs/obsidian-tag-curator/issues
+- **Discussions:** https://github.com/prisant-labs/obsidian-tag-curator/discussions
+- **Repository:** https://github.com/prisant-labs/obsidian-tag-curator
+
+## Acknowledgments
+
+- The [Obsidian](https://obsidian.md) team and the plugin developer community.
+- [Tag Wrangler](https://github.com/pjeby/tag-wrangler), [Notebook Navigator](https://github.com/johansan/notebook-navigator), and [Style Settings](https://github.com/mgmeyers/obsidian-style-settings), the companions Tag Curator composes with.
+- [BRAT](https://github.com/TfTHacker/obsidian42-brat) for beta distribution.
+- README structure inspired by [Best-README-Template](https://github.com/othneildrew/Best-README-Template) and [amazing-github-template](https://github.com/dec0dOS/amazing-github-template).
+
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
