@@ -1,16 +1,28 @@
+<!-- Thanks for contributing to Tag Curator. -->
+
 ## Summary
 
-<!-- Brief description of changes -->
+<!-- What does this change, and why? -->
 
-## Changes
+## Related issue
 
-- 
+<!-- e.g. Closes #123 -->
 
-## Testing
+## Type of change
 
-- [ ] Tests pass
-- [ ] Manual verification completed
+- [ ] Bug fix
+- [ ] New feature
+- [ ] Refactor / internal
+- [ ] Docs only
 
-## Related Issues
+## Checklist
 
-<!-- Closes #XX, Fixes #YY -->
+- [ ] `npm run lint && npm run typecheck && npm test && npm run build` all pass
+- [ ] Commits follow [Conventional Commits](https://www.conventionalcommits.org/)
+- [ ] Tag Curator stays display-only: no note content is written
+- [ ] If behavior changed, `docs/TESTING.md` and any affected docs are updated
+- [ ] If this is a significant architectural decision, an ADR is added under `docs/decisions/`
+
+## Notes for reviewers
+
+<!-- Anything specific to look at; screenshots for UI changes. -->

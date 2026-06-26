@@ -1,23 +1,98 @@
-name: Bug Report
-description: Report a bug or unexpected behavior
+name: Bug report
+description: Report something not working as expected
+title: "[Bug]: "
 labels: ["bug"]
 body:
-  - type: textarea
-    id: description
+  - type: markdown
     attributes:
-      label: Description
-      description: What happened? What did you expect to happen?
+      value: |
+        Thanks for filing a bug. Tag Curator is display-only and never edits your notes, so most issues are about how tags render in a particular surface. The details below help pin it down quickly.
+  - type: checkboxes
+    attributes:
+      label: Pre-flight
+      options:
+        - label: I searched existing issues and this is not a duplicate.
+          required: true
+        - label: I am on the latest release of Tag Curator.
+          required: true
+  - type: input
+    id: tc-version
+    attributes:
+      label: Tag Curator version
+      placeholder: e.g. 1.0.0
+    validations:
+      required: true
+  - type: input
+    id: obsidian-version
+    attributes:
+      label: Obsidian version
+      description: Settings > About > Current version
+      placeholder: e.g. 1.9.10
+    validations:
+      required: true
+  - type: dropdown
+    id: platform
+    attributes:
+      label: Platform
+      options:
+        - Desktop (Windows)
+        - Desktop (macOS)
+        - Desktop (Linux)
+        - Mobile (iOS / iPadOS)
+        - Mobile (Android)
+    validations:
+      required: true
+  - type: dropdown
+    id: scope
+    attributes:
+      label: Which surface(s) are affected?
+      multiple: true
+      options:
+        - Tag pane
+        - Notebook Navigator tag tree
+        - Properties panel
+        - Editor autocomplete
+        - The Curation Workspace / pane
+        - Settings
+        - Not surface-specific
+  - type: textarea
+    id: repro
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1.
+        2.
+        3.
     validations:
       required: true
   - type: textarea
-    id: steps
+    id: expected
     attributes:
-      label: Steps to Reproduce
-      description: How can we reproduce this?
+      label: Expected behavior
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
     validations:
       required: true
   - type: textarea
     id: environment
     attributes:
-      label: Environment
-      description: OS, version, relevant tools
+      label: Relevant plugins and theme
+      description: Especially Notebook Navigator, Tag Wrangler, and Style Settings, plus your theme (some themes restyle the tag pane).
+      placeholder: e.g. Notebook Navigator 1.x, Minimal theme
+  - type: checkboxes
+    attributes:
+      label: Recovery check
+      description: This confirms the display-only contract held.
+      options:
+        - label: Running "Tag Curator: Panic disable" restored the tags or removed the effect.
+        - label: My note content is unaffected (only the display was wrong).
+  - type: textarea
+    id: console
+    attributes:
+      label: Console errors (optional)
+      description: Open dev tools (Ctrl/Cmd+Shift+I) then Console, and paste anything relevant.
+      render: shell
