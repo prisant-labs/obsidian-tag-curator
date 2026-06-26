@@ -176,6 +176,21 @@ Sometimes you do not want a whole rule, just one specific tag handled a certain 
 
 Set an override from a tag's row in the workspace. Overrides persist and resolve ahead of rules.
 
+Putting overrides, rules, and the default together, here is how Tag Curator decides whether any given tag is shown:
+
+<!-- These diagrams render natively on GitHub. Before the directory submission, confirm Mermaid renders in Obsidian's in-app plugin browser; if it shows as raw code there, swap this and the Safety-contract diagram for committed SVGs. -->
+
+```mermaid
+flowchart TD
+    T["A tag"] --> O1{"always-show override?"}
+    O1 -->|yes| SHOW["Shown (safety net)"]
+    O1 -->|no| O2{"always-hide override?"}
+    O2 -->|yes| HIDE["Hidden / flagged"]
+    O2 -->|no| R{"matches an enabled rule?"}
+    R -->|yes| RH["Highest-priority rule applies"] --> HIDE
+    R -->|no| DEF["Default: shown"]
+```
+
 ### Presets
 
 Five built-in presets ship enabled or disabled to taste:
@@ -230,6 +245,14 @@ Both are pretty-printed JSON for easy git diffing.
 ## Safety contract
 
 Tag Curator never modifies note content. It does not patch `metadataCache.getTags()` or any other internal Obsidian API. Dataview, Tasks, and Bases see the real, unfiltered tag data.
+
+```mermaid
+flowchart LR
+    Notes["Your notes<br/>(never written)"] --> Cache["Obsidian metadata cache<br/>(unmodified)"]
+    Cache --> Q["Dataview / Tasks / Bases<br/>(see the real, full tag set)"]
+    Cache --> TC["Tag Curator<br/>(reads only)"]
+    TC -. "decorates the display only" .-> UI["Tag pane, Notebook Navigator,<br/>Properties, Autocomplete"]
+```
 
 Tag Curator makes no network requests of any kind: nothing is fetched, nothing is sent, and there is no telemetry.
 
