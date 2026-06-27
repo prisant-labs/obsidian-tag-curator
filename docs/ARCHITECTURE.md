@@ -131,10 +131,10 @@ classDiagram
         +setEnabled(on)
         #observeContainer(el)
         #apply(root)
-        #findRows(root)* ObservedRow[]
-        #applyDecoration(el, ruleId, mode)*
-        #clearDecoration(el)*
-        #findDecorated(root)* HTMLElement[]
+        #findRows(root) ObservedRow[]
+        #applyDecoration(el, ruleId, mode)
+        #clearDecoration(el)
+        #findDecorated(root) HTMLElement[]
     }
     ObserverBase <|-- TagPaneObserver
     ObserverBase <|-- NotebookNavigatorObserver

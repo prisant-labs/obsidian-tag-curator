@@ -19,7 +19,7 @@ Tag Curator is **display-only**. It decorates how tags render by toggling CSS cl
 
 ## Build artifacts
 
-`main.js` and `styles.css` are **not committed** (they are gitignored and shipped only by the release workflow). `styles.css` is hand-authored source you edit directly; `main.js` is built by esbuild from `src/`.
+`main.js` is **not committed** - it is gitignored and built by esbuild from `src/` (shipped via the release workflow). `styles.css`, by contrast, is hand-authored source and **is** committed; you edit it directly.
 
 | Command | What it does |
 |---|---|
