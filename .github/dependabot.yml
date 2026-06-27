@@ -8,6 +8,12 @@ updates:
     open-pull-requests-limit: 5
     commit-message:
       prefix: "chore(deps)"
+    ignore:
+      # @types/node tracks the Node major we build on, not the latest release.
+      # Decline auto major bumps (e.g. 22 -> 26); take minor/patch only.
+      # Revisit when .nvmrc moves.
+      - dependency-name: "@types/node"
+        update-types: ["version-update:semver-major"]
 
   # GitHub Actions used in the build/release workflows
   - package-ecosystem: "github-actions"
