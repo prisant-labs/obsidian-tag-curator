@@ -9,8 +9,11 @@ function regexFor(pattern: string): RegExp | null {
     const compiled = compileSafeRegex(pattern);
     REGEX_CACHE.set(pattern, compiled);
     return compiled;
-  } catch (e) {
-    console.warn('[tag-curator] invalid regex', pattern, e);
+  } catch {
+    // Invalid or unsafe pattern: cache the miss so we never recompile it, and
+    // stay silent. The rule editor validates regex at entry (with a visible
+    // ok/error status), so reaching here is a guard, not a user-facing error -
+    // and the review guideline asks that the console show only error messages.
     REGEX_CACHE.set(pattern, null);
     return null;
   }
