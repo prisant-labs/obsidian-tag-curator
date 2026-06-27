@@ -37,6 +37,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 - Settings schema advances to **v6**, automatic and additive. v3 -> v4 introduces the per-tag `overrides` store (defaulting to `{}`); later steps add per-scope enables, the reviewed flag, and the opt-in pane state (`paneEnabled`). Migrations are one-way and guarded; writes use the existing atomic write-temp-then-rename. No user action required.
 
+### Known limitations
+
+- On very large vaults (thousands of tags) Obsidian virtualizes the core tag pane. In the densest regions a hidden tag can briefly leave a stale glyph or a gap until the pane re-renders. Normal vaults hide cleanly, and the Curation pane and Properties scope are unaffected. A virtualizer-aware fix is planned for 1.1.
+- Enabling the plugin or running a full reindex scans the whole vault. On very large vaults (tens of thousands of files) this can take roughly 10 to 15 seconds. A chunked, incremental scan is planned for 1.1.
+- The status bar item is desktop-only, because Obsidian does not render a status bar on mobile. Every display scope still works on mobile.
+
 ## [0.1.0] - 2026-05-14
 
 Initial public release.
@@ -82,10 +88,3 @@ Initial public release.
 - No profiles, aliases, or inbox mode in v0.1.0. These are planned for v0.3.
 - No Tag Wrangler, Notebook Navigator, or Colored Tags Wrangler integration yet. Planned for v0.3 to v0.4.
 - Graph view and Bases scopes deferred to v0.5+ because of canvas rendering and Bases API volatility, respectively.
-
-## Planned releases
-
-- v0.2: graph view and autocomplete scopes, properties chips, recently created / orphan / stale panels, allow-only mode, plugin-integration detection in the welcome modal (the formal onboarding wizard is dropped; first-run welcome modal ships in v0.1).
-- v0.3: aliases, profiles, Tag Wrangler integration, inbox mode.
-- v0.4: Notebook Navigator integration, suggested merges, export / import, community rule packs.
-- v0.5+: Bases scope, Colored Tags Wrangler compatibility, mobile polish, community plugin directory submission.
