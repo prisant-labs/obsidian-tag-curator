@@ -16,6 +16,7 @@ import { detectNotebookNavigator, MIN_API_VERSION } from '../integrations/notebo
 import { TagTable } from './curationWorkspace/tagTable';
 import { TagListModel } from './tagList/tagListModel';
 import { makeTagTableDeps } from './tagList/tagTableDeps';
+import { makeActivatable, setSwitchState } from '../util/a11y';
 
 type TabId = 'general' | 'curate' | 'scopes' | 'presets' | 'custom' | 'advanced' | 'help';
 
@@ -71,6 +72,7 @@ export class TagCuratorSettingTab extends PluginSettingTab {
 
     // Tab bar.
     this.tabBar = containerEl.createDiv({ cls: 'tag-curator-top-tabs' });
+    this.tabBar.setAttribute('role', 'tablist');
     this.panelHost = containerEl.createDiv({
       cls: 'tag-curator-panel-host',
     });
@@ -78,16 +80,22 @@ export class TagCuratorSettingTab extends PluginSettingTab {
     const tabs = this.buildTabDescriptors();
     for (const tab of tabs) {
       const tabEl = this.tabBar.createDiv({ cls: 'tcst-tab' });
-      if (tab.id === this.activeTab) tabEl.addClass('active');
+      const isActive = tab.id === this.activeTab;
+      if (isActive) tabEl.addClass('active');
+      tabEl.setAttribute('aria-selected', isActive ? 'true' : 'false');
       tabEl.createSpan({ text: tab.label });
       if (tab.badge) {
         const badge = tabEl.createSpan({ cls: 'tcst-badge', text: tab.badge });
         if (tab.badgeKind === 'soon') badge.addClass('tcst-badge-soon');
       }
-      tabEl.addEventListener('click', () => {
-        this.activeTab = tab.id;
-        this.display();
-      });
+      makeActivatable(
+        tabEl,
+        () => {
+          this.activeTab = tab.id;
+          this.display();
+        },
+        { role: 'tab' },
+      );
     }
 
     const active = tabs.find((t) => t.id === this.activeTab) ?? tabs[0];
@@ -468,7 +476,7 @@ export class TagCuratorSettingTab extends PluginSettingTab {
       cls: 'tc-action-link',
       text: label,
     });
-    link.addEventListener('click', (e) => {
+    makeActivatable(link, (e) => {
       e.preventDefault();
       onClick();
     });
@@ -526,7 +534,7 @@ export class TagCuratorSettingTab extends PluginSettingTab {
         );
       };
       paintAffected(isOn);
-      affectedEl.addEventListener('click', (e) => {
+      makeActivatable(affectedEl, (e) => {
         e.preventDefault();
         // Only navigate when the preset is active: its rule is then in the
         // engine, so the Curate Tags filter has tags to show. When off, the
@@ -545,13 +553,15 @@ export class TagCuratorSettingTab extends PluginSettingTab {
         cls: 'tcst-more-link',
         text: 'More details',
       });
+      moreToggle.setAttribute('aria-expanded', 'false');
       const details = body.createDiv({ cls: 'tcst-preset-details' });
       details.addClass('tc-hidden');
       this.renderPresetDetails(details, preset);
-      moreToggle.addEventListener('click', () => {
+      makeActivatable(moreToggle, () => {
         const open = !details.hasClass('tc-hidden');
         details.toggleClass('tc-hidden', open);
         moreToggle.setText(open ? 'More details' : 'Hide details');
+        moreToggle.setAttribute('aria-expanded', open ? 'false' : 'true');
       });
 
       // Toggle on the left; flipping it updates the affected-count label live.
@@ -635,11 +645,17 @@ export class TagCuratorSettingTab extends PluginSettingTab {
   ): HTMLElement {
     const toggle = parent.createDiv({ cls: 'tcst-toggle' });
     toggle.toggleClass('on', initial);
-    toggle.addEventListener('click', () => {
-      const next = !toggle.hasClass('on');
-      toggle.toggleClass('on', next);
-      void onChange(next);
-    });
+    setSwitchState(toggle, initial);
+    makeActivatable(
+      toggle,
+      () => {
+        const next = !toggle.hasClass('on');
+        toggle.toggleClass('on', next);
+        setSwitchState(toggle, next);
+        void onChange(next);
+      },
+      { role: 'switch' },
+    );
     return toggle;
   }
 

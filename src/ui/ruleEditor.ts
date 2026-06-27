@@ -29,6 +29,7 @@ import {
 import { RuleEngine } from '../engine/ruleEngine';
 import { resolveActiveRules } from '../engine/presets';
 import { compileSafeRegex } from '../util/safeRegex';
+import { makeActivatable, setSwitchState } from '../util/a11y';
 
 type Mode = 'cards' | 'edit';
 
@@ -146,7 +147,7 @@ export class RuleEditor {
     });
     if (!rule.enabled) affectedEl.addClass('tcr-card-affected-zero');
 
-    card.addEventListener('click', (e) => {
+    makeActivatable(card, (e) => {
       const tgt = e.target as HTMLElement;
       if (tgt.closest('.tcr-card-toggle')) return;
       this.openEdit(rule);
@@ -160,7 +161,7 @@ export class RuleEditor {
       cls: 'tcr-card-new-sub',
       text: 'Opens the editor with defaults. No separate wizard.',
     });
-    card.addEventListener('click', () => this.openEdit(null));
+    makeActivatable(card, () => this.openEdit(null));
   }
 
   private openEdit(rule: Rule | null): void {
@@ -234,7 +235,7 @@ export class RuleEditor {
         if (draft.match.type === t) c.addClass('on');
         c.createDiv({ cls: 'tcr-type-card-title', text: cardTitle });
         c.createDiv({ cls: 'tcr-type-card-desc', text: desc });
-        c.addEventListener('click', () => {
+        makeActivatable(c, () => {
           if (draft.match.type === t) return;
           draft.match = blankCriteriaFor(t);
           this.render();
@@ -544,7 +545,7 @@ export class RuleEditor {
       countH.setText('Count' + arrow(this.previewSort === 'count'));
     };
     paint();
-    tagH.addEventListener('click', () => {
+    makeActivatable(tagH, () => {
       if (this.previewSort === 'name') this.previewSortDesc = !this.previewSortDesc;
       else {
         this.previewSort = 'name';
@@ -553,7 +554,7 @@ export class RuleEditor {
       paint();
       this.renderPreviewRows();
     });
-    countH.addEventListener('click', () => {
+    makeActivatable(countH, () => {
       if (this.previewSort === 'count') this.previewSortDesc = !this.previewSortDesc;
       else {
         this.previewSort = 'count';
@@ -611,7 +612,6 @@ export class RuleEditor {
     row.createSpan({ cls: 'tcr-pd-tag', text: m.tag });
     row.createSpan({ cls: 'tcr-pd-count', text: String(m.count) });
     const info = row.createSpan({ cls: 'tcr-pd-info', text: 'ⓘ' });
-    info.setAttribute('role', 'button');
     info.setAttribute('aria-label', `Details for ${m.tag}`);
 
     const open = this.openPreviewTags.has(m.tag);
@@ -626,7 +626,7 @@ export class RuleEditor {
     this.kvRow(kv, 'Last used', formatPreviewDate(m.lastSeen));
     this.renderOverrideActions(detail, m.tag);
 
-    info.addEventListener('click', (e) => {
+    makeActivatable(info, (e) => {
       e.stopPropagation();
       if (this.openPreviewTags.has(m.tag)) {
         this.openPreviewTags.delete(m.tag);
@@ -767,12 +767,18 @@ export class RuleEditor {
   ): HTMLElement {
     const t = parent.createDiv({ cls: 'tcr-toggle' });
     t.toggleClass('on', initial);
-    t.addEventListener('click', (e) => {
-      e.stopPropagation();
-      const next = !t.hasClass('on');
-      t.toggleClass('on', next);
-      void onChange(next);
-    });
+    setSwitchState(t, initial);
+    makeActivatable(
+      t,
+      (e) => {
+        e.stopPropagation();
+        const next = !t.hasClass('on');
+        t.toggleClass('on', next);
+        setSwitchState(t, next);
+        void onChange(next);
+      },
+      { role: 'switch' },
+    );
     return t;
   }
 }

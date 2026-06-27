@@ -14,6 +14,7 @@
  */
 import { App, Modal } from 'obsidian';
 import TagCuratorPlugin from '../main';
+import { makeActivatable, setSwitchState } from '../util/a11y';
 
 type Choice = 'curating' | 'preview';
 
@@ -148,11 +149,17 @@ export class WelcomeModal extends Modal {
       .enabledPresets.includes(presetId);
     const toggleWrap = card.createDiv({ cls: 'tcw-toggle' });
     toggleWrap.toggleClass('on', enabled);
-    toggleWrap.addEventListener('click', () => {
-      const isOn = toggleWrap.hasClass('on');
-      toggleWrap.toggleClass('on', !isOn);
-      void this.plugin.settingsManager.setPresetEnabled(presetId, !isOn);
-    });
+    setSwitchState(toggleWrap, enabled);
+    makeActivatable(
+      toggleWrap,
+      () => {
+        const isOn = toggleWrap.hasClass('on');
+        toggleWrap.toggleClass('on', !isOn);
+        setSwitchState(toggleWrap, !isOn);
+        void this.plugin.settingsManager.setPresetEnabled(presetId, !isOn);
+      },
+      { role: 'switch' },
+    );
     const body = card.createDiv({ cls: 'tcw-preset-body' });
     body.createDiv({ cls: 'tcw-preset-name', text: name });
     body.createDiv({ cls: 'tcw-preset-desc', text: desc });
@@ -187,12 +194,14 @@ export class WelcomeModal extends Modal {
     for (const bullet of integ.bullets) {
       list.createEl('li', { text: bullet });
     }
-    // Collapsed by default; click the header to expand the bullet detail.
-    head.addEventListener('click', () => {
+    // Collapsed by default; activate the header to expand the bullet detail.
+    head.setAttribute('aria-expanded', 'false');
+    makeActivatable(head, () => {
       const open = card.hasClass('tcw-integ-open');
       card.toggleClass('tcw-integ-open', !open);
       card.toggleClass('tcw-integ-collapsed', open);
       chev.setText(open ? '›' : '⌄');
+      head.setAttribute('aria-expanded', open ? 'false' : 'true');
     });
   }
 

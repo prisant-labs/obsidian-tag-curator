@@ -26,6 +26,7 @@
  * manual TESTING matrix, not unit tests (the obsidian stub lacks full DOM/Menu).
  */
 import { Menu, setIcon } from 'obsidian';
+import { makeActivatable } from '../../util/a11y';
 import { TableColumnPrefs, TableSurface } from '../../types';
 import { FilterChip, SortKey, TagListModel, TagRow } from '../tagList/tagListModel';
 import { TagActions } from '../tagList/tagActions';
@@ -248,7 +249,7 @@ export class TagTable {
     const makeChip = (parent: HTMLElement, id: FilterChip, label: string): void => {
       const chip = parent.createDiv({ cls: 'tct-chip', text: label });
       this.chipEls.set(id, chip);
-      chip.addEventListener('click', () => {
+      makeActivatable(chip, () => {
         this.model.setFilter(id);
         this.refresh();
       });
@@ -335,7 +336,7 @@ export class TagTable {
         cell.addClass('tct-head-sortable');
         cell.createSpan({ cls: 'tct-sort-arrow' });
         this.headerCells.set(sk, cell);
-        cell.addEventListener('click', () => {
+        makeActivatable(cell, () => {
           this.model.setSort(sk);
           this.refresh();
         });
@@ -497,7 +498,7 @@ export class TagTable {
         }
         if (this.mode === 'view') {
           nameCell.addClass('tct-tagname-link');
-          nameCell.addEventListener('click', () => this.host.searchTag(row.meta.tag));
+          makeActivatable(nameCell, () => this.host.searchTag(row.meta.tag));
         }
         break;
       }
