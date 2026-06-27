@@ -158,7 +158,7 @@ export class WelcomeModal extends Modal {
         setSwitchState(toggleWrap, !isOn);
         void this.plugin.settingsManager.setPresetEnabled(presetId, !isOn);
       },
-      { role: 'switch' },
+      { role: 'switch', ariaLabel: `Enable ${name}` },
     );
     const body = card.createDiv({ cls: 'tcw-preset-body' });
     body.createDiv({ cls: 'tcw-preset-name', text: name });

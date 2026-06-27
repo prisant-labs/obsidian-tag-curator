@@ -17,6 +17,12 @@ describe('makeActivatable', () => {
     expect(el.getAttribute('role')).toBe('switch');
   });
 
+  it('sets an aria-label when provided', () => {
+    const el = document.createElement('div');
+    makeActivatable(el, () => {}, { ariaLabel: 'Enable preset: Hide hex codes' });
+    expect(el.getAttribute('aria-label')).toBe('Enable preset: Hide hex codes');
+  });
+
   it('fires the handler on click, Enter, and Space', () => {
     const el = document.createElement('div');
     const fn = vi.fn();

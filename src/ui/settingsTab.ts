@@ -72,7 +72,6 @@ export class TagCuratorSettingTab extends PluginSettingTab {
 
     // Tab bar.
     this.tabBar = containerEl.createDiv({ cls: 'tag-curator-top-tabs' });
-    this.tabBar.setAttribute('role', 'tablist');
     this.panelHost = containerEl.createDiv({
       cls: 'tag-curator-panel-host',
     });
@@ -82,20 +81,19 @@ export class TagCuratorSettingTab extends PluginSettingTab {
       const tabEl = this.tabBar.createDiv({ cls: 'tcst-tab' });
       const isActive = tab.id === this.activeTab;
       if (isActive) tabEl.addClass('active');
-      tabEl.setAttribute('aria-selected', isActive ? 'true' : 'false');
+      // A button group, not an ARIA tablist: a partial tab pattern (no roving
+      // tabindex, arrow-key nav, or tabpanel wiring) would be worse than honest
+      // buttons. aria-pressed marks the active tab.
+      tabEl.setAttribute('aria-pressed', isActive ? 'true' : 'false');
       tabEl.createSpan({ text: tab.label });
       if (tab.badge) {
         const badge = tabEl.createSpan({ cls: 'tcst-badge', text: tab.badge });
         if (tab.badgeKind === 'soon') badge.addClass('tcst-badge-soon');
       }
-      makeActivatable(
-        tabEl,
-        () => {
-          this.activeTab = tab.id;
-          this.display();
-        },
-        { role: 'tab' },
-      );
+      makeActivatable(tabEl, () => {
+        this.activeTab = tab.id;
+        this.display();
+      });
     }
 
     const active = tabs.find((t) => t.id === this.activeTab) ?? tabs[0];
@@ -527,14 +525,7 @@ export class TagCuratorSettingTab extends PluginSettingTab {
       const meta = body.createDiv({ cls: 'tcst-preset-meta' });
       // The affected-count is a link that opens the panel filtered to this preset.
       const affectedEl = meta.createEl('a', { cls: 'tcst-affected' });
-      const paintAffected = (on: boolean): void => {
-        affectedEl.toggleClass('tcst-affected-zero', !on);
-        affectedEl.setText(
-          on ? `${affected} tags affected` : `would hide ${affected} tags`,
-        );
-      };
-      paintAffected(isOn);
-      makeActivatable(affectedEl, (e) => {
+      const navigate = (e: Event): void => {
         e.preventDefault();
         // Only navigate when the preset is active: its rule is then in the
         // engine, so the Curate Tags filter has tags to show. When off, the
@@ -547,6 +538,26 @@ export class TagCuratorSettingTab extends PluginSettingTab {
         this.pendingRuleFilter = preset.id;
         this.activeTab = 'curate';
         this.display();
+      };
+      const paintAffected = (on: boolean): void => {
+        affectedEl.toggleClass('tcst-affected-zero', !on);
+        affectedEl.setText(
+          on ? `${affected} tags affected` : `would hide ${affected} tags`,
+        );
+        // A real button only when the preset is on (focusable); inert
+        // informational text when off, so keyboard users get no dead control.
+        if (on) {
+          affectedEl.setAttribute('role', 'button');
+          affectedEl.tabIndex = 0;
+        } else {
+          affectedEl.removeAttribute('role');
+          affectedEl.removeAttribute('tabindex');
+        }
+      };
+      paintAffected(isOn);
+      affectedEl.addEventListener('click', navigate);
+      affectedEl.addEventListener('keydown', (e: KeyboardEvent) => {
+        if (e.key === 'Enter' || e.key === ' ') navigate(e);
       });
 
       const moreToggle = meta.createSpan({
@@ -565,10 +576,15 @@ export class TagCuratorSettingTab extends PluginSettingTab {
       });
 
       // Toggle on the left; flipping it updates the affected-count label live.
-      const toggle = this.renderInlineToggle(card, isOn, async (next) => {
-        await this.plugin.settingsManager.setPresetEnabled(preset.id, next);
-        paintAffected(next);
-      });
+      const toggle = this.renderInlineToggle(
+        card,
+        isOn,
+        async (next) => {
+          await this.plugin.settingsManager.setPresetEnabled(preset.id, next);
+          paintAffected(next);
+        },
+        `Enable preset: ${preset.name}`,
+      );
       card.prepend(toggle);
     }
   }
@@ -642,6 +658,7 @@ export class TagCuratorSettingTab extends PluginSettingTab {
     parent: HTMLElement,
     initial: boolean,
     onChange: (next: boolean) => Promise<void> | void,
+    ariaLabel?: string,
   ): HTMLElement {
     const toggle = parent.createDiv({ cls: 'tcst-toggle' });
     toggle.toggleClass('on', initial);
@@ -654,7 +671,7 @@ export class TagCuratorSettingTab extends PluginSettingTab {
         setSwitchState(toggle, next);
         void onChange(next);
       },
-      { role: 'switch' },
+      { role: 'switch', ariaLabel },
     );
     return toggle;
   }

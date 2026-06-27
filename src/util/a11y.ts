@@ -16,10 +16,11 @@
 export function makeActivatable(
   el: HTMLElement,
   handler: (evt: Event) => void,
-  opts: { role?: string; tabIndex?: number } = {},
+  opts: { role?: string; tabIndex?: number; ariaLabel?: string } = {},
 ): void {
   el.setAttribute('role', opts.role ?? 'button');
   el.tabIndex = opts.tabIndex ?? 0;
+  if (opts.ariaLabel) el.setAttribute('aria-label', opts.ariaLabel);
   el.addEventListener('click', handler);
   el.addEventListener('keydown', (evt: KeyboardEvent) => {
     if (evt.key === 'Enter' || evt.key === ' ') {

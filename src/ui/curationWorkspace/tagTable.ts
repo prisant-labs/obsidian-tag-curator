@@ -248,6 +248,7 @@ export class TagTable {
   private buildChips(): void {
     const makeChip = (parent: HTMLElement, id: FilterChip, label: string): void => {
       const chip = parent.createDiv({ cls: 'tct-chip', text: label });
+      chip.setAttribute('aria-pressed', 'false');
       this.chipEls.set(id, chip);
       makeActivatable(chip, () => {
         this.model.setFilter(id);
@@ -424,7 +425,9 @@ export class TagTable {
 
   private syncChips(): void {
     for (const [id, el] of this.chipEls) {
-      el.toggleClass('active', id === this.model.activeFilter);
+      const active = id === this.model.activeFilter;
+      el.toggleClass('active', active);
+      el.setAttribute('aria-pressed', String(active));
     }
   }
 
@@ -479,6 +482,7 @@ export class TagTable {
       case 'select': {
         const selCell = tr.createDiv({ cls: 'tct-cell tct-cell-select' });
         const cb = selCell.createEl('input', { type: 'checkbox' });
+        cb.setAttribute('aria-label', 'Select #' + row.meta.tag);
         cb.checked = this.model.selection.has(row.meta.tag);
         cb.addEventListener('change', () => {
           this.model.toggleSelect(row.meta.tag);

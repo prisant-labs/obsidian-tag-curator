@@ -128,14 +128,19 @@ export class RuleEditor {
     if (!rule.enabled) card.addClass('tcr-card-off');
 
     const toggleWrap = card.createDiv({ cls: 'tcr-card-toggle' });
-    this.makeToggle(toggleWrap, rule.enabled, async (next) => {
-      await this.plugin.settingsManager.updateCustomRule(rule.id, {
-        enabled: next,
-      });
-    });
+    this.makeToggle(
+      toggleWrap,
+      rule.enabled,
+      async (next) => {
+        await this.plugin.settingsManager.updateCustomRule(rule.id, {
+          enabled: next,
+        });
+      },
+      `Enable rule: ${rule.name}`,
+    );
 
     const info = card.createDiv({ cls: 'tcr-card-info' });
-    info.createDiv({ cls: 'tcr-card-name', text: rule.name });
+    const nameEl = info.createDiv({ cls: 'tcr-card-name', text: rule.name });
     const sub = info.createDiv({ cls: 'tcr-card-sub' });
     sub.createSpan({ cls: 'tcr-card-type', text: rule.match.type });
     sub.appendText(' · ' + matchSummaryString(rule.match));
@@ -147,11 +152,22 @@ export class RuleEditor {
     });
     if (!rule.enabled) affectedEl.addClass('tcr-card-affected-zero');
 
-    makeActivatable(card, (e) => {
+    // The card is a mouse convenience target (click anywhere but the toggle to
+    // edit); the keyboard-focusable control is the rule-name button, a sibling
+    // of the toggle, so there are no nested interactive controls.
+    card.addEventListener('click', (e) => {
       const tgt = e.target as HTMLElement;
       if (tgt.closest('.tcr-card-toggle')) return;
       this.openEdit(rule);
     });
+    makeActivatable(
+      nameEl,
+      (e) => {
+        e.stopPropagation();
+        this.openEdit(rule);
+      },
+      { role: 'button' },
+    );
   }
 
   private renderNewCard(parent: HTMLElement): void {
@@ -213,9 +229,14 @@ export class RuleEditor {
     back.addEventListener('click', () => this.exitEdit());
 
     const title = head.createDiv({ cls: 'tcr-edit-title-row' });
-    this.makeToggle(title, draft.enabled, (next) => {
-      draft.enabled = next;
-    });
+    this.makeToggle(
+      title,
+      draft.enabled,
+      (next) => {
+        draft.enabled = next;
+      },
+      'Enable this rule',
+    );
     const nameInput = title.createEl('input', { cls: 'tcr-edit-title-input' });
     nameInput.value = draft.name;
     nameInput.placeholder = 'Untitled rule';
@@ -233,6 +254,7 @@ export class RuleEditor {
       for (const [t, cardTitle, desc] of types) {
         const c = cards.createDiv({ cls: 'tcr-type-card' });
         if (draft.match.type === t) c.addClass('on');
+        c.setAttribute('aria-pressed', draft.match.type === t ? 'true' : 'false');
         c.createDiv({ cls: 'tcr-type-card-title', text: cardTitle });
         c.createDiv({ cls: 'tcr-type-card-desc', text: desc });
         makeActivatable(c, () => {
@@ -764,6 +786,7 @@ export class RuleEditor {
     parent: HTMLElement,
     initial: boolean,
     onChange: (next: boolean) => Promise<void> | void,
+    ariaLabel?: string,
   ): HTMLElement {
     const t = parent.createDiv({ cls: 'tcr-toggle' });
     t.toggleClass('on', initial);
@@ -777,7 +800,7 @@ export class RuleEditor {
         setSwitchState(t, next);
         void onChange(next);
       },
-      { role: 'switch' },
+      { role: 'switch', ariaLabel },
     );
     return t;
   }
