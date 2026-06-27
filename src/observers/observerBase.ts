@@ -84,7 +84,11 @@ export abstract class ObserverBase {
   protected observeContainer(containerEl: HTMLElement): void {
     if (this.observers.has(containerEl)) return;
     const obs = new MutationObserver(() => this.scheduleApply());
-    obs.observe(containerEl, { childList: true, subtree: true });
+    // characterData catches virtualized panes (the core tag pane, Notebook
+    // Navigator) recycling a row by mutating its text in place; without it a
+    // recycled row keeps the prior tag's decoration. apply() only touches
+    // classes/attributes, never text, so this cannot self-trigger a loop.
+    obs.observe(containerEl, { childList: true, subtree: true, characterData: true });
     this.observers.set(containerEl, obs);
     this.containers.add(containerEl);
     this.plugin.register(() => {

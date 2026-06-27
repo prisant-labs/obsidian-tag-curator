@@ -216,4 +216,28 @@ describe('ObserverBase', () => {
     expect(row.classList.contains(DEC_FLAG)).toBe(true);
     expect(row.classList.contains(DEC_HIDDEN)).toBe(false);
   });
+
+  it('re-applies when a row is recycled via an in-place text change', async () => {
+    // Virtualized panes (the core tag pane, Notebook Navigator) recycle row
+    // elements by mutating their text in place rather than adding/removing
+    // nodes. The observer must catch characterData mutations, or a recycled
+    // row keeps the decoration of whatever tag it previously showed.
+    const c = makeContainer(['other']);
+    document.body.appendChild(c);
+    const obs = newObserver();
+    obs.setRules([rule()]);
+    obs.attach(c);
+    await flushRaf();
+
+    const row = c.querySelector('.row') as HTMLElement;
+    expect(row.classList.contains(DEC_HIDDEN)).toBe(false);
+
+    // Recycle the row to a rule-matched tag by editing the text node in place
+    // (a characterData mutation, no childList change).
+    (row.firstChild as Text).data = 't';
+    await flushRaf();
+    await flushRaf();
+
+    expect(row.classList.contains(DEC_HIDDEN)).toBe(true);
+  });
 });
