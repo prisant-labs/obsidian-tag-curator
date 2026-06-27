@@ -199,7 +199,7 @@ export class TagCuratorSettingTab extends PluginSettingTab {
       );
 
     new Setting(panel)
-      .setName('Enable Tag Curator Pane')
+      .setName('Enable Tag Curator pane')
       .setDesc(
         'Also surface curation as a dockable sidebar pane you can keep open beside the native tag pane. Curation always lives in the Curate Tags tab; this adds the docked option.',
       )
@@ -780,13 +780,14 @@ export class TagCuratorSettingTab extends PluginSettingTab {
     new Setting(panel)
       .setName('Mode')
       .setDesc(
-        'How Tag Curator filters tags. v0.1 ships Default; allow-only and inbox land in v0.2.',
+        'How Tag Curator filters tags. Default (hide matched) is the only mode today; allow-only and inbox curation are planned.',
       )
       .addDropdown((d) => {
+        // Only Default is implemented. Offering allow-only/inbox here would let a
+        // user select a mode the engine does not honor yet, so they are withheld
+        // until they ship rather than shown as dead options.
         d.addOption('default', 'Default (hide matched)')
-          .addOption('allow-only', 'Allow-only (v0.2)')
-          .addOption('inbox', 'Inbox (v0.2)')
-          .setValue(s.mode)
+          .setValue('default')
           .onChange(async (v) => {
             await this.plugin.settingsManager.update({ mode: v as Mode });
           });
