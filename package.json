@@ -16,7 +16,7 @@
     "obsidian-plugin",
     "tags"
   ],
-  "author": "Jonathan Prisant",
+  "author": "Prisant Labs",
   "license": "Apache-2.0",
   "devDependencies": {
     "@types/node": "^22.5.0",
