@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "node esbuild.config.mjs",
     "build": "node esbuild.config.mjs production",
-    "lint": "eslint src --ext .ts,.tsx --max-warnings 0",
+    "lint": "eslint src --max-warnings 0",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest"
@@ -19,16 +19,17 @@
   "author": "Prisant Labs",
   "license": "Apache-2.0",
   "devDependencies": {
+    "@eslint/js": "^10.0.1",
     "@types/node": "^22.5.0",
-    "@typescript-eslint/eslint-plugin": "^8.62.0",
-    "@typescript-eslint/parser": "^8.62.0",
     "builtin-modules": "^5.2.0",
     "esbuild": "^0.28.1",
-    "eslint": "^8.57.1",
+    "eslint": "^10.6.0",
+    "globals": "^17.7.0",
     "happy-dom": "^20.10.6",
     "obsidian": "latest",
     "tslib": "^2.7.0",
     "typescript": "^6.0.3",
+    "typescript-eslint": "^8.62.0",
     "vitest": "^4.1.9"
   },
   "private": true
