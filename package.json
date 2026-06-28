@@ -24,7 +24,7 @@
     "@typescript-eslint/parser": "^8.62.0",
     "builtin-modules": "^5.2.0",
     "esbuild": "^0.28.1",
-    "eslint": "^8.57.1",
+    "eslint": "^10.6.0",
     "happy-dom": "^20.10.6",
     "obsidian": "latest",
     "tslib": "^2.7.0",
