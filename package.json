@@ -22,14 +22,14 @@
     "@types/node": "^22.5.0",
     "@typescript-eslint/eslint-plugin": "^8.62.0",
     "@typescript-eslint/parser": "^8.62.0",
-    "builtin-modules": "^3.3.0",
+    "builtin-modules": "^5.2.0",
     "esbuild": "^0.28.1",
     "eslint": "^8.57.1",
     "happy-dom": "^20.10.6",
     "obsidian": "latest",
     "tslib": "^2.7.0",
     "typescript": "^5.6.2",
-    "vitest": "^3.2.4"
+    "vitest": "^4.1.9"
   },
   "private": true
 }
