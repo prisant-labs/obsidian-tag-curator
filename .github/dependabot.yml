@@ -24,6 +24,11 @@ updates:
       # Hold at the locked 1.12.3 until a fixed typings release; re-evaluate then.
       - dependency-name: "obsidian"
         versions: ["1.13.1"]
+      # ESLint 10 drops legacy .eslintrc support (flat eslint.config.js only,
+      # the default since v9); this repo is still on .eslintrc. Adopting it needs
+      # a flat-config migration (pairs with the typescript 6 tsconfig work). 1.1.
+      - dependency-name: "eslint"
+        update-types: ["version-update:semver-major"]
 
   # GitHub Actions used in the build/release workflows
   - package-ecosystem: "github-actions"
