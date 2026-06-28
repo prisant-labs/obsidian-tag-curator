@@ -14,11 +14,6 @@ updates:
       # Revisit when .nvmrc moves.
       - dependency-name: "@types/node"
         update-types: ["version-update:semver-major"]
-      # TypeScript 6.0 turns our tsconfig baseUrl + moduleResolution:node into
-      # hard errors (TS5101/TS5107); adopting it needs a tsconfig migration
-      # (drop baseUrl, moduleResolution -> bundler). Decline until that lands (1.1).
-      - dependency-name: "typescript"
-        update-types: ["version-update:semver-major"]
       # obsidian 1.13.1 ships a self-inconsistent obsidian.d.ts (Menu/Modal/
       # PopoverSuggest miss HistoryHandler.onHistoryBack), which fails tsc.
       # Hold at the locked 1.12.3 until a fixed typings release; re-evaluate then.
