@@ -1,7 +1,7 @@
 <a id="readme-top"></a>
 
 <p align="center">
-  <img src="docs/assets/header.png" alt="Tag Curator - a vault-wide tag visibility and curation engine for Obsidian. Display-only, no files modified, fully reversible, vault-wide." width="100%">
+  <img src="https://raw.githubusercontent.com/prisant-labs/obsidian-tag-curator/main/docs/assets/header.png" alt="Tag Curator - a vault-wide tag visibility and curation engine for Obsidian. Display-only, no files modified, fully reversible, vault-wide." width="100%">
 </p>
 
 # Tag Curator
