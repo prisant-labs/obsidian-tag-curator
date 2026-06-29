@@ -1,7 +1,10 @@
 <a id="readme-top"></a>
 
 <p align="center">
-  <img src="https://raw.githubusercontent.com/prisant-labs/obsidian-tag-curator/main/docs/assets/header.png" alt="Tag Curator - a vault-wide tag visibility and curation engine for Obsidian. Display-only, no files modified, fully reversible, vault-wide." width="100%">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/prisant-labs/obsidian-tag-curator/main/docs/assets/header-dark.png">
+    <img src="https://raw.githubusercontent.com/prisant-labs/obsidian-tag-curator/main/docs/assets/header-light.png" alt="Tag Curator - a vault-wide tag visibility and curation engine for Obsidian. Display-only, no files modified, fully reversible, vault-wide." width="100%">
+  </picture>
 </p>
 
 # Tag Curator
