@@ -50,6 +50,47 @@ function makeTagPane(tags: string[]): HTMLElement {
   return container;
 }
 
+/**
+ * Build a row matching the CURRENT Obsidian tag pane DOM (a generic tree-item):
+ * the tag text lives in `.tree-item-inner-text`, and the usage count is a
+ * sibling `.tag-pane-tag-count` flair OUTSIDE the text node. Reading the whole
+ * row's textContent therefore glues the count onto the tag ("0FA9EA" + "89").
+ * The legacy `.tag-pane-tag-text` class is gone. Captured from a live vault.
+ */
+function makeTreeItemTagRow(tag: string, count: number): HTMLElement {
+  const row = document.createElement('div');
+  row.className = 'tree-item-self tag-pane-tag is-clickable';
+
+  const inner = document.createElement('div');
+  inner.className = 'tree-item-inner';
+  const innerText = document.createElement('div');
+  innerText.className = 'tree-item-inner-text';
+  const parent = document.createElement('span');
+  parent.className = 'tag-pane-tag-parent';
+  const leaf = document.createElement('span');
+  leaf.className = 'tree-item-inner-text';
+  leaf.textContent = tag;
+  innerText.append(parent, leaf);
+  inner.appendChild(innerText);
+
+  const flairOuter = document.createElement('div');
+  flairOuter.className = 'tree-item-flair-outer';
+  const flair = document.createElement('span');
+  flair.className = 'tag-pane-tag-count tree-item-flair';
+  flair.textContent = String(count);
+  flairOuter.appendChild(flair);
+
+  row.append(inner, flairOuter);
+  return row;
+}
+
+function makeTreeItemTagPane(tags: Array<[string, number]>): HTMLElement {
+  const container = document.createElement('div');
+  container.className = 'tag-pane';
+  for (const [t, c] of tags) container.appendChild(makeTreeItemTagRow(t, c));
+  return container;
+}
+
 interface FakeWorkspace {
   onLayoutReady: (cb: () => void) => void;
   on: (event: string, cb: () => void) => { event: string; cb: () => void };
@@ -370,5 +411,42 @@ describe('TagPaneObserver.clearAll / unload', () => {
     obs.unload();
     expect(container.querySelector('.tag-pane-tag')?.classList.contains(HIDDEN_CLASS)).toBe(false);
     expect(obs.countHidden()).toBe(0);
+  });
+});
+
+describe('TagPaneObserver reads the current Obsidian tag-pane DOM', () => {
+  const hexRule = (): Rule =>
+    rule({ id: 'hide-hex-codes', match: { type: 'regex', pattern: '^[0-9A-Fa-f]{3,8}$' } });
+
+  it('hides a hex tag whose row carries a count flair (the count must not corrupt the tag)', async () => {
+    // Regression: "D157FA" used 111 times. Reading the whole row yields
+    // "D157FA111" (9 chars), which exceeds the 3-8 hex pattern and leaks the
+    // tag. (A 2-digit count stays <= 8 chars and still matches by luck, which is
+    // why only frequently-used hex tags leaked - the "funky" inconsistency.)
+    const container = makeTreeItemTagPane([['D157FA', 111]]);
+    document.body.appendChild(container);
+    const { app } = makeApp([container]);
+    const obs = new TagPaneObserver(app as never, new Plugin());
+    obs.setRules([hexRule()]);
+    obs.attachAll();
+    await flushRaf();
+
+    const row = container.querySelector('.tag-pane-tag') as HTMLElement;
+    expect(row.classList.contains(HIDDEN_CLASS)).toBe(true);
+  });
+
+  it('leaves a non-hex word tag visible (the fix must not over-hide)', async () => {
+    // "review" is not a hex code; it must stay visible. Guards against the fix
+    // reading something that turns a real tag into a false hex match.
+    const container = makeTreeItemTagPane([['review', 12]]);
+    document.body.appendChild(container);
+    const { app } = makeApp([container]);
+    const obs = new TagPaneObserver(app as never, new Plugin());
+    obs.setRules([hexRule()]);
+    obs.attachAll();
+    await flushRaf();
+
+    const row = container.querySelector('.tag-pane-tag') as HTMLElement;
+    expect(row.classList.contains(HIDDEN_CLASS)).toBe(false);
   });
 });

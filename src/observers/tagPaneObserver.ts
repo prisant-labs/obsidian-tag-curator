@@ -65,8 +65,17 @@ export class TagPaneObserver extends ObserverBase {
   protected findRows(root: HTMLElement): ObservedRow[] {
     const rows = root.querySelectorAll<HTMLElement>('.tag-pane-tag');
     return Array.from(rows).map((row) => {
-      const textEl = row.querySelector('.tag-pane-tag-text') ?? row;
-      return { el: row, tag: (textEl.textContent ?? '').trim() };
+      // Read the tag from the text node ONLY, never the whole row: the row also
+      // holds a count flair (.tag-pane-tag-count) whose digits would corrupt the
+      // tag string (e.g. "D157FA" + "111" -> "D157FA111", which then fails the
+      // hex pattern and leaks the tag). Current Obsidian renders the tag pane as
+      // a generic tree-item (.tree-item-inner-text); older builds used
+      // .tag-pane-tag-text. If neither is found the tag is empty and the row is
+      // skipped - failing safe (shown), never corrupted.
+      const textEl =
+        row.querySelector('.tree-item-inner-text') ??
+        row.querySelector('.tag-pane-tag-text');
+      return { el: row, tag: (textEl?.textContent ?? '').trim() };
     });
   }
 
