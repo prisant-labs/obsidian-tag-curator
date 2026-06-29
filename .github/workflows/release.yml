@@ -1,8 +1,8 @@
 name: release
 
-# Fires on any tag push. Builds the gitignored artifacts (main.js, styles.css are
-# never committed - see note below) and publishes the artifact quartet as a GitHub
-# release so BRAT and the community installer can fetch them.
+# Fires on any tag push. Builds main.js (the only gitignored artifact; styles.css,
+# manifest.json, and versions.json are tracked source) and publishes the artifact
+# quartet as a GitHub release so BRAT and the community installer can fetch them.
 #
 # There is no test step here on purpose: build.yml already gates main, and a release
 # tag is expected to point at an already-green commit. This workflow's job is to
