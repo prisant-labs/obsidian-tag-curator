@@ -1,5 +1,9 @@
 <a id="readme-top"></a>
 
+<p align="center">
+  <img src="docs/assets/header.png" alt="Tag Curator - a vault-wide tag visibility and curation engine for Obsidian. Display-only, no files modified, fully reversible, vault-wide." width="100%">
+</p>
+
 # Tag Curator
 
 **A vault-wide tag visibility and curation engine for Obsidian.** Hide, flag, and surface noisy tags across the places they actually appear, without modifying a single note.
@@ -82,6 +86,8 @@
 ## About
 
 Tag Curator gives you a rule engine that controls which tags appear across Obsidian's UI. Your notes are never touched. Disabling or uninstalling the plugin restores every tag immediately, because nothing was ever written to your files.
+
+> **How does it work?** [How Tag Curator Works](docs/HOW-IT-WORKS.md) is a plain-language explainer with an FAQ, written for both everyday users and engineers.
 
 The heart of v1.0 is the **Curation Workspace**: a real, dockable workspace leaf (not a settings screen) where you see every change land live. Open it beside the native tag pane and your loop becomes a single continuous glance: edit a rule on one side, watch tags hide or flag on the other, in the same breath.
 
@@ -244,7 +250,7 @@ Both are pretty-printed JSON for easy git diffing.
 
 ## Safety contract
 
-Tag Curator never modifies note content. It does not patch `metadataCache.getTags()` or any other internal Obsidian API. Dataview, Tasks, and Bases see the real, unfiltered tag data.
+Tag Curator never modifies note content. It does not patch `metadataCache.getTags()` or any other internal Obsidian API. Dataview, Tasks, and Bases see the real, unfiltered tag data. This is architecture, not a promise: the plugin contains no note-writing code. Every write it makes targets its own two files (`data.json` and `tags.json`); it never calls a note-mutating API such as `vault.modify`, `fileManager.renameFile`, or `processFrontMatter`. The one note-changing action, renaming a tag, is delegated to Tag Wrangler on your explicit request.
 
 ```mermaid
 flowchart LR

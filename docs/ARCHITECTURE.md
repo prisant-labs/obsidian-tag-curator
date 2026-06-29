@@ -1,6 +1,6 @@
 # Architecture
 
-Tag Curator is a **display-only** Obsidian plugin: it changes how tags *render* across Obsidian's UI by toggling CSS classes on existing DOM nodes, and it never edits note content. Disabling or uninstalling it restores every tag. This document is the canonical reference for how the plugin is built; for the contributor workflow see [CONTRIBUTING.md](../CONTRIBUTING.md).
+Tag Curator is a **display-only** Obsidian plugin: it changes how tags *render* across Obsidian's UI by toggling CSS classes on existing DOM nodes, and it never edits note content. Disabling or uninstalling it restores every tag. This document is the canonical reference for how the plugin is built. For a plain-language explanation of how it works (with an FAQ for users and engineers), start with [HOW-IT-WORKS.md](HOW-IT-WORKS.md); for the contributor workflow see [CONTRIBUTING.md](../CONTRIBUTING.md).
 
 ## The prime directive: decorate, never mutate
 
@@ -204,6 +204,7 @@ Obsidian virtualizes large surfaces (the tag pane and Notebook Navigator's tree)
 
 ## See also
 
+- [HOW-IT-WORKS.md](HOW-IT-WORKS.md) - plain-language explanation of how the plugin works, with an FAQ
 - [CONTRIBUTING.md](../CONTRIBUTING.md) - dev setup, the verification gate, and contribution rules
 - [CHANGELOG.md](../CHANGELOG.md) - released changes and known limitations
 - [docs/decisions/](decisions/) - architecture decision records (ADRs)
