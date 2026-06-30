@@ -17,6 +17,7 @@ import { TagTable } from './curationWorkspace/tagTable';
 import { TagListModel } from './tagList/tagListModel';
 import { makeTagTableDeps } from './tagList/tagTableDeps';
 import { makeActivatable, setSwitchState } from '../util/a11y';
+import { compileSafeRegex } from '../util/safeRegex';
 
 type TabId = 'general' | 'curate' | 'scopes' | 'presets' | 'custom' | 'advanced' | 'help';
 
@@ -627,10 +628,13 @@ export class TagCuratorSettingTab extends PluginSettingTab {
     const meta = this.plugin.tagMetaManager.all();
     if (match.type === 'regex' && match.pattern) {
       try {
-        const re = new RegExp(match.pattern);
+        // Route through the safe wrapper, not a raw RegExp: this preview iterates
+        // every tag with re.test(), so an unsafe pattern (lookbehind, or nested
+        // quantifiers that backtrack catastrophically) would freeze here too.
+        const re = compileSafeRegex(match.pattern);
         for (const [tag] of meta) if (re.test(tag)) count += 1;
       } catch {
-        /* invalid regex - report 0 */
+        /* invalid or unsafe regex - report 0 */
       }
     } else if (match.type === 'frequency') {
       const op = match.operator ?? '=';
