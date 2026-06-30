@@ -1,10 +1,10 @@
-# Contributing to Tag Curator
+# Contributing to Tag Visibility
 
-Thanks for your interest in improving Tag Curator. This guide covers setup, the verification gate, and the rules that keep the plugin safe to ship. Please also read the [Code of Conduct](CODE_OF_CONDUCT.md).
+Thanks for your interest in improving Tag Visibility. This guide covers setup, the verification gate, and the rules that keep the plugin safe to ship. Please also read the [Code of Conduct](CODE_OF_CONDUCT.md).
 
 ## The one rule that governs everything
 
-Tag Curator is **display-only**. It decorates how tags render by toggling CSS classes on existing DOM nodes; it must **never** edit note content, and it makes no network requests. Any change that could modify the vault's notes, exfiltrate data, or leave effects behind after the plugin is disabled is out of bounds. [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) explains why this constraint shapes the whole codebase.
+Tag Visibility is **display-only**. It decorates how tags render by toggling CSS classes on existing DOM nodes; it must **never** edit note content, and it makes no network requests. Any change that could modify the vault's notes, exfiltrate data, or leave effects behind after the plugin is disabled is out of bounds. [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) explains why this constraint shapes the whole codebase.
 
 ## Prerequisites
 
@@ -14,7 +14,7 @@ Tag Curator is **display-only**. It decorates how tags render by toggling CSS cl
 ## Setup
 
 1. Fork the repository.
-2. Clone your fork: `git clone https://github.com/YOUR_USERNAME/obsidian-tag-curator.git`
+2. Clone your fork: `git clone https://github.com/YOUR_USERNAME/obsidian-tag-visibility.git`
 3. Install dependencies: `npm ci`
 
 ## Build artifacts

@@ -1,6 +1,6 @@
 # Design System
 
-Design reference for obsidian-tag-curator's UI. The plugin's visual language is **Obsidian's own**: it borrows the host theme's colors, fonts, and spacing rather than imposing its own, so it looks native in any theme (light, dark, or community). Anyone (or any agent) generating or restyling UI for this plugin should follow the rules below. The implementation lives in `styles.css`; the component/layer design behind these surfaces is in [ARCHITECTURE.md](ARCHITECTURE.md).
+Design reference for obsidian-tag-visibility's UI. The plugin's visual language is **Obsidian's own**: it borrows the host theme's colors, fonts, and spacing rather than imposing its own, so it looks native in any theme (light, dark, or community). Anyone (or any agent) generating or restyling UI for this plugin should follow the rules below. The implementation lives in `styles.css`; the component/layer design behind these surfaces is in [ARCHITECTURE.md](ARCHITECTURE.md).
 
 ## Prime rules
 
@@ -32,7 +32,7 @@ Each surface uses a short prefix so styles stay scoped and greppable:
 | `tcw-*` | welcome modal |
 | `tcst-*` | settings tab |
 | `tcr-*` | rule editor |
-| `tct-*` | curation workspace + tag table |
+| `tct-*` | panel + tag table |
 
 Scope decoration classes: `.tag-curator-hidden` / `.tag-curator-flagged` (tag pane), `.tc-nn-hidden` / `.tc-nn-flagged` (Notebook Navigator), `.tc-prop-hidden` / `.tc-prop-flagged` (Properties), `.tc-ac-hidden` / `.tc-ac-flagged` (Autocomplete).
 
@@ -54,7 +54,7 @@ Scope decoration classes: `.tag-curator-hidden` / `.tag-curator-flagged` (tag pa
 ## Layout
 
 - **Flex columns** for panes and modals; **CSS grid** for the rule editor (`1fr 300px`) and the virtualized tag table (one `--tct-grid` template shared by the header and rows so columns stay aligned).
-- **Responsive**: the rule-editor workspace collapses to a single column at `max-width: 900px`; on mobile the curation pane opens full-width rather than splitting.
+- **Responsive**: the rule-editor workspace collapses to a single column at `max-width: 900px`; on mobile the panel opens full-width rather than splitting.
 
 ## Accessibility
 

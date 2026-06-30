@@ -1,6 +1,6 @@
 # Testing Guide
 
-How to verify Tag Curator before tagging a release. The **v1.0 manual smoke matrix** below is the current gate; the detailed v0.1 checklist that follows it remains valid for the surfaces it covers (welcome modal, state banner, Settings tabs, rule editor, schema migrations, file safety) and is folded in by reference.
+How to verify Tag Visibility before tagging a release. The **v1.0 manual smoke matrix** below is the current gate; the detailed v0.1 checklist that follows it remains valid for the surfaces it covers (welcome modal, state banner, Settings tabs, rule editor, schema migrations, file safety) and is folded in by reference.
 
 ## Local Testing Setup
 
@@ -12,35 +12,35 @@ How to verify Tag Curator before tagging a release. The **v1.0 manual smoke matr
 
 ### Build and Install
 
-1. Clone the repository: `git clone https://github.com/prisant-labs/obsidian-tag-curator.git`
+1. Clone the repository: `git clone https://github.com/prisant-labs/obsidian-tag-visibility.git`
 2. Install dependencies: `npm ci`
 3. Build the plugin: `npm run build`
 4. Copy artifacts to the test vault:
    ```bash
-   mkdir -p /path/to/test-vault/.obsidian/plugins/obsidian-tag-curator
-   cp main.js manifest.json styles.css /path/to/test-vault/.obsidian/plugins/obsidian-tag-curator/
+   mkdir -p /path/to/test-vault/.obsidian/plugins/obsidian-tag-visibility
+   cp main.js manifest.json styles.css /path/to/test-vault/.obsidian/plugins/obsidian-tag-visibility/
    ```
 5. Reload plugins in Obsidian settings (toggle off and on)
-6. Enable Tag Curator
+6. Enable Tag Visibility
 
 ### BRAT pre-release install (recommended for tester walks)
 
 1. Install the BRAT plugin in the test vault.
-2. Add this repo as a beta plugin: `https://github.com/prisant-labs/obsidian-tag-curator`.
+2. Add this repo as a beta plugin: `https://github.com/prisant-labs/obsidian-tag-visibility`.
 3. Pick the latest tag (the `release.yml` workflow attaches `main.js`, `manifest.json`, `styles.css`, `versions.json` to every tagged release).
 
 ## v1.0 manual BRAT smoke matrix
 
 Walk this before tagging v1.0. It is the current gate; the v0.1 checklist further down still applies to the surfaces it covers and is folded in by reference. Run on a real BRAT install (not just a local copy) so the release-asset path is exercised. Several cells need specific companions or content, noted inline.
 
-### A. The Curation Workspace and the live loop
+### A. The Tag Visibility panel and the live loop
 
-- [ ] **Open the workspace.** Run "Tag Curator: Open Curation Workspace". The leaf opens with the tag table, filter chips, the inline rule editor, and bulk actions. Zero console errors (Ctrl+Shift+I).
-- [ ] **Open beside the tag pane.** Run "Tag Curator: Open Curation Workspace beside the tag pane". The workspace and the native tag pane appear side by side as a split, arranged in one move.
-- [ ] **Live reaction.** With the two panes visible, create or edit a rule in the workspace (for example a regex that matches a hex-code tag). The affected-tags list in the workspace updates as you type, AND the native tag pane reacts live (matched tags hide, or flag in preview mode) without closing or reopening anything.
+- [ ] **Open the panel.** Run "Tag Visibility: Open the panel". The Tag Visibility panel opens with the tag table, filter chips, the inline rule editor, and bulk actions. Zero console errors (Ctrl+Shift+I).
+- [ ] **Open beside the tag pane.** Run "Tag Visibility: Open beside the tag pane". The panel and the native tag pane appear side by side as a split, arranged in one move.
+- [ ] **Live reaction.** With the two panes visible, create or edit a rule in the panel (for example a regex that matches a hex-code tag). The affected-tags list in the panel updates as you type, AND the native tag pane reacts live (matched tags hide, or flag in preview mode) without closing or reopening anything.
 - [ ] **Per-row diagnostics.** On an affected row, use "why is this hidden?" and confirm it names the exact preset, rule, or override responsible.
 - [ ] **Bulk actions.** Select several tags and confirm hide / unhide / flag / add description / send to Tag Wrangler operate on the selection.
-- [ ] **Launcher closes Settings.** Open Settings, go to General, click "Open Tag Curator": Settings closes and the pane is visible in the right sidebar (not hidden behind a modal). Repeat with "Open beside the tag pane".
+- [ ] **Launcher closes Settings.** Open Settings, go to General, click "Open Tag Visibility": Settings closes and the pane is visible in the right sidebar (not hidden behind a modal). Repeat with "Open beside the tag pane".
 
 ### B. Each scope hides/flags
 
@@ -53,7 +53,7 @@ Hiding a tag should, by default, hide it consistently across all four scopes. Co
 
 ### C. Per-tag overrides hold across surfaces
 
-- [ ] Pin a tag to **always-show** from its workspace row; confirm it stays visible in the tag pane, NN, Properties, and autocomplete even when a rule would hide it.
+- [ ] Pin a tag to **always-show** from its row in the panel; confirm it stays visible in the tag pane, NN, Properties, and autocomplete even when a rule would hide it.
 - [ ] Pin a different tag to **always-hide**; confirm it is hidden across the surfaces with no rule authored for it.
 - [ ] Confirm always-show wins over always-hide and over any matching rule.
 
@@ -64,14 +64,14 @@ Hiding a tag should, by default, hide it consistently across all four scopes. Co
 
 ### E. Panic disable clears everything
 
-- [ ] Run "Tag Curator: Panic disable" (or Settings > General > Run panic disable). Confirm display effects clear across **all four scopes** at once, the plugin disables itself, and the "Tag Curator is off" banner appears across surfaces.
+- [ ] Run "Tag Visibility: Panic disable" (or Settings > General > Run panic disable). Confirm display effects clear across **all four scopes** at once, the plugin disables itself, and the "Tag Visibility is off" banner appears across surfaces.
 - [ ] Re-enable from the banner; previously-hidden tags hide again across scopes.
 
 ### F. Reversibility and honesty
 
 - [ ] **Uninstall restores everything.** Disable, then uninstall the plugin; every tag is visible again across every surface. No `.md` file was modified.
 - [ ] **NN absent is a silent no-op.** In a vault without Notebook Navigator, the NN scope does nothing and logs nothing at non-debug levels; no errors.
-- [ ] **Honest status bar.** The status bar shows a truthful count for the current state (hidden count / `(preview): N flagged` / `off`) and is scope-independent. Click it to open the workspace filtered to hidden.
+- [ ] **Honest status bar.** The status bar shows a truthful count for the current state (hidden count / `(preview): N flagged` / `off`) and is scope-independent. Click it to open the panel filtered to hidden.
 
 ### G. Environment sweep
 
@@ -92,11 +92,11 @@ If any cell fails, fix and re-run that cell before tagging.
 
 | Surface | Where it lives | Notes |
 |---|---|---|
-| Welcome modal (D-008) | Fires once on first enable (gated by `seenWelcomeModal`) | Acknowledges "Tag Curator is now enabled"; preset cards with toggles; integration cards; **Start curating** or **Start in preview mode** CTAs. |
-| Settings tab (8 sub-tabs) | Obsidian Settings > Tag Curator | Top-tab layout: **General / Tag list / Presets / Custom rules / Commands / Advanced**, plus deferred placeholders **Profiles (v0.2)** and **Aliases (v0.3)**. |
+| Welcome modal (D-008) | Fires once on first enable (gated by `seenWelcomeModal`) | Acknowledges "Tag Visibility is now enabled"; preset cards with toggles; integration cards; **Start hiding tags** or **Start in preview mode** CTAs. |
+| Settings tab (8 sub-tabs) | Obsidian Settings > Tag Visibility | Top-tab layout: **General / Tag list / Presets / Custom rules / Commands / Advanced**, plus deferred placeholders **Profiles (v0.2)** and **Aliases (v0.3)**. |
 | Tag list view (D-011) | Same component, two hosts | Sidebar leaf (command + status-bar click) AND Settings > Tag list tab. State stays in sync. |
 | Rule editor (D-010) | Settings > Custom rules tab | Card view + right-docked preview. Click any card to enter edit mode (no separate wizard, D-002 closed). |
-| State banner (D-007) | Top of every Tag Curator surface | Persistent. Two variants: `Preview mode is on` (amber) and `Tag Curator is off` (muted). One-click action to restore default. |
+| State banner (D-007) | Top of every Tag Visibility surface | Persistent. Two variants: `Preview mode is on` (amber) and `Tag Visibility is off` (muted). One-click action to restore default. |
 | Status bar | Bottom of Obsidian | Shows hidden count or `(preview): N flagged` or `off`. Click to open the Tag list filtered to hidden. |
 | Commands (6 total) | Cmd/Ctrl+P palette | `toggle-enable`, `panic-disable`, `toggle-preview-mode`, `open-tag-list`, `open-tag-list-hidden`, `rescan-tags`. |
 
@@ -107,11 +107,11 @@ If any cell fails, fix and re-run that cell before tagging.
 On a fresh install with `seenWelcomeModal: false`:
 
 - [ ] Modal opens once on first enable (after the initial tag scan completes).
-- [ ] Header says "Tag Curator is now enabled" and "Choose how to start" (no "Got it, enable" wording).
+- [ ] Header says "Tag Visibility is now enabled" and "Choose how to start" (no "Got it, enable" wording).
 - [ ] Safety promises strip shows three left-aligned check rows (Display-only / File-safe / Fully reversible). Not three centered chunky cards.
 - [ ] Two preset cards visible (Hide hex color codes, Hide URL anchor fragments). Toggling a card off writes through immediately.
 - [ ] Integration cards show name + state pill (Enabled / Installed / Not installed) + bulleted "what changes". Tag Wrangler and Notebook Navigator appear with their detected states.
-- [ ] **Start curating** primary button closes the modal and applies the enabled presets.
+- [ ] **Start hiding tags** primary button closes the modal and applies the enabled presets.
 - [ ] **Start in preview mode** secondary button enables Preview mode (matched tags become flagged, not hidden), then closes.
 - [ ] After dismissal, modal does not reappear on subsequent reloads.
 
@@ -119,7 +119,7 @@ On a fresh install with `seenWelcomeModal: false`:
 
 - [ ] When Preview mode is on, the amber `Preview mode is on. Matched tags are flagged...` banner appears above the active panel in **Settings > General**, in the **Tag list view** (both hosts), and in the **Custom rules tab**.
 - [ ] Banner action button `Turn off preview` clears the banner from every surface simultaneously.
-- [ ] When the plugin is disabled, the muted `Tag Curator is off...` banner appears in the same places.
+- [ ] When the plugin is disabled, the muted `Tag Visibility is off...` banner appears in the same places.
 - [ ] Banner action button `Turn on` re-enables the plugin and clears the banner.
 - [ ] In the default state (enabled, Preview off), no banner is shown anywhere.
 
@@ -132,7 +132,7 @@ On a fresh install with `seenWelcomeModal: false`:
 ### 4. General tab
 
 - [ ] **Stats header**: 4 cards (Total tags / Hidden now / Active rules / Orphans) with live numbers.
-- [ ] **Enable Tag Curator** toggle persists immediately.
+- [ ] **Enable Tag Visibility** toggle persists immediately.
 - [ ] **Preview mode** toggle persists and changes the tag pane: matched tags become flagged (with the FLAG class) instead of hidden.
 - [ ] **Panic disable** row (under "If something looks wrong"): clicking `Run panic disable` instantly un-hides every tag, disables the plugin, and the muted state banner appears across surfaces.
 
@@ -184,7 +184,7 @@ In both hosts:
 ### 8. Commands tab
 
 - [ ] Lists all 6 v0.1 commands with descriptions.
-- [ ] Each command in the palette (Cmd/Ctrl+P) is prefixed `Tag Curator:` and behaves as described:
+- [ ] Each command in the palette (Cmd/Ctrl+P) is prefixed `Tag Visibility:` and behaves as described:
   - `Toggle enable` flips the master switch; Notice confirms new state.
   - `Panic disable` removes all DOM effects and disables; Notice confirms.
   - `Toggle preview mode` flips Preview; Notice confirms; status bar changes to `(preview): N flagged`.
@@ -203,9 +203,9 @@ In both hosts:
 
 ### 10. Status bar item
 
-- [ ] When enabled and Preview off: shows `Tag Curator: N tags hidden` (or `1 tag hidden` at N=1).
-- [ ] When Preview on: shows `Tag Curator (preview): N flagged`.
-- [ ] When disabled: shows `Tag Curator: off`.
+- [ ] When enabled and Preview off: shows `Tag Visibility: N tags hidden` (or `1 tag hidden` at N=1).
+- [ ] When Preview on: shows `Tag Visibility (preview): N flagged`.
+- [ ] When disabled: shows `Tag Visibility: off`.
 - [ ] Clicking the item opens the Tag list pre-filtered to Hidden.
 
 ### 11. Preview mode (was "dry-run")
@@ -229,9 +229,9 @@ Reset the test vault's `.obsidian/plugins/tag-curator/data.json` to each state a
 Only relevant if Tag Wrangler is installed in the test vault.
 
 - [ ] When Tag Wrangler is **not** installed/enabled, the `Send to Tag Wrangler` bulk button is hidden.
-- [ ] When Tag Wrangler is enabled, selecting 1-3 tags in the Tag list and clicking `Send to Tag Wrangler` triggers Tag Wrangler's rename modal. Tag Curator shows a Notice confirming how many tags were dispatched.
-- [ ] Tag Wrangler does the actual rename; Tag Curator's tag list refreshes on the next `metadataCache.changed` event.
-- [ ] No files are modified by Tag Curator itself.
+- [ ] When Tag Wrangler is enabled, selecting 1-3 tags in the Tag list and clicking `Send to Tag Wrangler` triggers Tag Wrangler's rename modal. Tag Visibility shows a Notice confirming how many tags were dispatched.
+- [ ] Tag Wrangler does the actual rename; Tag Visibility's tag list refreshes on the next `metadataCache.changed` event.
+- [ ] No files are modified by Tag Visibility itself.
 
 ### 14. File safety
 
@@ -254,7 +254,7 @@ These items intentionally surface a Notice or are deferred to v0.2+. If a tester
 
 - **Bulk Hide / Bulk Unhide / Bulk Add description** in the Tag list show a Notice pointing to **B009** (Tag detail sheet, v0.2). Per-tag overrides land with that surface.
 - **Welcome modal integration detection** uses a hardcoded card set; full live detection is **B004** (v0.2).
-- **Curation panels** (Recently created / Orphans / Stale / Suggested merges / Untagged notes) are deferred to v0.2 - only the Tag list view's filter chips approximate these.
+- **Organization panels** (Recently created / Orphans / Stale / Suggested merges / Untagged notes) are deferred to v0.2 - only the Tag list view's filter chips approximate these.
 - **Drag-to-reorder rules** is **B012** (v0.2). v0.1 hides priority entirely; new custom rules default to 50.
 - **Compound criteria builder (AND/OR/NOT)** is **B001/B002** (v0.2).
 - **Aliases / merge workflow** is **B006** (v0.3).
@@ -309,7 +309,7 @@ git push origin 0.1.0
 
 ### 16. Pane View/Manage modes (Task 16)
 
-Pane opens in View: tag names are links that open a tag search; no checkboxes/bulk bar/row menu; a Filters disclosure expands/collapses the chip row. Switch to Manage: checkboxes, bulk bar, and row menus return and chips show normally. The Curate Tags settings tab is unaffected (always full Manage). Header and rows stay column-aligned in View.
+Pane opens in View: tag names are links that open a tag search; no checkboxes/bulk bar/row menu; a Filters disclosure expands/collapses the chip row. Switch to Manage: checkboxes, bulk bar, and row menus return and chips show normally. The All Tags settings tab is unaffected (always full Manage). Header and rows stay column-aligned in View.
 
 The tag push triggers `.github/workflows/release.yml`, which uploads `manifest.json`, `main.js`, `styles.css`, and `versions.json` to the GitHub release.
 
@@ -317,7 +317,7 @@ The tag push triggers `.github/workflows/release.yml`, which uploads `manifest.j
 
 ### Enable Debug Logging
 
-1. Open **Tag Curator settings > Advanced**.
+1. Open **Tag Visibility settings > Advanced**.
 2. Toggle **Debug logging** on.
 3. Open the browser console (Ctrl+Shift+I in desktop Obsidian).
 4. Look for `[tag-curator]` prefixed log lines.
@@ -393,9 +393,9 @@ Verify on:
 
 The plugin is **not** desktop-only (`isDesktopOnly: false`), so mobile must work; the only desktop-specific surface is the status bar (Obsidian doesn't render one on mobile).
 
-### 18. Workspace toolbar layout
+### 18. Panel toolbar layout
 
-- [ ] Workspace toolbar shows the search box on top and the filter chips on their own row directly beneath it (not side by side).
+- [ ] The panel toolbar shows the search box on top and the filter chips on their own row directly beneath it (not side by side).
 
 ### 19. Row menu: Mark reviewed / Mark unreviewed
 
@@ -405,13 +405,13 @@ The plugin is **not** desktop-only (`isDesktopOnly: false`), so mobile must work
 
 - [ ] Select 2 or more tags, click Mark reviewed in the bulk bar: all selected tags leave the Unreviewed filter.
 
-### 21. Settings Curate Tags tab
+### 21. Settings All Tags tab
 
-- [ ] Settings -> Curate Tags shows the full Manage grid (search, chips, selection, bulk bar, row menu, virtual scroll). Switching to another tab and back, and closing/reopening Settings, does not duplicate rows or leak scroll listeners.
+- [ ] Settings -> All Tags shows the full Manage grid (search, chips, selection, bulk bar, row menu, virtual scroll). Switching to another tab and back, and closing/reopening Settings, does not duplicate rows or leak scroll listeners.
 
-### 22. Enable Tag Curator Pane toggle
+### 22. Enable Tag Visibility Pane toggle
 
-- [ ] General has no Open button. Toggling Enable Tag Curator Pane OFF removes the ribbon icon and closes any open Tag Curator pane; toggling ON restores the ribbon. With the pane OFF, the 'Open the panel' / 'Open beside the tag pane' commands show a Notice. The Presets-tab 'N tags affected' deep-link and the status-bar click still open the pane regardless (they are not gated).
+- [ ] General has no Open button. Toggling Enable Tag Visibility Pane OFF removes the ribbon icon and closes any open Tag Visibility pane; toggling ON restores the ribbon. With the pane OFF, the 'Open the panel' / 'Open beside the tag pane' commands show a Notice. The Presets-tab 'N tags affected' deep-link and the status-bar click still open the pane regardless (they are not gated).
 
 ### 23. Rule deep-link opens pane in Manage mode
 
@@ -420,5 +420,5 @@ The plugin is **not** desktop-only (`isDesktopOnly: false`), so mobile must work
 ### 24. Phase 3 adversarial review fixes (F-1, F-2, F-3)
 
 - [ ] After a preset deep-link (clicking "N tags affected" in Presets tab), clicking the status bar shows ALL hidden tags (the rule filter is cleared, not narrowed to the prior rule).
-- [ ] With the Curate Tags settings tab open, external changes (toggling a rule, rescanning vault tags) refresh the table without closing and reopening Settings.
-- [ ] Switching between Custom rules and Curate Tags tabs repeatedly does not leak editor or table subscriptions (confirmed via zero extra settingsManager listener warnings in the console).
+- [ ] With the All Tags settings tab open, external changes (toggling a rule, rescanning vault tags) refresh the table without closing and reopening Settings.
+- [ ] Switching between Custom rules and All Tags tabs repeatedly does not leak editor or table subscriptions (confirmed via zero extra settingsManager listener warnings in the console).

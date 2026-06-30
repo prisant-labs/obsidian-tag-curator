@@ -1,6 +1,6 @@
 # Architecture Decision Records
 
-This directory holds the architecture decision records (ADRs) for Tag Curator. An ADR captures a single significant decision: the context that forced it, the options weighed, and the consequences. They exist so a future contributor (or a future us) can see not just what the code does, but why it is shaped that way.
+This directory holds the architecture decision records (ADRs) for Tag Visibility. An ADR captures a single significant decision: the context that forced it, the options weighed, and the consequences. They exist so a future contributor (or a future us) can see not just what the code does, but why it is shaped that way.
 
 ## Format
 

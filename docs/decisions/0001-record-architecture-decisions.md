@@ -10,7 +10,7 @@ informed:
 
 ## Context and Problem Statement
 
-Tag Curator is becoming a public, open-source plugin. Significant engineering decisions (the display-only contract, the observer-per-scope model, override precedence, the runtime-only Notebook Navigator interop) were made with real trade-offs, but the reasoning lived in private planning docs. How do we keep the "why" discoverable for contributors without exposing internal strategy and roadmap material?
+Tag Visibility is becoming a public, open-source plugin. Significant engineering decisions (the display-only contract, the observer-per-scope model, override precedence, the runtime-only Notebook Navigator interop) were made with real trade-offs, but the reasoning lived in private planning docs. How do we keep the "why" discoverable for contributors without exposing internal strategy and roadmap material?
 
 ## Considered Options
 

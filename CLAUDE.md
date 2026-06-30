@@ -2,7 +2,7 @@
 
 ## Project Context
 
-- **obsidian-tag-curator** - Vault-wide tag visibility and curation engine for Obsidian (display-only, file-safe, fully reversible)
+- **obsidian-tag-visibility** - Vault-wide tag visibility engine for Obsidian (display-only, file-safe, fully reversible)
 - Created: 2026-05-04
 
 ## Repository Structure

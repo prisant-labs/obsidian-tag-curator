@@ -6,7 +6,7 @@ body:
   - type: markdown
     attributes:
       value: |
-        Thanks for the idea. A note on scope: Tag Curator is display-only and file-safe by design. It will not edit note content, rename tags (that is Tag Wrangler's role), or color tags (Colored Tags Wrangler's role). Ideas that fit "curate what is shown, never touch the files" are the best fit.
+        Thanks for the idea. A note on scope: Tag Visibility is display-only and file-safe by design. It will not edit note content, rename tags (that is Tag Wrangler's role), or color tags (Colored Tags Wrangler's role). Ideas that fit "curate what is shown, never touch the files" are the best fit.
   - type: textarea
     id: problem
     attributes:
@@ -28,4 +28,4 @@ body:
     attributes:
       label: Fit with the contract
       options:
-        - label: This keeps Tag Curator display-only (it does not edit, rename, or write note content).
+        - label: This keeps Tag Visibility display-only (it does not edit, rename, or write note content).

@@ -1,4 +1,4 @@
-<!-- Thanks for contributing to Tag Curator. -->
+<!-- Thanks for contributing to Tag Visibility. -->
 
 ## Summary
 
@@ -19,7 +19,7 @@
 
 - [ ] `npm run lint && npm run typecheck && npm test && npm run build` all pass
 - [ ] Commits follow [Conventional Commits](https://www.conventionalcommits.org/)
-- [ ] Tag Curator stays display-only: no note content is written
+- [ ] Tag Visibility stays display-only: no note content is written
 - [ ] If behavior changed, `docs/TESTING.md` and any affected docs are updated
 - [ ] If this is a significant architectural decision, an ADR is added under `docs/decisions/`
 

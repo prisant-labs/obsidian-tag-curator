@@ -6,19 +6,19 @@ body:
   - type: markdown
     attributes:
       value: |
-        Thanks for filing a bug. Tag Curator is display-only and never edits your notes, so most issues are about how tags render in a particular surface. The details below help pin it down quickly.
+        Thanks for filing a bug. Tag Visibility is display-only and never edits your notes, so most issues are about how tags render in a particular surface. The details below help pin it down quickly.
   - type: checkboxes
     attributes:
       label: Pre-flight
       options:
         - label: I searched existing issues and this is not a duplicate.
           required: true
-        - label: I am on the latest release of Tag Curator.
+        - label: I am on the latest release of Tag Visibility.
           required: true
   - type: input
     id: tc-version
     attributes:
-      label: Tag Curator version
+      label: Tag Visibility version
       placeholder: e.g. 1.0.0
     validations:
       required: true
@@ -52,7 +52,7 @@ body:
         - Notebook Navigator tag tree
         - Properties panel
         - Editor autocomplete
-        - The Curation Workspace / pane
+        - The Tag Visibility panel
         - Settings
         - Not surface-specific
   - type: textarea
@@ -88,7 +88,7 @@ body:
       label: Recovery check
       description: This confirms the display-only contract held.
       options:
-        - label: Running "Tag Curator: Panic disable" restored the tags or removed the effect.
+        - label: Running "Tag Visibility: Panic disable" restored the tags or removed the effect.
         - label: My note content is unaffected (only the display was wrong).
   - type: textarea
     id: console

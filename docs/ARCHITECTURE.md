@@ -1,10 +1,10 @@
 # Architecture
 
-Tag Curator is a **display-only** Obsidian plugin: it changes how tags *render* across Obsidian's UI by toggling CSS classes on existing DOM nodes, and it never edits note content. Disabling or uninstalling it restores every tag. This document is the canonical reference for how the plugin is built. For a plain-language explanation of how it works (with an FAQ for users and engineers), start with [HOW-IT-WORKS.md](HOW-IT-WORKS.md); for the contributor workflow see [CONTRIBUTING.md](../CONTRIBUTING.md).
+Tag Visibility is a **display-only** Obsidian plugin: it changes how tags *render* across Obsidian's UI by toggling CSS classes on existing DOM nodes, and it never edits note content. Disabling or uninstalling it restores every tag. This document is the canonical reference for how the plugin is built. For a plain-language explanation of how it works (with an FAQ for users and engineers), start with [HOW-IT-WORKS.md](HOW-IT-WORKS.md); for the contributor workflow see [CONTRIBUTING.md](../CONTRIBUTING.md).
 
 ## The prime directive: decorate, never mutate
 
-Every architectural choice follows from one rule: **the plugin must not modify the vault's notes.** It therefore works entirely at the rendered-DOM layer. To hide a tag, an observer adds a Tag-Curator-owned class (for example `.tag-curator-hidden`) to the rendered row, and a CSS rule collapses it with `display: none`. Nothing is removed from the document model, no note is rewritten, and the only persisted state is the plugin's own config plus a metadata sidecar. That single constraint is what makes the plugin fully reversible.
+Every architectural choice follows from one rule: **the plugin must not modify the vault's notes.** It therefore works entirely at the rendered-DOM layer. To hide a tag, an observer adds a plugin-owned class (for example `.tag-curator-hidden`) to the rendered row, and a CSS rule collapses it with `display: none`. Nothing is removed from the document model, no note is rewritten, and the only persisted state is the plugin's own config plus a metadata sidecar. That single constraint is what makes the plugin fully reversible.
 
 ## Layers
 
@@ -15,7 +15,7 @@ flowchart TB
         NN[Notebook Navigator tree]
         PR[Properties pills]
         AC[Autocomplete popup]
-        WS[Curation Workspace pane + Settings]
+        WS[Tag Visibility panel + Settings]
     end
     subgraph Observers["Observer layer (the only DOM-touching layer)"]
         OB[ObserverBase]
@@ -48,7 +48,7 @@ flowchart TB
 
 Four layers, plus the orchestrator:
 
-- **UI surfaces** - the places tags appear: the native tag pane, Notebook Navigator's tag tree, Properties pills, the editor autocomplete popup, and the plugin's own Curation Workspace pane and Settings tab.
+- **UI surfaces** - the places tags appear: the native tag pane, Notebook Navigator's tag tree, Properties pills, the editor autocomplete popup, and the plugin's own Tag Visibility panel and Settings tab.
 - **Observer layer** - one `ObserverBase` subclass per host surface. Each watches its surface for tag rows and toggles decoration classes. This is the only layer that touches host DOM it does not own.
 - **Engine** - pure, DOM-free decision logic. Given a tag, its metadata, the active rules, and the per-tag overrides, it decides whether the tag is shown, hidden, or flagged.
 - **Storage** - `SettingsManager` (rules, scope kill switches, per-tag overrides; persisted to `data.json`) and `TagMetaManager` (per-tag count, first seen, last seen, source; persisted to `tags.json`).
@@ -78,12 +78,12 @@ src/
     notebookNavigator.ts        # detect + reapply subscription
     notebookNavigatorApi.ts
   ui/
-    settingsTab.ts              # Tabbed settings (General, Curate, Scopes, Presets, ...)
+    settingsTab.ts              # Tabbed settings (General, All Tags, Scopes, Presets, ...)
     ruleEditor.ts               # Card-based rule editor + live preview
     stateBanner.ts              # Persistent non-default-state banner
     welcomeModal.ts             # First-run onboarding
     panicDisable.ts             # Brute-force DOM sweep across all scopes
-    curationWorkspace/          # The dockable Curation Workspace pane + virtualized table
+    curationWorkspace/          # The dockable Tag Visibility panel + virtualized table
     tagList/                    # Shared tag-table model + actions (pane and settings)
   util/
     safeRegex.ts                # iOS-safe regex compile (rejects lookbehind)

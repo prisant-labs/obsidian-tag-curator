@@ -1,6 +1,6 @@
-# obsidian-tag-curator
+# obsidian-tag-visibility
 
-> Vault-wide tag visibility and curation engine for Obsidian (display-only, file-safe, fully reversible)
+> Vault-wide tag visibility engine for Obsidian (display-only, file-safe, fully reversible)
 
 ## Project Overview
 
