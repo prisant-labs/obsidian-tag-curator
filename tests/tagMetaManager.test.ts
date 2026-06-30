@@ -619,4 +619,17 @@ describe('TagMetaManager reviewed durability (P2-09)', () => {
     expect(written.tags.inbox).toBeDefined();
     expect(written.tags.inbox.reviewed).toBeUndefined();
   });
+
+  it('hydrates reviewed for a tag re-entering via indexFile (delete-then-recreate)', () => {
+    const app = makeApp();
+    // Durable store says #done is reviewed, but it is absent from the in-memory
+    // store (every note carrying it was deleted, dropping it to count 0).
+    const store = fakeReviewedStore({ done: true });
+    const mgr = new TagMetaManager(app as never, makePlugin(), store as never);
+    const file = addFile(app, 'new.md', ['done']);
+
+    mgr.indexFile(file); // re-enters via the incremental path, not load/scanAll
+
+    expect(mgr.get('done')?.reviewed).toBe(true);
+  });
 });

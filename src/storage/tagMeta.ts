@@ -204,13 +204,19 @@ export class TagMetaManager extends Events {
   private touchTag(tag: string, source: TagSource, now: number): void {
     const existing = this.store.get(tag);
     if (!existing) {
-      this.store.set(tag, {
+      const meta: TagMeta = {
         tag,
         firstSeen: now,
         lastSeen: now,
         count: 1,
         sources: [source],
-      });
+      };
+      // Seed the reviewed mirror from the durable store: a tag can re-enter here
+      // (a deleted-then-recreated tag) while settings still hold its reviewed flag.
+      // Without this, the incremental path would desync the mirror (settings is
+      // authoritative); load()/scanAll() hydrate, so this path must too.
+      if (this.reviewed) meta.reviewed = this.reviewed.isReviewed(tag);
+      this.store.set(tag, meta);
     } else {
       existing.lastSeen = now;
       if (!existing.sources.includes(source)) existing.sources.push(source);
