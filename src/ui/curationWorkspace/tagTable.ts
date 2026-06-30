@@ -16,7 +16,7 @@
  *
  * Columns are data-driven (ALL_COLS): which ones are present depends on the mode
  * (select + actions chrome is manage-only) and on the per-surface column prefs
- * (Last used / Source / Rule are user-toggleable, independent per surface). The
+ * (Last indexed / Source / Rule are user-toggleable, independent per surface). The
  * grid template is computed from the active column set and published as the
  * --tct-grid CSS variable so the header and rows stay aligned.
  *
@@ -79,11 +79,11 @@ const ALL_COLS: ColDef[] = [
   },
   {
     id: 'lastSeen',
-    track: '92px',
-    label: 'Last used',
+    track: '104px',
+    label: 'Last indexed',
     sortKey: 'lastSeen',
     optional: 'lastSeen',
-    tip: 'Most recent time the tag was seen in an indexed note.',
+    tip: 'When an index scan last recorded this tag (not how recently you used it).',
   },
   {
     id: 'source',
@@ -112,7 +112,7 @@ const ALL_COLS: ColDef[] = [
 ];
 
 const OPTIONAL_COLS: Array<[keyof TableColumnPrefs, string]> = [
-  ['lastSeen', 'Last used'],
+  ['lastSeen', 'Last indexed'],
   ['source', 'Source'],
   ['rule', 'Rule'],
 ];

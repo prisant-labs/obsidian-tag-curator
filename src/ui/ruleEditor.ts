@@ -645,7 +645,7 @@ export class RuleEditor {
     if (ruleLabel) this.kvRow(kv, 'Affected by', ruleLabel);
     this.kvRow(kv, 'Notes', String(m.count));
     this.kvRow(kv, 'First seen', formatPreviewDate(m.firstSeen));
-    this.kvRow(kv, 'Last used', formatPreviewDate(m.lastSeen));
+    this.kvRow(kv, 'Last indexed', formatPreviewDate(m.lastSeen));
     this.renderOverrideActions(detail, m.tag);
 
     makeActivatable(info, (e) => {
