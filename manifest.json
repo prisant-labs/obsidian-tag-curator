@@ -1,11 +1,11 @@
 {
-  "id": "tag-visibility",
-  "name": "Tag Visibility",
-  "version": "1.0.0-rc.7",
-  "minAppVersion": "1.9.10",
-  "description": "Control which tags are visible across Obsidian's UI: hide, flag, and pin. Display-only, file-safe, fully reversible.",
-  "author": "Prisant Labs",
-  "authorUrl": "https://github.com/prisant-labs",
-  "helpUrl": "https://github.com/prisant-labs/obsidian-tag-visibility#readme",
-  "isDesktopOnly": false
+	"id": "tag-visibility",
+	"name": "Tag Visibility",
+	"version": "1.0.0-rc.8",
+	"minAppVersion": "1.9.10",
+	"description": "Control which tags are visible across Obsidian's UI: hide, flag, and pin. Display-only, file-safe, fully reversible.",
+	"author": "Prisant Labs",
+	"authorUrl": "https://github.com/prisant-labs",
+	"helpUrl": "https://github.com/prisant-labs/obsidian-tag-visibility#readme",
+	"isDesktopOnly": false
 }
