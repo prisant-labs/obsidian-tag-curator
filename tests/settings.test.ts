@@ -16,9 +16,7 @@ function customRule(overrides: Partial<Rule> = {}): Rule {
     enabled: true,
     priority: 50,
     match: { type: 'list', list: [] },
-    action: 'hide',
-    scopes: ['tag-pane'],
-    ...overrides,
+    action: 'hide',    ...overrides,
   };
 }
 
@@ -27,6 +25,10 @@ describe('SettingsManager.load - fresh install', () => {
     const mgr = new SettingsManager(pluginWith(null));
     await mgr.load();
     expect(mgr.get()).toEqual({ ...DEFAULT_SETTINGS, schemaVersion: SCHEMA_VERSION });
+  });
+
+  it('carries no per-rule defaultScopes (global scope only)', () => {
+    expect(DEFAULT_SETTINGS).not.toHaveProperty('defaultScopes');
   });
 
   it('uses defaults when stored data is empty object', async () => {

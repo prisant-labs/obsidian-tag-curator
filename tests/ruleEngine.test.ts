@@ -9,9 +9,7 @@ function rule(overrides: Partial<Rule> = {}): Rule {
     enabled: true,
     priority: 50,
     match: { type: 'list', list: ['t'] },
-    action: 'hide',
-    scopes: ['tag-pane'],
-    ...overrides,
+    action: 'hide',    ...overrides,
   };
 }
 
@@ -159,11 +157,10 @@ describe('RuleEngine.getRuleAttribution', () => {
     expect(result.effective?.reason).toBe('exact match in list');
   });
 
-  it('includes action, scopes, priority, and builtin in attribution', () => {
+  it('includes action, priority, and builtin in attribution, with no scopes', () => {
     const r = rule({
       id: 'a',
       action: 'hide',
-      scopes: ['tag-pane'],
       priority: 42,
       builtin: true,
     });
@@ -171,10 +168,10 @@ describe('RuleEngine.getRuleAttribution', () => {
     expect(result.effective).toMatchObject({
       ruleId: 'a',
       action: 'hide',
-      scopes: ['tag-pane'],
       priority: 42,
       builtin: true,
     });
+    expect(result.effective).not.toHaveProperty('scopes');
   });
 
   it('treats missing builtin flag as false', () => {

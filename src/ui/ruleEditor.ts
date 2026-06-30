@@ -202,7 +202,6 @@ export class RuleEditor {
       priority: DEFAULT_PRIORITY,
       match: { type: 'regex', pattern: '' },
       action: 'hide',
-      scopes: ['tag-pane'],
     };
   }
 
@@ -280,38 +279,6 @@ export class RuleEditor {
       }
       sel.addEventListener('change', () => {
         draft.action = sel.value as Action;
-      });
-
-      const scopeRow = this.row(sec);
-      const scopeLabel = this.label(scopeRow, 'Scope');
-      this.attachHelp(
-        scopeLabel,
-        'Where the rule applies. v0.1 supports tag-pane only; graph view, autocomplete, and properties chips arrive in v0.2.',
-      );
-      const sctl = this.control(scopeRow);
-      const ssel = sctl.createEl('select', { cls: 'tcr-select' });
-      const opts: Array<{
-        value: Scope[];
-        label: string;
-        disabled?: boolean;
-      }> = [
-        { value: ['tag-pane'], label: 'tag-pane' },
-        {
-          value: ['tag-pane', 'graph'],
-          label: 'tag-pane + graph (v0.2)',
-          disabled: true,
-        },
-      ];
-      for (const o of opts) {
-        const opt = ssel.createEl('option', {
-          value: o.value.join(','),
-          text: o.label,
-        });
-        if (o.disabled) opt.disabled = true;
-        if (draft.scopes.join(',') === o.value.join(',')) opt.selected = true;
-      }
-      ssel.addEventListener('change', () => {
-        draft.scopes = ssel.value.split(',') as Scope[];
       });
     });
 
@@ -741,7 +708,6 @@ export class RuleEditor {
       priority: 0,
       match: criteria,
       action: 'hide',
-      scopes: ['tag-pane'],
     };
     try {
       return RuleEngine.testTag(m.tag, synthetic);

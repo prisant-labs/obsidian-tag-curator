@@ -18,9 +18,7 @@ function rule(overrides: Partial<Rule> = {}): Rule {
     enabled: true,
     priority: 50,
     match: { type: 'list', list: ['draft'] },
-    action: 'hide',
-    scopes: ['autocomplete'],
-    ...overrides,
+    action: 'hide',    ...overrides,
   };
 }
 

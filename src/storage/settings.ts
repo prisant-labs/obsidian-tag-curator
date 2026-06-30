@@ -293,8 +293,8 @@ export class SettingsManager {
    * Whether a given scope is globally live (Phase 5B). Reads the per-scope
    * enable map; a scope absent from the map is treated as enabled, so callers
    * (and Phases 6-8) get a safe default-on for any scope not yet listed. This is
-   * the global on/off switch for a surface, distinct from `defaultScopes` (which
-   * governs which scopes a rule applies to).
+   * the global on/off switch for a surface (the only scope control; rules
+   * themselves are global and apply to every enabled surface).
    */
   isScopeEnabled(scope: string): boolean {
     const flag = this.settings.scopeEnabled?.[scope];

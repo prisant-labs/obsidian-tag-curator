@@ -27,7 +27,6 @@ function attributeOverride(value: TagOverride): AttributedMatch {
     // An always-show pin keeps the tag visible (show-only semantics); an
     // always-hide pin hides it.
     action: showing ? 'show-only' : 'hide',
-    scopes: [],
     priority: Number.POSITIVE_INFINITY,
     builtin: false,
     reason: showing ? 'pinned to always show' : 'pinned to always hide',
@@ -57,7 +56,6 @@ function attribute(rule: Rule, tagMeta: TagMeta | undefined): AttributedMatch {
     ruleId: rule.id,
     ruleName: rule.name,
     action: rule.action,
-    scopes: rule.scopes,
     priority: rule.priority,
     builtin: rule.builtin ?? false,
     reason: describeReason(rule.match, tagMeta),

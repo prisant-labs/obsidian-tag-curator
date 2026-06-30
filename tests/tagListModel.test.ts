@@ -13,9 +13,7 @@ function hideRule(tag: string): Rule {
     enabled: true,
     priority: 50,
     match: { type: 'list', list: [tag] },
-    action: 'hide',
-    scopes: ['tag-pane'],
-  };
+    action: 'hide',  };
 }
 
 function source(

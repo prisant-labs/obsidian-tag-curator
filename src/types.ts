@@ -38,7 +38,6 @@ export interface Rule {
   priority: number;
   match: MatchCriteria;
   action: Action;
-  scopes: Scope[];
   notes?: string;
   builtin?: boolean;
 }
@@ -86,7 +85,6 @@ export interface TagCuratorSettings {
   schemaVersion: number;
   enabled: boolean;
   mode: Mode;
-  defaultScopes: Scope[];
   enabledPresets: string[];
   customRules: Rule[];
   // Per-tag visibility overrides (D-015), keyed by tag (no leading #). Resolved
@@ -94,10 +92,10 @@ export interface TagCuratorSettings {
   // always-show on the same tag. Schema v4 added this; v3->v4 defaults it to {}.
   overrides: Record<string, TagOverride>;
   // Per-scope global enable, keyed by Scope (e.g. 'tag-pane', 'notebook-navigator').
-  // This is the "is this surface live at all" switch and is deliberately separate
-  // from `defaultScopes` (which controls rule applicability per scope). A scope
-  // absent from the map is treated as enabled (see isScopeEnabled): the four v1.0
-  // scopes default true. Schema v5 added this; v4->v5 defaults it. Phases 6-8
+  // This is the "is this surface live at all" global switch and the only scope
+  // control (rules themselves are global, applying to every enabled surface). A
+  // scope absent from the map is treated as enabled (see isScopeEnabled): the four
+  // v1.0 scopes default true. Schema v5 added this; v4->v5 defaults it. Phases 6-8
   // reuse this field for properties / autocomplete / the Settings Scopes section.
   scopeEnabled: Record<string, boolean>;
   previewMode: boolean;
@@ -128,7 +126,6 @@ export const DEFAULT_SETTINGS: TagCuratorSettings = {
   schemaVersion: SCHEMA_VERSION,
   enabled: true,
   mode: 'default',
-  defaultScopes: ['tag-pane'],
   enabledPresets: ['hide-hex-codes', 'hide-url-anchors'],
   customRules: [],
   overrides: {},
@@ -171,7 +168,6 @@ export interface AttributedMatch {
   ruleId: string;
   ruleName: string;
   action: Action;
-  scopes: Scope[];
   priority: number;
   builtin: boolean;
   reason: string;

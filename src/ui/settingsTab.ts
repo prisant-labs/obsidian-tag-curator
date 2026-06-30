@@ -609,8 +609,6 @@ export class TagCuratorSettingTab extends PluginSettingTab {
     m.createEl('code', { text: matchSummary });
     dl.createSpan({ cls: 'tcst-dl-label', text: 'Action:' });
     dl.createSpan({ cls: 'tcst-dl-value', text: preset.rule.action });
-    dl.createSpan({ cls: 'tcst-dl-label', text: 'Scope:' });
-    dl.createSpan({ cls: 'tcst-dl-value', text: preset.rule.scopes.join(', ') });
     if (preset.rule.notes) {
       dl.createSpan({ cls: 'tcst-dl-label', text: 'Notes:' });
       dl.createSpan({ cls: 'tcst-dl-value', text: preset.rule.notes });
