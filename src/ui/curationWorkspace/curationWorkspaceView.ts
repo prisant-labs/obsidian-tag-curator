@@ -63,7 +63,7 @@ export class CurationWorkspaceView extends ItemView {
     return CURATION_VIEW_TYPE;
   }
   getDisplayText(): string {
-    return 'Tag Curator';
+    return 'Tag Visibility';
   }
   getIcon(): string {
     return 'tags';
@@ -122,7 +122,7 @@ export class CurationWorkspaceView extends ItemView {
     this.banner = new StateBanner(this.container, this.plugin);
 
     const header = this.container.createDiv({ cls: 'tcw-header' });
-    header.createEl('h2', { text: 'Tag Curator' });
+    header.createEl('h2', { text: 'Tag Visibility' });
 
     // Right-hand header group: the View/Manage switch, then a gear that opens
     // Settings (where rules and everything else live - items 1 + 2).
@@ -134,8 +134,8 @@ export class CurationWorkspaceView extends ItemView {
     this.addViewButton(viewSeg, 'manage', 'Manage');
 
     const gear = right.createEl('button', { cls: 'tcw-gear' });
-    gear.setAttribute('aria-label', 'Open Tag Curator settings');
-    gear.setAttribute('title', 'Open Tag Curator settings');
+    gear.setAttribute('aria-label', 'Open Tag Visibility settings');
+    gear.setAttribute('title', 'Open Tag Visibility settings');
     // setIcon must target a span, not the <button> itself: a direct setIcon on a
     // button element does not render in some Obsidian builds (item 2).
     const gearIc = gear.createSpan({ cls: 'tcw-gear-ic' });

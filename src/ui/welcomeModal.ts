@@ -2,7 +2,7 @@
  * First-run welcome modal (D-008).
  *
  * Fires once on first enable when settings.seenWelcomeModal is false. Structure:
- *   - Header: state-aware ("Tag Curator is now enabled" + "Choose how to start")
+ *   - Header: state-aware ("Tag Visibility is now enabled" + "Choose how to start")
  *   - Safety promises strip (left-aligned check rows, no centered chunks)
  *   - Two preset cards with toggles (default presets, can be untoggled before start)
  *   - Detected integrations as per-plugin cards with state pills + bullets
@@ -30,7 +30,7 @@ const INTEGRATIONS: IntegrationDescriptor[] = [
     name: 'Tag Wrangler',
     bullets: [
       'Per-row "Rename with Tag Wrangler" hands a tag off to Tag Wrangler so renames stay safe.',
-      'The "Send to Tag Wrangler" bulk action in the Tag Curator panel delegates renaming to Tag Wrangler.',
+      'The "Send to Tag Wrangler" bulk action in the Tag Visibility panel delegates renaming to Tag Wrangler.',
     ],
   },
   {
@@ -66,10 +66,10 @@ export class WelcomeModal extends Modal {
 
     // Header: lead with the plugin name + a featured how-it-works intro.
     const head = c.createDiv({ cls: 'tcw-head' });
-    head.createEl('h3', { cls: 'tcw-title', text: 'Tag Curator' });
+    head.createEl('h3', { cls: 'tcw-title', text: 'Tag Visibility' });
     head.createDiv({ cls: 'tcw-status', text: 'Now enabled' });
     const intro = head.createDiv({ cls: 'tcw-intro' });
-    intro.appendText('Tag Curator ');
+    intro.appendText('Tag Visibility ');
     intro.createEl('strong', { text: 'hides or flags' });
     intro.appendText(
       ' noisy tags from view using presets and your own rules. It is display-only, so your notes are never changed and turning it off restores every tag.',
@@ -79,7 +79,7 @@ export class WelcomeModal extends Modal {
     const promises = c.createDiv({ cls: 'tcw-promises' });
     this.renderPromise(promises, 'Display-only.', 'It never edits your notes.');
     this.renderPromise(promises, 'File-safe.', 'No content is written to markdown.');
-    this.renderPromise(promises, 'Fully reversible.', 'Disable Tag Curator and everything returns.');
+    this.renderPromise(promises, 'Fully reversible.', 'Disable Tag Visibility and everything returns.');
 
     // Default presets (with live toggles). Caption sits directly under the heading.
     c.createDiv({ cls: 'tcw-section-label', text: 'Two presets, on by default' });

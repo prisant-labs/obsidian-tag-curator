@@ -1,6 +1,6 @@
 /**
  * Minimal, hand-written local types for the subset of Notebook Navigator's
- * public plugin API that Tag Curator calls at runtime.
+ * public plugin API that Tag Visibility calls at runtime.
  *
  * This is deliberately NOT NN's published `.d.ts`, and it is not derived from NN
  * source. It is an independent interface contract written only to type our own

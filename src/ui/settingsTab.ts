@@ -192,7 +192,7 @@ export class TagCuratorSettingTab extends PluginSettingTab {
 
     // Master switch first, then the opt-in pane beneath it (1-1).
     new Setting(panel)
-      .setName('Enable Tag Curator')
+      .setName('Enable Tag Visibility')
       .setDesc(
         'Master switch. When off, every tag shows normally and no DOM is touched.',
       )
@@ -205,7 +205,7 @@ export class TagCuratorSettingTab extends PluginSettingTab {
       );
 
     new Setting(panel)
-      .setName('Enable Tag Curator pane')
+      .setName('Enable Tag Visibility pane')
       .setDesc(
         'Also surface curation as a dockable sidebar pane you can keep open beside the native tag pane. Curation always lives in the Curate Tags tab; this adds the docked option.',
       )
@@ -233,7 +233,7 @@ export class TagCuratorSettingTab extends PluginSettingTab {
     new Setting(panel)
       .setName('Run panic disable')
       .setDesc(
-        'One-shot hard reset: instantly un-hides every tag across all surfaces and sweeps the document even if a scope is wedged, then turns the plugin off. Goes further than the master toggle, which only flips the switch. Fully reversible: nothing in your notes is touched. Leaves a "Tag Curator is off" banner until you re-enable.',
+        'One-shot hard reset: instantly un-hides every tag across all surfaces and sweeps the document even if a scope is wedged, then turns the plugin off. Goes further than the master toggle, which only flips the switch. Fully reversible: nothing in your notes is touched. Leaves a "Tag Visibility is off" banner until you re-enable.',
       )
       .addButton((b) =>
         b
@@ -330,7 +330,7 @@ export class TagCuratorSettingTab extends PluginSettingTab {
     panel.createEl('p', {
       cls: 'tcst-section-sub',
       text:
-        'A scope is a place your tags appear. Tag Curator can hide or flag tags in each one, independently and reversibly - toggling a scope takes effect immediately, no restart.',
+        'A scope is a place your tags appear. Tag Visibility can hide or flag tags in each one, independently and reversibly - toggling a scope takes effect immediately, no restart.',
     });
 
     new Setting(panel).setName('Obsidian surfaces').setHeading();
@@ -370,7 +370,7 @@ export class TagCuratorSettingTab extends PluginSettingTab {
 
     new Setting(panel).setName('Plugin integrations').setHeading();
 
-    // Notebook Navigator - a plugin surface Tag Curator can curate; gated on detection.
+    // Notebook Navigator - a plugin surface Tag Visibility can curate; gated on detection.
     const nnHandle = detectNotebookNavigator(this.app);
     const nnDisabled = nnHandle.status !== 'ready';
     let nnDesc = 'Curate the Notebook Navigator tag tree (runtime-interop only).';
@@ -696,7 +696,7 @@ export class TagCuratorSettingTab extends PluginSettingTab {
     panel.createEl('p', {
       cls: 'tcst-section-sub',
       text:
-        'All commands appear in Obsidian\'s palette (Cmd/Ctrl+P) prefixed "Tag Curator:". Bind hotkeys in Obsidian\'s hotkey settings - no defaults shipped.',
+        'All commands appear in Obsidian\'s palette (Cmd/Ctrl+P) prefixed "Tag Visibility:". Bind hotkeys in Obsidian\'s hotkey settings - no defaults shipped.',
     });
 
     const cmds: Array<[string, string]> = [
@@ -726,7 +726,7 @@ export class TagCuratorSettingTab extends PluginSettingTab {
     new Setting(panel).setName('FAQ').setHeading();
     const faqs: Array<[string, string]> = [
       [
-        'Does Tag Curator change my notes?',
+        'Does Tag Visibility change my notes?',
         'No. It is display-only - it hides or flags tags in the UI and never edits note content. Disabling or uninstalling it restores every tag.',
       ],
       [
@@ -744,7 +744,7 @@ export class TagCuratorSettingTab extends PluginSettingTab {
 
     new Setting(panel).setName('About').setHeading();
     new Setting(panel)
-      .setName('Tag Curator ' + this.plugin.manifest.version)
+      .setName('Tag Visibility ' + this.plugin.manifest.version)
       .setDesc('Display-only, file-safe, fully reversible tag curation.')
       .addButton((b) =>
         b.setButtonText('GitHub').onClick(() => {
@@ -813,7 +813,7 @@ export class TagCuratorSettingTab extends PluginSettingTab {
     new Setting(panel)
       .setName('Mode')
       .setDesc(
-        'How Tag Curator filters tags. Default (hide matched) is the only mode today; allow-only and inbox curation are planned.',
+        'How Tag Visibility filters tags. Default (hide matched) is the only mode today; allow-only and inbox curation are planned.',
       )
       .addDropdown((d) => {
         // Only Default is implemented. Offering allow-only/inbox here would let a
@@ -828,10 +828,10 @@ export class TagCuratorSettingTab extends PluginSettingTab {
   }
 
   private async reindexVault(): Promise<void> {
-    new Notice('Tag Curator: rescanning vault tags...');
+    new Notice('Tag Visibility: rescanning vault tags...');
     await this.plugin.tagMetaManager.scanAll();
     this.plugin.tagPaneObserver.setMetadata(this.plugin.tagMetaManager.all());
-    new Notice('Tag Curator: rescan complete');
+    new Notice('Tag Visibility: rescan complete');
     this.display();
   }
 

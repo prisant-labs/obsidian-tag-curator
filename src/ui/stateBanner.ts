@@ -1,10 +1,10 @@
 /**
  * Persistent state banner (D-007).
  *
- * Renders above every Tag Curator surface whenever the plugin is in a non-default
+ * Renders above every Tag Visibility surface whenever the plugin is in a non-default
  * state. Two variants:
  *   - "preview" (amber)  - Preview mode is on; matched tags are flagged, not hidden.
- *   - "off"     (muted)  - Tag Curator is off; no tags are being curated.
+ *   - "off"     (muted)  - Tag Visibility is off; no tags are being curated.
  *
  * Each banner carries an inline action so resolving the state is one click.
  * Subscribes to settings changes and updates itself; the host surface only has
@@ -63,7 +63,7 @@ export class StateBanner {
         void this.plugin.settingsManager.setPreviewMode(false);
       });
     } else {
-      msg.createEl('strong', { text: 'Tag Curator is off. ' });
+      msg.createEl('strong', { text: 'Tag Visibility is off. ' });
       msg.appendText(
         'No tags are being curated. Re-enable to apply your rules again. Nothing in your notes is ever changed.',
       );

@@ -192,7 +192,7 @@ export default class TagCuratorPlugin extends Plugin {
       name: 'Open the panel',
       callback: () => {
         if (!this.settingsManager.get().paneEnabled) {
-          new Notice('Enable the Tag Curator Pane in Settings -> General to dock it.');
+          new Notice('Enable the Tag Visibility Pane in Settings -> General to dock it.');
           return;
         }
         void this.openCurationWorkspace();
@@ -203,7 +203,7 @@ export default class TagCuratorPlugin extends Plugin {
       name: 'Open beside the tag pane',
       callback: () => {
         if (!this.settingsManager.get().paneEnabled) {
-          new Notice('Enable the Tag Curator Pane in Settings -> General to dock it.');
+          new Notice('Enable the Tag Visibility Pane in Settings -> General to dock it.');
           return;
         }
         void this.openBesideTagPane();
@@ -231,7 +231,7 @@ export default class TagCuratorPlugin extends Plugin {
   applyPaneEnabled(): void {
     const on = this.settingsManager.get().paneEnabled;
     if (on && !this.ribbonEl) {
-      this.ribbonEl = this.addRibbonIcon('tags', 'Open Tag Curator', () => {
+      this.ribbonEl = this.addRibbonIcon('tags', 'Open Tag Visibility', () => {
         void this.openCurationWorkspace();
       });
     } else if (!on && this.ribbonEl) {
@@ -282,7 +282,7 @@ export default class TagCuratorPlugin extends Plugin {
     if (handle.status === 'too-old') {
       if (!settings.seenNnTooOldNotice) {
         new Notice(
-          `Tag Curator: Notebook Navigator integration needs NN ${MIN_API_VERSION} or newer; the NN scope is off.`,
+          `Tag Visibility: Notebook Navigator integration needs NN ${MIN_API_VERSION} or newer; the NN scope is off.`,
         );
         void this.settingsManager.setSeenNnTooOldNotice(true);
       }
@@ -374,7 +374,7 @@ export default class TagCuratorPlugin extends Plugin {
   private async toggleEnable(): Promise<void> {
     const current = this.settingsManager.get().enabled;
     await this.settingsManager.setEnabled(!current);
-    new Notice(`Tag Curator ${!current ? 'enabled' : 'disabled'}`);
+    new Notice(`Tag Visibility ${!current ? 'enabled' : 'disabled'}`);
   }
 
   private async togglePreviewMode(): Promise<void> {
@@ -397,15 +397,15 @@ export default class TagCuratorPlugin extends Plugin {
     for (const obs of this.observers) obs.setEnabled(false);
     panicCleanup(document);
     void this.settingsManager.setEnabled(false);
-    new Notice('Tag Curator: panic disable activated. All DOM effects removed.');
+    new Notice('Tag Visibility: panic disable activated. All DOM effects removed.');
   }
 
   private async rescanTags(): Promise<void> {
-    new Notice('Tag Curator: rescanning vault tags...');
+    new Notice('Tag Visibility: rescanning vault tags...');
     await this.tagMetaManager.scanAll();
     this.pushMetadata();
     this.refreshStatusBar();
-    new Notice('Tag Curator: rescan complete');
+    new Notice('Tag Visibility: rescan complete');
   }
 
   async openCurationWorkspace(opts?: CurationWorkspaceOptions): Promise<void> {
@@ -480,18 +480,18 @@ export default class TagCuratorPlugin extends Plugin {
     if (!this.statusBarEl) return;
     const settings = this.settingsManager.get();
     if (!settings.enabled) {
-      this.statusBarEl.setText('Tag Curator: off');
+      this.statusBarEl.setText('Tag Visibility: off');
       return;
     }
     // Count from the engine over tag metadata, not from one scope's DOM, so
     // toggling the tag-pane scope off no longer zeroes the count.
     const curated = this.countCurated(settings);
     if (settings.previewMode) {
-      this.statusBarEl.setText(`Tag Curator (preview): ${curated} flagged`);
+      this.statusBarEl.setText(`Tag Visibility (preview): ${curated} flagged`);
       return;
     }
     this.statusBarEl.setText(
-      curated === 1 ? 'Tag Curator: 1 tag hidden' : `Tag Curator: ${curated} tags hidden`,
+      curated === 1 ? 'Tag Visibility: 1 tag hidden' : `Tag Visibility: ${curated} tags hidden`,
     );
   }
 }

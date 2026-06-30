@@ -1,7 +1,7 @@
 import { App } from 'obsidian';
 import { NnEventName, NotebookNavigatorApi } from './notebookNavigatorApi';
 
-/** Minimum NN public-API version Tag Curator supports (decision 2, 2026-05-29). */
+/** Minimum NN public-API version Tag Visibility supports (decision 2, 2026-05-29). */
 export const MIN_API_VERSION = '2.0.0';
 
 const NN_PLUGIN_ID = 'notebook-navigator';
@@ -26,7 +26,7 @@ interface PluginsRegistry {
 }
 
 /**
- * Detect Notebook Navigator and decide whether Tag Curator's NN scope can run.
+ * Detect Notebook Navigator and decide whether Tag Visibility's NN scope can run.
  *   - absent: NN is not enabled. Silent no-op.
  *   - too-old: NN is enabled but its API is missing or below MIN_API_VERSION.
  *     The caller shows a one-time notice and skips the entire scope.

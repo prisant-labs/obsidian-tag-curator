@@ -1,4 +1,4 @@
-// Tag Curator owns four decoration namespaces: the core tag pane
+// Tag Visibility owns four decoration namespaces: the core tag pane
 // (tag-curator-*), the Notebook Navigator tag tree (tc-nn-*), the Properties
 // panel tag pills (tc-prop-*), and the editor tag-autocomplete suggestions
 // (tc-ac-*). Panic disable must sweep all of them, so a stale scope cannot leave

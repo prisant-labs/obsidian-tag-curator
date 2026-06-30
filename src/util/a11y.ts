@@ -1,5 +1,5 @@
 /**
- * Keyboard accessibility helpers for the non-<button> controls Tag Curator
+ * Keyboard accessibility helpers for the non-<button> controls Tag Visibility
  * builds from divs, spans, and anchors for layout reasons (tabs, toggles, cards,
  * sortable headers, filter chips, clickable cells). A plain <button> is
  * keyboard-operable for free; these helpers give the same operability to the

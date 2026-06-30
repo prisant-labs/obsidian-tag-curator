@@ -60,6 +60,6 @@ export async function openBesideTagPane(deps: OpenBesideDeps): Promise<void> {
   }
 
   // Fallback: no tag pane and no split available.
-  notify('Tag Curator: could not open beside the tag pane - opening in sidebar instead.');
+  notify('Tag Visibility: could not open beside the tag pane - opening in sidebar instead.');
   await openPane();
 }

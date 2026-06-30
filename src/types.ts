@@ -109,7 +109,7 @@ export interface TagCuratorSettings {
   // False until the notice has been shown once; flipped true and persisted so the
   // user is not nagged on every load when NN is below MIN_API_VERSION.
   seenNnTooOldNotice: boolean;
-  // Whether the dockable Tag Curator Pane is available (opt-in surface). Curation
+  // Whether the dockable Tag Visibility Pane is available (opt-in surface). Curation
   // always lives in the Curate Tags settings tab; this only governs the sidebar
   // leaf, its ribbon icon, and the open-pane commands. Schema v6 added this.
   paneEnabled: boolean;

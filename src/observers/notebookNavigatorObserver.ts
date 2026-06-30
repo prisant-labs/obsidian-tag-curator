@@ -30,7 +30,7 @@ interface NnLeaf {
 
 /**
  * Decorates Notebook Navigator's tag tree (`.nn-navitem.nn-tag[data-tag]` rows)
- * with Tag Curator's hide/flag rules at runtime. GPL boundary: this is runtime
+ * with Tag Visibility's hide/flag rules at runtime. GPL boundary: this is runtime
  * interop only - it observes and mutates NN's rendered DOM via stable data-*
  * attributes and adds only `tc-nn-*` classes. It never imports NN source and
  * never touches NN's own `nn-*` classes or settings.
