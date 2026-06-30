@@ -65,7 +65,9 @@ export default class TagCuratorPlugin extends Plugin {
     await this.settingsManager.load();
     const settings = this.settingsManager.get();
 
-    this.tagMetaManager = new TagMetaManager(this.app, this);
+    // SettingsManager is the durable reviewed-tag store (P2-09): reviewed state
+    // lives in data.json, not the rebuildable tags.json sidecar.
+    this.tagMetaManager = new TagMetaManager(this.app, this, this.settingsManager);
     this.tagMetaManager.setDebounceMs(settings.sidecarDebounceMs);
     await this.tagMetaManager.load();
 

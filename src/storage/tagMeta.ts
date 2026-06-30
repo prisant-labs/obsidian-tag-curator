@@ -7,20 +7,36 @@ interface PersistedTagMeta {
   tags: Record<string, TagMeta>;
 }
 
-const SCHEMA = 1;
+/**
+ * Durable store for user-owned reviewed state (SettingsManager in production).
+ * `reviewed` is NOT derivable from the vault, so it must not live in the
+ * rebuildable tags.json sidecar; TagMetaManager keeps a `meta.reviewed` mirror for
+ * the read path but treats this store as the source of truth (P2-09).
+ */
+export interface ReviewedStore {
+  isReviewed(tag: string): boolean;
+  setReviewedTags(tags: string[], value: boolean): void | Promise<void>;
+}
+
+// v2: reviewed is no longer written into the sidecar (it lives in durable settings
+// now). A v1 sidecar is still accepted on load so its inline reviewed flags can be
+// lifted into the durable store once.
+const SCHEMA = 2;
 
 export class TagMetaManager extends Events {
   private app: App;
   private plugin: Plugin;
+  private reviewed?: ReviewedStore;
   private store = new Map<string, TagMeta>();
   private fileTags = new Map<string, Set<string>>();
   private saveTimer: ReturnType<typeof setTimeout> | null = null;
   private debounceMs = 5000;
 
-  constructor(app: App, plugin: Plugin) {
+  constructor(app: App, plugin: Plugin, reviewed?: ReviewedStore) {
     super();
     this.app = app;
     this.plugin = plugin;
+    this.reviewed = reviewed;
   }
 
   setDebounceMs(ms: number): void {
@@ -42,11 +58,19 @@ export class TagMetaManager extends Events {
       }
       const raw = await adapter.read(path);
       const parsed = JSON.parse(raw) as PersistedTagMeta;
-      if (parsed.schemaVersion !== SCHEMA) {
+      // Accept the current schema and the immediately-prior v1 (which stored
+      // reviewed inline). Any other version is discarded; the derived data
+      // rebuilds on the next scanAll.
+      if (parsed.schemaVersion !== SCHEMA && parsed.schemaVersion !== 1) {
         this.store = new Map();
         return;
       }
       this.store = new Map(Object.entries(parsed.tags ?? {}));
+      // One-time lift: pull a v1 sidecar's inline reviewed flags into the durable
+      // store before they would be dropped (the sidecar is rewritten as v2).
+      if (parsed.schemaVersion === 1) this.liftLegacyReviewed();
+      // Durable settings is authoritative for reviewed; mirror it onto the store.
+      this.hydrateReviewed();
     } catch (e) {
       console.error('[tag-curator] tags.json corrupted, rebuilding', e);
       this.store = new Map();
@@ -103,6 +127,9 @@ export class TagMetaManager extends Events {
 
     this.store = freshStore;
     this.fileTags = freshFileTags;
+    // Durable settings is authoritative for reviewed; mirror it onto the rebuilt
+    // store (the prior carry-over above covers the no-store case in tests).
+    this.hydrateReviewed();
     await this.flushNow();
     this.trigger('changed');
   }
@@ -209,15 +236,40 @@ export class TagMetaManager extends Events {
 
   private async flushNow(): Promise<void> {
     this.saveTimer = null;
-    const payload: PersistedTagMeta = {
-      schemaVersion: SCHEMA,
-      tags: Object.fromEntries(this.store),
-    };
+    const tags: Record<string, TagMeta> = {};
+    for (const [tag, meta] of this.store) {
+      // reviewed lives in durable settings (P2-09); keep it out of the rebuildable
+      // sidecar so the sidecar holds only derived data.
+      const copy: TagMeta = { ...meta };
+      delete copy.reviewed;
+      tags[tag] = copy;
+    }
+    const payload: PersistedTagMeta = { schemaVersion: SCHEMA, tags };
     const adapter = this.app.vault.adapter;
     const path = this.filePath();
     const dir = path.substring(0, path.lastIndexOf('/'));
     if (!(await adapter.exists(dir))) await adapter.mkdir(dir);
     await adapter.write(path, JSON.stringify(payload, null, 2));
+  }
+
+  /**
+   * Pull a v1 sidecar's inline reviewed flags into the durable store, once.
+   * Idempotent (re-marking the same tags true is a no-op), so a restored v1
+   * sidecar re-lifts safely.
+   */
+  private liftLegacyReviewed(): void {
+    if (!this.reviewed) return;
+    const toLift: string[] = [];
+    for (const meta of this.store.values()) if (meta.reviewed) toLift.push(meta.tag);
+    if (toLift.length) void this.reviewed.setReviewedTags(toLift, true);
+  }
+
+  /** Mirror durable reviewed state onto the in-memory store (settings is the source). */
+  private hydrateReviewed(): void {
+    if (!this.reviewed) return;
+    for (const meta of this.store.values()) {
+      meta.reviewed = this.reviewed.isReviewed(meta.tag);
+    }
   }
 
   get(tag: string): TagMeta | undefined {
@@ -237,14 +289,19 @@ export class TagMetaManager extends Events {
    */
   setReviewedBulk(tags: string[], value: boolean): void {
     let changed = false;
+    const applied: string[] = [];
     for (const tag of tags) {
       const existing = this.store.get(tag);
       if (!existing) continue;
       if (existing.reviewed === value) continue;
-      existing.reviewed = value;
+      existing.reviewed = value; // mirror for the read path
+      applied.push(tag);
       changed = true;
     }
     if (!changed) return;
+    // Durable source of truth (survives a sidecar rebuild/loss). The store
+    // quiet-persists so this does not trigger the settings rule fan-out.
+    void this.reviewed?.setReviewedTags(applied, value);
     this.scheduleSave();
     this.trigger('changed');
   }

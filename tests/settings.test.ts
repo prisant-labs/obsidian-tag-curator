@@ -381,6 +381,57 @@ describe('SettingsManager future-schema write guard (P2-08)', () => {
   });
 });
 
+describe('SettingsManager reviewed tags (P2-09 durable store)', () => {
+  it('defaults reviewedTags to {} on a fresh install', async () => {
+    const mgr = new SettingsManager(pluginWith(null));
+    await mgr.load();
+    expect(mgr.getReviewedTags()).toEqual({});
+    expect(mgr.isReviewed('anything')).toBe(false);
+  });
+
+  it('setReviewedTags marks tags and persists to data.json', async () => {
+    const plugin = pluginWith(null);
+    const mgr = new SettingsManager(plugin);
+    await mgr.load();
+    await mgr.setReviewedTags(['alpha', 'beta'], true);
+    expect(mgr.isReviewed('alpha')).toBe(true);
+    expect(mgr.isReviewed('beta')).toBe(true);
+    expect((plugin.data as { reviewedTags: Record<string, true> }).reviewedTags).toEqual({
+      alpha: true,
+      beta: true,
+    });
+  });
+
+  it('setReviewedTags with false removes tags', async () => {
+    const mgr = new SettingsManager(pluginWith(null));
+    await mgr.load();
+    await mgr.setReviewedTags(['alpha', 'beta'], true);
+    await mgr.setReviewedTags(['alpha'], false);
+    expect(mgr.isReviewed('alpha')).toBe(false);
+    expect(mgr.getReviewedTags()).toEqual({ beta: true });
+  });
+
+  it('does not trigger the settings onChange fan-out (reviewed is not a rule change)', async () => {
+    const mgr = new SettingsManager(pluginWith(null));
+    await mgr.load();
+    let fired = 0;
+    mgr.onChange(() => {
+      fired += 1;
+    });
+    await mgr.setReviewedTags(['alpha'], true);
+    expect(fired).toBe(0);
+  });
+
+  it('defaults reviewedTags when migrating a v9 file', async () => {
+    const v9 = { ...DEFAULT_SETTINGS, schemaVersion: 9 } as Record<string, unknown>;
+    delete v9.reviewedTags;
+    const mgr = new SettingsManager(pluginWith(v9));
+    await mgr.load();
+    expect(mgr.get().schemaVersion).toBe(SCHEMA_VERSION);
+    expect(mgr.getReviewedTags()).toEqual({});
+  });
+});
+
 describe('SettingsManager.load - v4 to v5 migration (per-scope enable + NN notice)', () => {
   // A v4 fixture must NOT carry the v5 fields, so we build it from DEFAULT_SETTINGS
   // and explicitly strip the fields v5 introduces; otherwise the defaults would

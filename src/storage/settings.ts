@@ -177,10 +177,23 @@ export class SettingsManager {
       const tc = normalizeTableColumns(merged.tableColumns);
       merged.tableColumns = { pane: { ...PANE_DEFAULT_COLS }, settings: tc.settings };
     }
+    if (inferred < 10) {
+      // v10: reviewed state moved from the discardable tags.json sidecar to durable
+      // settings (P2-09). The spread fills reviewedTags from DEFAULT when absent;
+      // this guard repairs a malformed value. The one-time lift of existing sidecar
+      // flags into this map happens in TagMetaManager.load() (it owns tags.json).
+      if (
+        !merged.reviewedTags ||
+        typeof merged.reviewedTags !== 'object' ||
+        Array.isArray(merged.reviewedTags)
+      ) {
+        merged.reviewedTags = {};
+      }
+    }
     return merged;
   }
 
-  private async persist(): Promise<void> {
+  private async persist(notify = true): Promise<void> {
     if (this.futureSchema) {
       // Read-only: the on-disk data was written by a newer plugin version.
       // Writing our older shape back would downgrade schemaVersion and could
@@ -189,7 +202,7 @@ export class SettingsManager {
       return;
     }
     await this.plugin.saveData(this.settings);
-    for (const cb of this.listeners) cb();
+    if (notify) for (const cb of this.listeners) cb();
   }
 
   get(): TagCuratorSettings {
@@ -299,6 +312,32 @@ export class SettingsManager {
     else next[tag] = value;
     this.settings.overrides = next;
     await this.persist();
+  }
+
+  /** Whether the user has marked this tag reviewed (P2-09). Tag keys carry no '#'. */
+  isReviewed(tag: string): boolean {
+    return this.settings.reviewedTags[tag] === true;
+  }
+
+  /** The durable reviewed-tags map (lives in data.json, not the tags.json sidecar). */
+  getReviewedTags(): Record<string, true> {
+    return this.settings.reviewedTags;
+  }
+
+  /**
+   * Mark or unmark a batch of tags reviewed and persist durably. Persists WITHOUT
+   * notifying settings listeners: reviewed is not a rule/scope change, so it must
+   * not trigger the heavy observer re-decoration fan-out. The tag table repaints
+   * off TagMetaManager's own 'changed' event instead. Tag keys carry no '#'.
+   */
+  async setReviewedTags(tags: string[], value: boolean): Promise<void> {
+    const next = { ...this.settings.reviewedTags };
+    for (const tag of tags) {
+      if (value) next[tag] = true;
+      else delete next[tag];
+    }
+    this.settings.reviewedTags = next;
+    await this.persist(false);
   }
 
   onChange(cb: () => void): () => void {

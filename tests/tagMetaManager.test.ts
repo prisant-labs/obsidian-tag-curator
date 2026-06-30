@@ -57,6 +57,21 @@ function makePlugin(): Plugin {
   return p;
 }
 
+// A stand-in for the durable reviewed store (SettingsManager in production).
+function fakeReviewedStore(initial: Record<string, true> = {}) {
+  const map: Record<string, true> = { ...initial };
+  return {
+    map,
+    isReviewed: (tag: string) => map[tag] === true,
+    setReviewedTags: (tags: string[], value: boolean) => {
+      for (const t of tags) {
+        if (value) map[t] = true;
+        else delete map[t];
+      }
+    },
+  };
+}
+
 function addFile(app: FakeApp, path: string, tags: string[], frontmatterTags?: string[]): TFile {
   const file = new TFile(path);
   app.vault.markdownFiles.push(file);
@@ -87,7 +102,7 @@ describe('TagMetaManager.scanAll + load', () => {
     const written = app.vault.adapter.files.get('.obsidian/plugins/tag-curator/tags.json');
     expect(written).toBeDefined();
     const parsed = JSON.parse(written!);
-    expect(parsed.schemaVersion).toBe(1);
+    expect(parsed.schemaVersion).toBe(2);
     expect(parsed.tags.todo.count).toBe(2);
     expect(parsed.tags.wip.count).toBe(1);
   });
@@ -518,5 +533,90 @@ describe('TagMetaManager.unload', () => {
     await Promise.resolve();
     await Promise.resolve();
     expect(app.vault.adapter.files.has('.obsidian/plugins/tag-curator/tags.json')).toBe(true);
+  });
+});
+
+describe('TagMetaManager reviewed durability (P2-09)', () => {
+  it('setReviewedBulk writes through to the durable reviewed store', () => {
+    const app = makeApp();
+    const file = addFile(app, 'a.md', ['inbox']);
+    const store = fakeReviewedStore();
+    const mgr = new TagMetaManager(app as never, makePlugin(), store as never);
+    mgr.indexFile(file);
+
+    mgr.setReviewedBulk(['inbox'], true);
+    expect(store.isReviewed('inbox')).toBe(true);
+    expect(mgr.get('inbox')?.reviewed).toBe(true);
+
+    mgr.setReviewedBulk(['inbox'], false);
+    expect(store.isReviewed('inbox')).toBe(false);
+  });
+
+  it('lifts legacy reviewed flags from a v1 sidecar into the durable store on load', async () => {
+    const app = makeApp();
+    const plugin = makePlugin();
+    // A pre-migration (v1) sidecar carried reviewed inline.
+    await app.vault.adapter.write(
+      '.obsidian/plugins/tag-curator/tags.json',
+      JSON.stringify({
+        schemaVersion: 1,
+        tags: {
+          done: {
+            tag: 'done',
+            firstSeen: 1,
+            lastSeen: 1,
+            count: 1,
+            sources: ['inline'],
+            reviewed: true,
+          },
+          todo: { tag: 'todo', firstSeen: 1, lastSeen: 1, count: 1, sources: ['inline'] },
+        },
+      }),
+    );
+    const store = fakeReviewedStore();
+    const mgr = new TagMetaManager(app as never, plugin, store as never);
+    await mgr.load();
+
+    // Lifted to the durable store...
+    expect(store.isReviewed('done')).toBe(true);
+    expect(store.isReviewed('todo')).toBe(false);
+    // ...and the in-memory mirror reflects it.
+    expect(mgr.get('done')?.reviewed).toBe(true);
+  });
+
+  it('hydrates meta.reviewed from the durable store (settings is authoritative)', async () => {
+    const app = makeApp();
+    const plugin = makePlugin();
+    // A v2 sidecar no longer stores reviewed; the durable store does.
+    await app.vault.adapter.write(
+      '.obsidian/plugins/tag-curator/tags.json',
+      JSON.stringify({
+        schemaVersion: 2,
+        tags: { done: { tag: 'done', firstSeen: 1, lastSeen: 1, count: 1, sources: ['inline'] } },
+      }),
+    );
+    const store = fakeReviewedStore({ done: true });
+    const mgr = new TagMetaManager(app as never, plugin, store as never);
+    await mgr.load();
+    expect(mgr.get('done')?.reviewed).toBe(true);
+  });
+
+  it('writes the v2 sidecar without the reviewed field', async () => {
+    const app = makeApp();
+    addFile(app, 'a.md', ['inbox']);
+    const store = fakeReviewedStore();
+    const mgr = new TagMetaManager(app as never, makePlugin(), store as never);
+    await mgr.scanAll();
+    mgr.setReviewedBulk(['inbox'], true);
+    mgr.unload();
+    await Promise.resolve();
+    await Promise.resolve();
+
+    const written = JSON.parse(
+      app.vault.adapter.files.get('.obsidian/plugins/tag-curator/tags.json')!,
+    );
+    expect(written.schemaVersion).toBe(2);
+    expect(written.tags.inbox).toBeDefined();
+    expect(written.tags.inbox.reviewed).toBeUndefined();
   });
 });

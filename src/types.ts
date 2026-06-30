@@ -1,4 +1,6 @@
-export const SCHEMA_VERSION = 9;
+// v10: reviewed state moved out of the discardable tags.json sidecar into durable
+// settings (reviewedTags) so it survives a sidecar rebuild/loss (P2-09).
+export const SCHEMA_VERSION = 10;
 
 export type Mode = 'default' | 'allow-only' | 'inbox';
 
@@ -115,6 +117,11 @@ export interface TagCuratorSettings {
   // Which optional tag-table columns are visible (2-5), kept independently per
   // surface (item 8a). Schema v7 added a flat shape; v8 reshaped it per surface.
   tableColumns: Record<TableSurface, TableColumnPrefs>;
+  // Tags the user has marked reviewed, keyed by tag (no leading '#'). This is
+  // user-owned, non-derivable state, so it lives here in durable settings, NOT in
+  // the rebuildable tags.json sidecar. Schema v10 added this; the v9->v10 step
+  // defaults it and TagMetaManager lifts any legacy sidecar flags once (P2-09).
+  reviewedTags: Record<string, true>;
 }
 
 export const DEFAULT_SETTINGS: TagCuratorSettings = {
@@ -143,6 +150,7 @@ export const DEFAULT_SETTINGS: TagCuratorSettings = {
     pane: { lastSeen: false, source: false, rule: false },
     settings: { lastSeen: true, source: true, rule: true },
   },
+  reviewedTags: {},
   sidecarDebounceMs: 5000,
 };
 
