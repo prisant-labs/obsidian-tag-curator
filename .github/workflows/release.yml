@@ -1,12 +1,16 @@
 name: release
 
-# Fires on any tag push. Builds main.js (the only gitignored artifact; styles.css,
-# manifest.json, and versions.json are tracked source) and publishes the artifact
-# quartet as a GitHub release so BRAT and the community installer can fetch them.
+# Fires on any tag push. Runs the full verification gate (lint, typecheck, test) at
+# the tagged commit, builds main.js (the only gitignored artifact; styles.css,
+# manifest.json, and versions.json are tracked source), verifies the tag matches the
+# manifest, and publishes the artifact quartet as a GitHub release so BRAT and the
+# community installer can fetch them.
 #
-# There is no test step here on purpose: build.yml already gates main, and a release
-# tag is expected to point at an already-green commit. This workflow's job is to
-# build, verify the tag matches the manifest, and publish.
+# The gate runs here, not only in build.yml, because a tag can point at any commit,
+# not necessarily a green main. Re-running it means a tag on a non-green commit fails
+# before anything is published. The third-party release action is pinned to a commit
+# SHA so a moved tag cannot swap in unreviewed code in this privileged (contents:
+# write) workflow.
 
 on:
   push:
@@ -26,6 +30,10 @@ jobs:
           node-version-file: '.nvmrc'
           cache: 'npm'
       - run: npm ci
+      # Full gate at the tag: a tag on a non-green commit must fail before publish.
+      - run: npm run lint
+      - run: npm run typecheck
+      - run: npm run test
       - run: npm run build
       - name: Verify artifacts
         run: |
@@ -47,7 +55,9 @@ jobs:
             exit 1
           fi
       - name: Create release
-        uses: softprops/action-gh-release@v3
+        # Pinned to a commit SHA (not the movable @v3 tag) to harden this
+        # contents:write workflow against a repointed tag. Update deliberately.
+        uses: softprops/action-gh-release@718ea10b132b3b2eba29c1007bb80653f286566b # v3.0.1
         with:
           files: |
             manifest.json
