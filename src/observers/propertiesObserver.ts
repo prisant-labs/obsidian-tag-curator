@@ -1,6 +1,6 @@
 import { ObservedRow, ObserverBase, DecorationMode } from './observerBase';
 
-// Tag-Curator-owned decoration for the Properties scope. Distinct from the tag
+// plugin-owned decoration for the Properties scope. Distinct from the tag
 // pane (tag-curator-*) and Notebook Navigator (tc-nn-*) namespaces, so panic
 // cleanup and the per-scope kill switch can sweep this surface independently.
 const HIDDEN_CLASS = 'tc-prop-hidden';

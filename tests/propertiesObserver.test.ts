@@ -5,7 +5,7 @@ import { Plugin, View, WorkspaceLeaf } from 'obsidian';
 import { PropertiesObserver } from '../src/observers/propertiesObserver';
 import { Rule, TagMeta } from '../src/types';
 
-// Tag-Curator-namespaced decoration classes / marker for the Properties scope.
+// plugin-namespaced decoration classes / marker for the Properties scope.
 // Distinct from tag-pane (tag-curator-*) and NN (tc-nn-*) namespaces.
 const HIDDEN_CLASS = 'tc-prop-hidden';
 const FLAG_CLASS = 'tc-prop-flagged';

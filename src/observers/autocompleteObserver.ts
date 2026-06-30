@@ -1,6 +1,6 @@
 import { ObservedRow, ObserverBase, DecorationMode } from './observerBase';
 
-// Tag-Curator-owned decoration for the autocomplete scope. Distinct from the
+// plugin-owned decoration for the autocomplete scope. Distinct from the
 // tag pane (tag-curator-*), Notebook Navigator (tc-nn-*), and Properties
 // (tc-prop-*) namespaces, so panic cleanup and the per-scope kill switch sweep
 // this surface independently.

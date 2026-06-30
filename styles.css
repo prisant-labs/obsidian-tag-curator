@@ -1,11 +1,11 @@
 /**
- * Tag Curator Plugin Styles
+ * Tag Visibility Plugin Styles
  */
 
 /* =========================================================
  * Themeable variables (Style Settings, D-016, optional).
  *
- * Every Tag-Curator-owned themeable value gets a :root default here so the
+ * Every plugin-owned themeable value gets a :root default here so the
  * plugin styles correctly with NO dependency on Style Settings. The settings
  * block below (a CSS comment whose body starts with the literal at-settings
  * keyword) is auto-discovered by the Style Settings plugin (if installed) and
@@ -18,7 +18,7 @@
  * ========================================================= */
 :root {
   /* Flagged tag highlight color (preview mode + flagged rows/pills/suggestions).
-   * Was --text-warning inline; now a Tag-Curator-owned, themeable alias. */
+   * Was --text-warning inline; now a plugin-owned, themeable alias. */
   --tag-curator-flag-color: var(--text-warning);
   /* Background wash behind a flagged row / pill / suggestion. */
   --tag-curator-flag-bg: var(--background-modifier-hover);
@@ -36,7 +36,7 @@ body.tag-curator-flag-bold {
 
 /* @settings
 
-name: Tag Curator
+name: Tag Visibility
 id: tag-curator
 settings:
   - id: tag-curator-flag-color
@@ -60,7 +60,7 @@ settings:
 */
 
 /* =========================================================
- * State banner (D-007) - persistent above Tag Curator surfaces
+ * State banner (D-007) - persistent above Tag Visibility surfaces
  * whenever the plugin is in a non-default state.
  * ========================================================= */
 /* Both variants read as proper callouts (item 8b): a color-coded left accent
@@ -1863,7 +1863,7 @@ settings:
 
 /* -----------------------------------------------------------------
  * Notebook Navigator tag-tree decoration (NN compat, plan Phase 3.4).
- * Tag-Curator-owned classes only (tc-nn-*); NN's nn-* base classes are
+ * plugin-owned classes only (tc-nn-*); NN's nn-* base classes are
  * never styled destructively. Colors come from Obsidian theme variables.
  * Runtime interop: these target NN's rendered .nn-tag rows from the
  * outside; no NN source is referenced.
@@ -1874,7 +1874,7 @@ settings:
   display: none !important;
 }
 
-/* Flag (preview mode): a Tag-Curator-owned highlight so the user can see
+/* Flag (preview mode): a plugin-owned highlight so the user can see
  * which NN rows a rule would hide, without actually hiding them. */
 .nn-tag.tc-nn-flagged {
   background: var(--tag-curator-flag-bg);
@@ -1888,7 +1888,7 @@ settings:
 
 /* -----------------------------------------------------------------
  * Properties panel tag-pill decoration (plan Phase 6).
- * Tag-Curator-owned classes only (tc-prop-*); core Obsidian's
+ * plugin-owned classes only (tc-prop-*); core Obsidian's
  * multi-select-pill base class is never styled destructively. Colors
  * come from Obsidian theme variables. The selectors target the rendered
  * pills in the metadata editor's tags property row from the outside.
@@ -1902,7 +1902,7 @@ settings:
   display: none !important;
 }
 
-/* Flag (preview mode): a Tag-Curator-owned highlight so the user can see
+/* Flag (preview mode): a plugin-owned highlight so the user can see
  * which tag pills a rule would hide, without actually hiding them. */
 .multi-select-pill.tc-prop-flagged {
   background: var(--tag-curator-flag-bg);
@@ -1916,7 +1916,7 @@ settings:
 
 /* -----------------------------------------------------------------
  * Editor tag-autocomplete suggestion suppression (plan Phase 7).
- * Tag-Curator-owned classes only (tc-ac-*); core Obsidian's
+ * plugin-owned classes only (tc-ac-*); core Obsidian's
  * suggestion-item base class is never styled destructively. Colors come
  * from Obsidian theme variables. The selectors target the rendered tag
  * suggestion items inside the transient .suggestion-container popup from
@@ -1934,7 +1934,7 @@ settings:
   display: none !important;
 }
 
-/* Flag (preview mode): a Tag-Curator-owned highlight so the user can see
+/* Flag (preview mode): a plugin-owned highlight so the user can see
  * which tag suggestions a rule would hide, without actually hiding them. */
 .suggestion-item.tc-ac-flagged {
   background: var(--tag-curator-flag-bg);
@@ -1948,7 +1948,7 @@ settings:
 
 /* -----------------------------------------------------------------
  * Core tag pane decoration (the original, primary scope).
- * Tag-Curator-owned classes only (tag-curator-*); Obsidian's
+ * plugin-owned classes only (tag-curator-*); Obsidian's
  * .tag-pane-tag base class is never styled destructively. The observer
  * (tagPaneObserver.ts) toggles these classes on the rows; without these
  * rules the class is inert and the tag pane silently never hides.
@@ -1959,7 +1959,7 @@ settings:
   display: none !important;
 }
 
-/* Flag (preview mode): a Tag-Curator-owned highlight so the user can see
+/* Flag (preview mode): a plugin-owned highlight so the user can see
  * which rows a rule would hide, without actually hiding them. */
 .tag-pane-tag.tag-curator-flagged {
   background: var(--tag-curator-flag-bg);

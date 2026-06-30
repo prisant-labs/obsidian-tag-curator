@@ -1,7 +1,7 @@
 import { RuleAttribution, TagMeta } from '../types';
 import { DecorationMode, ObservedRow, ObserverBase } from './observerBase';
 
-// Tag-Curator-owned decoration. These never collide with NN's nn-* namespace
+// plugin-owned decoration. These never collide with NN's nn-* namespace
 // and are the only classes/attrs this observer adds or removes.
 const HIDDEN_CLASS = 'tc-nn-hidden';
 const FLAG_CLASS = 'tc-nn-flagged';

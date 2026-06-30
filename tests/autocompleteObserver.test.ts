@@ -5,7 +5,7 @@ import { Plugin } from 'obsidian';
 import { AutocompleteObserver } from '../src/observers/autocompleteObserver';
 import { Rule, TagMeta } from '../src/types';
 
-// Tag-Curator-namespaced decoration for the autocomplete scope. Distinct from
+// plugin-namespaced decoration for the autocomplete scope. Distinct from
 // tag-pane (tag-curator-*), NN (tc-nn-*), and Properties (tc-prop-*).
 const HIDDEN_CLASS = 'tc-ac-hidden';
 const FLAG_CLASS = 'tc-ac-flagged';

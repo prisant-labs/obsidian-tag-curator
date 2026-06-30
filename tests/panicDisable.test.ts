@@ -6,7 +6,7 @@ import { panicCleanup } from '../src/ui/panicDisable';
 /**
  * Locks the "panic clears everything across all scopes" contract (Phase 10).
  *
- * Tag Curator owns four decoration namespaces - the core tag pane
+ * Tag Visibility owns four decoration namespaces - the core tag pane
  * (tag-curator-*), Notebook Navigator (tc-nn-*), Properties (tc-prop-*), and the
  * editor autocomplete (tc-ac-*). panicCleanup(document) must strip EVERY scope's
  * classes AND data-*-rule attrs, plus the aria-hidden each decoration sets, so a

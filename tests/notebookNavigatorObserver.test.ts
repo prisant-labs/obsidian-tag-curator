@@ -5,7 +5,7 @@ import { Plugin, View, WorkspaceLeaf } from 'obsidian';
 import { NotebookNavigatorObserver } from '../src/observers/notebookNavigatorObserver';
 import { Rule, TagMeta } from '../src/types';
 
-// Tag-Curator-namespaced decoration classes / marker. Never nn-*.
+// plugin-namespaced decoration classes / marker. Never nn-*.
 const HIDDEN_CLASS = 'tc-nn-hidden';
 const FLAG_CLASS = 'tc-nn-flagged';
 const RULE_ATTR = 'data-tc-nn-rule';
