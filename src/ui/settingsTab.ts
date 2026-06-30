@@ -40,7 +40,7 @@ export class TagCuratorSettingTab extends PluginSettingTab {
   private curateOffSettings: (() => void) | null = null;
   private curateMetaRef: EventRef | null = null;
   private ruleEditor: RuleEditor | null = null;
-  // The rule id the Curate Tags table is filtered to (null = all tags). Driven
+  // The rule id the All Tags table is filtered to (null = all tags). Driven
   // by the "Filter by rule" selector and by a Presets deep-link (3-1).
   private curateRuleFilter: string | null = null;
   // Set by a Presets "N tags affected" click just before switching tabs;
@@ -133,7 +133,7 @@ export class TagCuratorSettingTab extends PluginSettingTab {
 
     return [
       { id: 'general', label: 'General', render: (p) => this.renderGeneral(p) },
-      { id: 'curate', label: 'Curate Tags', render: (p) => this.renderCurate(p) },
+      { id: 'curate', label: 'All Tags', render: (p) => this.renderCurate(p) },
       {
         id: 'scopes',
         label: 'Scopes & integrations',
@@ -207,7 +207,7 @@ export class TagCuratorSettingTab extends PluginSettingTab {
     new Setting(panel)
       .setName('Enable Tag Visibility pane')
       .setDesc(
-        'Also surface curation as a dockable sidebar pane you can keep open beside the native tag pane. Curation always lives in the Curate Tags tab; this adds the docked option.',
+        'Also surface the tag list as a dockable sidebar pane you can keep open beside the native tag pane. The list always lives in the All Tags tab; this adds the docked option.',
       )
       .addToggle((t) =>
         t.setValue(s.paneEnabled).onChange(async (v) => {
@@ -265,7 +265,7 @@ export class TagCuratorSettingTab extends PluginSettingTab {
   }
 
   // -----------------------------------------------------------------
-  // Curate Tags - always-Manage grid
+  // All Tags - always-Manage grid
   // -----------------------------------------------------------------
 
   private renderCurate(panel: HTMLElement): void {
@@ -337,7 +337,7 @@ export class TagCuratorSettingTab extends PluginSettingTab {
 
     new Setting(panel)
       .setName('Tag pane')
-      .setDesc("Hide and flag curated tags in Obsidian's native tag pane.")
+      .setDesc("Hide and flag matched tags in Obsidian's native tag pane.")
       .addToggle((t) =>
         t
           .setValue(this.plugin.settingsManager.isScopeEnabled('tag-pane'))
@@ -348,7 +348,7 @@ export class TagCuratorSettingTab extends PluginSettingTab {
 
     new Setting(panel)
       .setName('Properties panel')
-      .setDesc('Curate frontmatter tags shown in the Properties panel.')
+      .setDesc('Hide and flag frontmatter tags shown in the Properties panel.')
       .addToggle((t) =>
         t
           .setValue(this.plugin.settingsManager.isScopeEnabled('properties'))
@@ -359,7 +359,7 @@ export class TagCuratorSettingTab extends PluginSettingTab {
 
     new Setting(panel)
       .setName('Autocomplete')
-      .setDesc('Hide curated tags from the editor tag suggestion list.')
+      .setDesc('Hide matched tags from the editor tag suggestion list.')
       .addToggle((t) =>
         t
           .setValue(this.plugin.settingsManager.isScopeEnabled('autocomplete'))
@@ -370,10 +370,10 @@ export class TagCuratorSettingTab extends PluginSettingTab {
 
     new Setting(panel).setName('Plugin integrations').setHeading();
 
-    // Notebook Navigator - a plugin surface Tag Visibility can curate; gated on detection.
+    // Notebook Navigator - a plugin surface Tag Visibility can control; gated on detection.
     const nnHandle = detectNotebookNavigator(this.app);
     const nnDisabled = nnHandle.status !== 'ready';
-    let nnDesc = 'Curate the Notebook Navigator tag tree (runtime-interop only).';
+    let nnDesc = 'Hide and flag in the Notebook Navigator tag tree (runtime-interop only).';
     if (nnHandle.status !== 'ready' && nnHandle.status !== 'absent') {
       nnDesc += ' Requires Notebook Navigator ' + MIN_API_VERSION + ' or newer.';
     }
@@ -528,12 +528,12 @@ export class TagCuratorSettingTab extends PluginSettingTab {
       const navigate = (e: Event): void => {
         e.preventDefault();
         // Only navigate when the preset is active: its rule is then in the
-        // engine, so the Curate Tags filter has tags to show. When off, the
+        // engine, so the All Tags filter has tags to show. When off, the
         // "would hide N tags" label is informational, not a link (3-1).
         if (!this.plugin.settingsManager.get().enabledPresets.includes(preset.id)) {
           return;
         }
-        // Stay inside Settings: jump to the Curate Tags tab pre-filtered to this
+        // Stay inside Settings: jump to the All Tags tab pre-filtered to this
         // preset instead of opening the pane behind the Settings window.
         this.pendingRuleFilter = preset.id;
         this.activeTab = 'curate';
@@ -745,15 +745,15 @@ export class TagCuratorSettingTab extends PluginSettingTab {
     new Setting(panel).setName('About').setHeading();
     new Setting(panel)
       .setName('Tag Visibility ' + this.plugin.manifest.version)
-      .setDesc('Display-only, file-safe, fully reversible tag curation.')
+      .setDesc('Display-only, file-safe, fully reversible tag visibility.')
       .addButton((b) =>
         b.setButtonText('GitHub').onClick(() => {
-          window.open('https://github.com/prisant-labs/obsidian-tag-curator');
+          window.open('https://github.com/prisant-labs/obsidian-tag-visibility');
         }),
       )
       .addButton((b) =>
         b.setButtonText('Report an issue').onClick(() => {
-          window.open('https://github.com/prisant-labs/obsidian-tag-curator/issues/new');
+          window.open('https://github.com/prisant-labs/obsidian-tag-visibility/issues/new');
         }),
       );
   }
@@ -813,7 +813,7 @@ export class TagCuratorSettingTab extends PluginSettingTab {
     new Setting(panel)
       .setName('Mode')
       .setDesc(
-        'How Tag Visibility filters tags. Default (hide matched) is the only mode today; allow-only and inbox curation are planned.',
+        'How Tag Visibility filters tags. Default (hide matched) is the only mode today; allow-only and inbox modes are planned.',
       )
       .addDropdown((d) => {
         // Only Default is implemented. Offering allow-only/inbox here would let a

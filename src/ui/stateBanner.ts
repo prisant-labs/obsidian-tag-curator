@@ -65,7 +65,7 @@ export class StateBanner {
     } else {
       msg.createEl('strong', { text: 'Tag Visibility is off. ' });
       msg.appendText(
-        'No tags are being curated. Re-enable to apply your rules again. Nothing in your notes is ever changed.',
+        'No tags are being hidden or flagged. Re-enable to apply your rules again. Nothing in your notes is ever changed.',
       );
       action.setText('Turn on');
       action.addEventListener('click', () => {

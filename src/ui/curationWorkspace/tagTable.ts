@@ -91,7 +91,7 @@ const ALL_COLS: ColDef[] = [
     label: 'Source',
     sortKey: 'source',
     optional: 'source',
-    tip: 'Where the tag is written: inline (#tag in the body), frontmatter (a YAML property), or both. Not the same as a curation scope.',
+    tip: 'Where the tag is written: inline (#tag in the body), frontmatter (a YAML property), or both. Not the same as a visibility scope.',
   },
   {
     id: 'visible',
@@ -119,7 +119,7 @@ const OPTIONAL_COLS: Array<[keyof TableColumnPrefs, string]> = [
 
 const DEFAULT_COLS: TableColumnPrefs = { lastSeen: true, source: true, rule: true };
 
-/** Optional Filter-by-rule dropdown config (the settings Curate Tags tab passes it). */
+/** Optional Filter-by-rule dropdown config (the settings All Tags tab passes it). */
 export interface RuleFilterConfig {
   options: Array<{ id: string; name: string }>;
   current: string | null;

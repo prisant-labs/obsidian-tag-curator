@@ -64,7 +64,7 @@ export interface TableColumnPrefs {
 
 /**
  * The two surfaces that host the tag table. Column visibility is kept
- * independently per surface (a narrow docked pane and the wide Curate Tags
+ * independently per surface (a narrow docked pane and the wide All Tags
  * settings tab want different column sets - item 8a).
  */
 export type TableSurface = 'pane' | 'settings';
@@ -110,7 +110,7 @@ export interface TagCuratorSettings {
   // user is not nagged on every load when NN is below MIN_API_VERSION.
   seenNnTooOldNotice: boolean;
   // Whether the dockable Tag Visibility Pane is available (opt-in surface). Curation
-  // always lives in the Curate Tags settings tab; this only governs the sidebar
+  // always lives in the All Tags settings tab; this only governs the sidebar
   // leaf, its ribbon icon, and the open-pane commands. Schema v6 added this.
   paneEnabled: boolean;
   // Which optional tag-table columns are visible (2-5), kept independently per
@@ -139,7 +139,7 @@ export const DEFAULT_SETTINGS: TagCuratorSettings = {
   seenNnTooOldNotice: false,
   paneEnabled: true,
   // The narrow docked pane opens lean - tag / count / visibility only (item 3) -
-  // while the wide Curate Tags settings tab shows every column.
+  // while the wide All Tags settings tab shows every column.
   tableColumns: {
     pane: { lastSeen: false, source: false, rule: false },
     settings: { lastSeen: true, source: true, rule: true },

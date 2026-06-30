@@ -107,7 +107,7 @@ export default class TagCuratorPlugin extends Plugin {
     this.autocompleteObserver.init();
 
     // The legacy "Vault tags" TagListView (D-012) was retired pre-1.0: the
-    // Curation Workspace pane plus the Curate Tags settings tab are the single
+    // Curation Workspace pane plus the All Tags settings tab are the single
     // tag-surface family, so the old leaf no longer registers or opens.
     this.registerView(
       CURATION_VIEW_TYPE,

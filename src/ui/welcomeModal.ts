@@ -6,7 +6,7 @@
  *   - Safety promises strip (left-aligned check rows, no centered chunks)
  *   - Two preset cards with toggles (default presets, can be untoggled before start)
  *   - Detected integrations as per-plugin cards with state pills + bullets
- *   - Footer: "Start curating" (primary) + "Start in preview mode" (secondary)
+ *   - Footer: "Start hiding tags" (primary) + "Start in preview mode" (secondary)
  *
  * Plugin integration detection: v0.1 ships a hardcoded card set; full detection
  * via app.plugins.enabledPlugins is B004 (v0.2). For v0.1 we DO detect known
@@ -120,7 +120,7 @@ export class WelcomeModal extends Modal {
     previewBtn.addEventListener('click', () => this.finish('preview'));
     const startBtn = foot.createEl('button', {
       cls: 'tcw-btn tcw-btn-accent',
-      text: 'Start curating',
+      text: 'Start hiding tags',
     });
     startBtn.addEventListener('click', () => this.finish('curating'));
   }
