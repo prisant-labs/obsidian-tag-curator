@@ -136,6 +136,82 @@ describe('TagMetaManager.scanAll + load', () => {
   });
 });
 
+describe('TagMetaManager.scanAll rebuild (P1-03)', () => {
+  it('drops tags from a stale sidecar that no current file contains', async () => {
+    const app = makeApp();
+    const plugin = makePlugin();
+    // Sidecar on disk carries a stale tag absent from every current file.
+    await app.vault.adapter.write(
+      '.obsidian/plugins/tag-curator/tags.json',
+      JSON.stringify({
+        schemaVersion: 1,
+        tags: {
+          obsolete: { tag: 'obsolete', firstSeen: 1, lastSeen: 1, count: 3, sources: ['inline'] },
+          kept: { tag: 'kept', firstSeen: 1, lastSeen: 1, count: 1, sources: ['inline'] },
+        },
+      }),
+    );
+    addFile(app, 'a.md', ['kept']);
+
+    const mgr = new TagMetaManager(app as never, plugin);
+    await mgr.load();
+    expect(mgr.get('obsolete')).toBeDefined();
+
+    await mgr.scanAll();
+
+    expect(mgr.get('obsolete')).toBeUndefined();
+    expect(mgr.get('kept')?.count).toBe(1);
+  });
+
+  it('preserves user-owned fields and firstSeen for surviving tags across a rescan', async () => {
+    const app = makeApp();
+    const plugin = makePlugin();
+    await app.vault.adapter.write(
+      '.obsidian/plugins/tag-curator/tags.json',
+      JSON.stringify({
+        schemaVersion: 1,
+        tags: {
+          kept: {
+            tag: 'kept',
+            firstSeen: 111,
+            lastSeen: 111,
+            count: 1,
+            sources: ['inline'],
+            reviewed: true,
+            description: 'my note',
+            aliases: ['kept-alias'],
+          },
+        },
+      }),
+    );
+    addFile(app, 'a.md', ['kept']);
+
+    const mgr = new TagMetaManager(app as never, plugin);
+    await mgr.load();
+    await mgr.scanAll();
+
+    const meta = mgr.get('kept');
+    expect(meta?.reviewed).toBe(true);
+    expect(meta?.firstSeen).toBe(111);
+    expect(meta?.description).toBe('my note');
+    expect(meta?.aliases).toEqual(['kept-alias']);
+  });
+
+  it('emits exactly one changed event for a full scan', async () => {
+    const app = makeApp();
+    addFile(app, 'a.md', ['x']);
+    addFile(app, 'b.md', ['y', 'z']);
+    const mgr = new TagMetaManager(app as never, makePlugin());
+    let fired = 0;
+    mgr.on('changed', () => {
+      fired += 1;
+    });
+
+    await mgr.scanAll();
+    expect(fired).toBe(1);
+  });
+});
+
 describe('TagMetaManager.indexFile', () => {
   it('records first/last seen timestamps and sources', async () => {
     const app = makeApp();

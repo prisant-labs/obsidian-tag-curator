@@ -53,15 +53,70 @@ export class TagMetaManager extends Events {
     }
   }
 
+  /**
+   * Full reindex: rebuild a fresh aggregate from the CURRENT vault, then swap it
+   * in. Unlike the incremental `indexFile` path, this rebuilds from nothing, so
+   * tags persisted in `tags.json` but no longer present in any file are dropped.
+   * The incremental path cannot see those: it only reconciles a file's own
+   * previous-vs-current tags, and after a fresh `load()` the `fileTags` map is
+   * empty, so a stale sidecar tag is in no file's previous set and never
+   * recomputed to zero. Durable user-owned fields (`firstSeen`, `description`,
+   * `aliases`, `reviewed`) are carried over for surviving tags; `count`,
+   * `sources`, and `lastSeen` are recomputed from current state. Fires a single
+   * `changed` after the swap (not one per file).
+   */
   async scanAll(): Promise<void> {
     const files = this.app.vault.getMarkdownFiles();
+    const previousStore = this.store;
+    const freshStore = new Map<string, TagMeta>();
+    const freshFileTags = new Map<string, Set<string>>();
+    const now = Date.now();
+
     for (const file of files) {
-      this.indexFile(file);
+      const { currentTags, sourcesByTag } = this.readFileTags(file);
+      freshFileTags.set(file.path, currentTags);
+      for (const tag of currentTags) {
+        const sources = sourcesByTag.get(tag) ?? ['frontmatter'];
+        const existing = freshStore.get(tag);
+        if (existing) {
+          existing.count += 1;
+          for (const source of sources) {
+            if (!existing.sources.includes(source)) existing.sources.push(source);
+          }
+        } else {
+          const prior = previousStore.get(tag);
+          const meta: TagMeta = {
+            tag,
+            firstSeen: prior?.firstSeen ?? now,
+            lastSeen: now,
+            count: 1,
+            sources: [...sources],
+          };
+          // Carry user-owned fields forward; never reset them on a reindex.
+          if (prior?.description !== undefined) meta.description = prior.description;
+          if (prior?.aliases !== undefined) meta.aliases = prior.aliases;
+          if (prior?.reviewed !== undefined) meta.reviewed = prior.reviewed;
+          freshStore.set(tag, meta);
+        }
+      }
     }
+
+    this.store = freshStore;
+    this.fileTags = freshFileTags;
     await this.flushNow();
+    this.trigger('changed');
   }
 
-  indexFile(file: TFile): void {
+  /**
+   * Read a file's tags from the metadata cache: the file's tag set plus each
+   * tag's source locations (inline body, frontmatter, or both). Shared by the
+   * incremental `indexFile` path and the bulk `scanAll` rebuild so both read the
+   * cache identically. Tag keys carry no leading '#'.
+   */
+  private readFileTags(file: TFile): {
+    currentTags: Set<string>;
+    sourcesByTag: Map<string, TagSource[]>;
+  } {
     const cache = this.app.metadataCache.getFileCache(file);
     const inlineTags = (cache?.tags ?? []).map((t) => t.tag);
     const allTags = tagsFromCache(cache);
@@ -70,20 +125,31 @@ export class TagMetaManager extends Events {
     const frontmatterSet = new Set<string>();
     if (typeof fm === 'string') frontmatterSet.add(fm);
     else if (Array.isArray(fm)) for (const t of fm) frontmatterSet.add(t);
-    const now = Date.now();
 
-    const previousTags = this.fileTags.get(file.path) ?? new Set<string>();
     const currentTags = new Set<string>(allTags);
-    this.fileTags.set(file.path, currentTags);
-
+    const sourcesByTag = new Map<string, TagSource[]>();
     for (const tag of currentTags) {
-      // A tag may appear in BOTH inline body and frontmatter; record each
-      // source so the sidecar's `sources` field reflects every location.
+      // A tag may appear in BOTH inline body and frontmatter; record each source
+      // so the sidecar's `sources` field reflects every location.
       const seen: TagSource[] = [];
       if (inlineSet.has(tag)) seen.push('inline');
       if (frontmatterSet.has(tag)) seen.push('frontmatter');
-      if (seen.length === 0) seen.push('frontmatter'); // fallback: came via cache but neither set
-      for (const source of seen) this.touchTag(tag, source, now);
+      if (seen.length === 0) seen.push('frontmatter'); // via cache but neither set
+      sourcesByTag.set(tag, seen);
+    }
+    return { currentTags, sourcesByTag };
+  }
+
+  indexFile(file: TFile): void {
+    const now = Date.now();
+    const { currentTags, sourcesByTag } = this.readFileTags(file);
+    const previousTags = this.fileTags.get(file.path) ?? new Set<string>();
+    this.fileTags.set(file.path, currentTags);
+
+    for (const tag of currentTags) {
+      for (const source of sourcesByTag.get(tag) ?? ['frontmatter']) {
+        this.touchTag(tag, source, now);
+      }
     }
     for (const tag of previousTags) {
       if (!currentTags.has(tag)) this.recomputeCount(tag);
