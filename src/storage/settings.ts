@@ -58,6 +58,11 @@ export class SettingsManager {
   private plugin: Plugin;
   private settings: TagCuratorSettings = { ...DEFAULT_SETTINGS };
   private listeners: Array<() => void> = [];
+  // True when the loaded data.json carries a schemaVersion newer than this build.
+  // While set, persist() is a no-op: writing our older shape back would downgrade
+  // schemaVersion and could corrupt fields a newer version reshaped. Re-evaluated
+  // on every load()/reload().
+  private futureSchema = false;
 
   constructor(plugin: Plugin) {
     this.plugin = plugin;
@@ -66,9 +71,19 @@ export class SettingsManager {
   async load(): Promise<void> {
     const raw = ((await this.plugin.loadData()) ?? {}) as LegacyV0Settings;
     const incomingVersion = (raw.schemaVersion ?? 0) as number;
+    this.futureSchema = incomingVersion > SCHEMA_VERSION;
     this.settings = this.migrate(raw);
-    // Only persist when migrating UP. Reading a future-version file with an
-    // older plugin must not overwrite the on-disk data with downgraded shape.
+    if (this.futureSchema) {
+      // Newer plugin wrote this vault. Run read-only so no write downgrades it;
+      // warn once so a confused user/dev knows why settings will not save.
+      console.warn(
+        `[tag-visibility] data.json is schema v${incomingVersion}, newer than this ` +
+          `plugin (v${SCHEMA_VERSION}). Running read-only; setting changes will not be ` +
+          `saved until the plugin is updated.`,
+      );
+      return;
+    }
+    // Only persist when migrating UP; a current-version file needs no rewrite.
     if (incomingVersion < SCHEMA_VERSION) {
       await this.persist();
     }
@@ -81,7 +96,10 @@ export class SettingsManager {
     const merged: TagCuratorSettings = {
       ...DEFAULT_SETTINGS,
       ...base,
-      schemaVersion: SCHEMA_VERSION,
+      // Never lower the recorded version: a future file keeps its own version in
+      // memory so an accidental write could not silently downgrade it (persist()
+      // also blocks writes for future files; this is belt and suspenders).
+      schemaVersion: Math.max(inferred, SCHEMA_VERSION),
       customRules: Array.isArray(raw.rules)
         ? raw.rules
         : Array.isArray(base.customRules)
@@ -163,6 +181,13 @@ export class SettingsManager {
   }
 
   private async persist(): Promise<void> {
+    if (this.futureSchema) {
+      // Read-only: the on-disk data was written by a newer plugin version.
+      // Writing our older shape back would downgrade schemaVersion and could
+      // corrupt fields a newer version reshaped. Keep the in-memory change for
+      // this session but never touch disk.
+      return;
+    }
     await this.plugin.saveData(this.settings);
     for (const cb of this.listeners) cb();
   }

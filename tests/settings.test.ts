@@ -345,6 +345,42 @@ describe('SettingsManager.load - v3 to v4 migration (overrides)', () => {
   });
 });
 
+describe('SettingsManager future-schema write guard (P2-08)', () => {
+  it('a setter does not downgrade or rewrite a future-version file', async () => {
+    const future = {
+      ...DEFAULT_SETTINGS,
+      schemaVersion: SCHEMA_VERSION + 5,
+      enabled: true,
+      futureField: { kept: true } as unknown,
+    };
+    const plugin = pluginWith(future);
+    const mgr = new SettingsManager(plugin);
+    await mgr.load();
+
+    // The user toggles something while running an OLDER plugin against NEWER data.
+    await mgr.setEnabled(false);
+
+    const onDisk = plugin.data as {
+      schemaVersion: number;
+      enabled: boolean;
+      futureField?: { kept: boolean };
+    };
+    // On-disk file untouched: same future version, future field intact, and the
+    // older plugin's downgraded write never landed.
+    expect(onDisk.schemaVersion).toBe(SCHEMA_VERSION + 5);
+    expect(onDisk.futureField).toEqual({ kept: true });
+    expect(onDisk.enabled).toBe(true);
+  });
+
+  it('still persists writes normally for a current-version file', async () => {
+    const plugin = pluginWith({ ...DEFAULT_SETTINGS, schemaVersion: SCHEMA_VERSION });
+    const mgr = new SettingsManager(plugin);
+    await mgr.load();
+    await mgr.setEnabled(false);
+    expect((plugin.data as { enabled: boolean }).enabled).toBe(false);
+  });
+});
+
 describe('SettingsManager.load - v4 to v5 migration (per-scope enable + NN notice)', () => {
   // A v4 fixture must NOT carry the v5 fields, so we build it from DEFAULT_SETTINGS
   // and explicitly strip the fields v5 introduces; otherwise the defaults would
