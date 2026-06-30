@@ -63,6 +63,10 @@ export class SettingsManager {
   // schemaVersion and could corrupt fields a newer version reshaped. Re-evaluated
   // on every load()/reload().
   private futureSchema = false;
+  // The schemaVersion read from disk this load (before migration). Used to detect
+  // the one-time upgrade across the v10 boundary, where reviewed state moved into
+  // durable settings - see shouldLiftLegacyReviewed. Re-evaluated every load.
+  private incomingVersion = SCHEMA_VERSION;
 
   constructor(plugin: Plugin) {
     this.plugin = plugin;
@@ -71,6 +75,7 @@ export class SettingsManager {
   async load(): Promise<void> {
     const raw = ((await this.plugin.loadData()) ?? {}) as LegacyV0Settings;
     const incomingVersion = (raw.schemaVersion ?? 0) as number;
+    this.incomingVersion = incomingVersion;
     this.futureSchema = incomingVersion > SCHEMA_VERSION;
     this.settings = this.migrate(raw);
     if (this.futureSchema) {
@@ -338,6 +343,17 @@ export class SettingsManager {
     }
     this.settings.reviewedTags = next;
     await this.persist(false);
+  }
+
+  /**
+   * Whether this load migrated the vault up across the v10 boundary, where reviewed
+   * state moved from the tags.json sidecar into durable settings (P2-09).
+   * TagMetaManager lifts a v1 sidecar's inline reviewed flags only when this is
+   * true, so a v1 sidecar that reappears later (sync, backup restore) on an
+   * already-migrated vault cannot re-lift and clobber intentional un-reviews.
+   */
+  shouldLiftLegacyReviewed(): boolean {
+    return this.incomingVersion < 10;
   }
 
   onChange(cb: () => void): () => void {

@@ -58,7 +58,10 @@ function makePlugin(): Plugin {
 }
 
 // A stand-in for the durable reviewed store (SettingsManager in production).
-function fakeReviewedStore(initial: Record<string, true> = {}) {
+function fakeReviewedStore(
+  initial: Record<string, true> = {},
+  opts: { shouldLift?: boolean } = {},
+) {
   const map: Record<string, true> = { ...initial };
   return {
     map,
@@ -69,6 +72,9 @@ function fakeReviewedStore(initial: Record<string, true> = {}) {
         else delete map[t];
       }
     },
+    // True only on the load that migrated this vault across the v10 boundary;
+    // defaults true so the legacy-lift test exercises the lift.
+    shouldLiftLegacyReviewed: () => opts.shouldLift ?? true,
   };
 }
 
@@ -631,5 +637,36 @@ describe('TagMetaManager reviewed durability (P2-09)', () => {
     mgr.indexFile(file); // re-enters via the incremental path, not load/scanAll
 
     expect(mgr.get('done')?.reviewed).toBe(true);
+  });
+
+  it('does not re-lift a reappearing v1 sidecar after migration (preserves un-reviews)', async () => {
+    const app = makeApp();
+    const plugin = makePlugin();
+    // A v1 sidecar reappears (e.g. synced from a device still on the old plugin)
+    // marking #inbox reviewed - but the user already un-reviewed it (durable empty)
+    // and settings has migrated past v10, so shouldLift is false.
+    await app.vault.adapter.write(
+      '.obsidian/plugins/tag-curator/tags.json',
+      JSON.stringify({
+        schemaVersion: 1,
+        tags: {
+          inbox: {
+            tag: 'inbox',
+            firstSeen: 1,
+            lastSeen: 1,
+            count: 1,
+            sources: ['inline'],
+            reviewed: true,
+          },
+        },
+      }),
+    );
+    const store = fakeReviewedStore({}, { shouldLift: false });
+    const mgr = new TagMetaManager(app as never, plugin, store as never);
+    await mgr.load();
+
+    // The un-review survives: the reappearing v1 sidecar did not re-lift inbox.
+    expect(store.isReviewed('inbox')).toBe(false);
+    expect(mgr.get('inbox')?.reviewed).toBe(false);
   });
 });

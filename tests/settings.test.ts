@@ -448,6 +448,18 @@ describe('SettingsManager reviewed tags (P2-09 durable store)', () => {
     expect(mgr.get().schemaVersion).toBe(SCHEMA_VERSION);
     expect(mgr.getReviewedTags()).toEqual({});
   });
+
+  it('shouldLiftLegacyReviewed is true only when migrating up across the v10 boundary', async () => {
+    const upgrading = new SettingsManager(pluginWith({ ...DEFAULT_SETTINGS, schemaVersion: 9 }));
+    await upgrading.load();
+    expect(upgrading.shouldLiftLegacyReviewed()).toBe(true);
+
+    const current = new SettingsManager(
+      pluginWith({ ...DEFAULT_SETTINGS, schemaVersion: SCHEMA_VERSION }),
+    );
+    await current.load();
+    expect(current.shouldLiftLegacyReviewed()).toBe(false);
+  });
 });
 
 describe('SettingsManager.load - v4 to v5 migration (per-scope enable + NN notice)', () => {

@@ -16,6 +16,9 @@ interface PersistedTagMeta {
 export interface ReviewedStore {
   isReviewed(tag: string): boolean;
   setReviewedTags(tags: string[], value: boolean): void | Promise<void>;
+  // True only on the load that migrated this vault across the v10 boundary, where
+  // reviewed moved into durable settings. Gates the one-time legacy lift below.
+  shouldLiftLegacyReviewed(): boolean;
 }
 
 // v2: reviewed is no longer written into the sidecar (it lives in durable settings
@@ -66,9 +69,15 @@ export class TagMetaManager extends Events {
         return;
       }
       this.store = new Map(Object.entries(parsed.tags ?? {}));
-      // One-time lift: pull a v1 sidecar's inline reviewed flags into the durable
-      // store before they would be dropped (the sidecar is rewritten as v2).
-      if (parsed.schemaVersion === 1) this.liftLegacyReviewed();
+      // One-time lift of a v1 sidecar's inline reviewed flags into durable
+      // settings - but ONLY on the load that migrated the vault across the v10
+      // boundary (shouldLiftLegacyReviewed). A v1 sidecar that reappears later
+      // (synced from a device still on the old plugin, or a backup restore) on an
+      // already-migrated vault must not re-lift: that would overwrite tags the
+      // user has since un-reviewed.
+      if (parsed.schemaVersion === 1 && this.reviewed?.shouldLiftLegacyReviewed()) {
+        await this.liftLegacyReviewed();
+      }
       // Durable settings is authoritative for reviewed; mirror it onto the store.
       this.hydrateReviewed();
     } catch (e) {
@@ -259,15 +268,16 @@ export class TagMetaManager extends Events {
   }
 
   /**
-   * Pull a v1 sidecar's inline reviewed flags into the durable store, once.
-   * Idempotent (re-marking the same tags true is a no-op), so a restored v1
-   * sidecar re-lifts safely.
+   * Pull a v1 sidecar's inline reviewed flags into the durable store. Awaited so
+   * the durable write completes before the caller hydrates the mirror. The caller
+   * gates this on the one-time v10 upgrade (shouldLiftLegacyReviewed), so it does
+   * not re-run for a v1 sidecar that reappears after migration.
    */
-  private liftLegacyReviewed(): void {
+  private async liftLegacyReviewed(): Promise<void> {
     if (!this.reviewed) return;
     const toLift: string[] = [];
     for (const meta of this.store.values()) if (meta.reviewed) toLift.push(meta.tag);
-    if (toLift.length) void this.reviewed.setReviewedTags(toLift, true);
+    if (toLift.length) await this.reviewed.setReviewedTags(toLift, true);
   }
 
   /** Mirror durable reviewed state onto the in-memory store (settings is the source). */
