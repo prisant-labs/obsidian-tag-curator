@@ -379,6 +379,24 @@ describe('SettingsManager future-schema write guard (P2-08)', () => {
     await mgr.setEnabled(false);
     expect((plugin.data as { enabled: boolean }).enabled).toBe(false);
   });
+
+  it('still notifies listeners on an in-memory change in future-schema mode', async () => {
+    const plugin = pluginWith({ ...DEFAULT_SETTINGS, schemaVersion: SCHEMA_VERSION + 5 });
+    const mgr = new SettingsManager(plugin);
+    await mgr.load();
+    let fired = 0;
+    mgr.onChange(() => {
+      fired += 1;
+    });
+
+    await mgr.setEnabled(false);
+
+    // Disk is not written (read-only), but listeners still fire so the in-memory
+    // change reaches the observers/status bar for this session instead of the
+    // toggle appearing dead.
+    expect(fired).toBe(1);
+    expect(mgr.get().enabled).toBe(false);
+  });
 });
 
 describe('SettingsManager reviewed tags (P2-09 durable store)', () => {

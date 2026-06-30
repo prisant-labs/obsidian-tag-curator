@@ -194,14 +194,14 @@ export class SettingsManager {
   }
 
   private async persist(notify = true): Promise<void> {
-    if (this.futureSchema) {
-      // Read-only: the on-disk data was written by a newer plugin version.
-      // Writing our older shape back would downgrade schemaVersion and could
-      // corrupt fields a newer version reshaped. Keep the in-memory change for
-      // this session but never touch disk.
-      return;
+    // Skip only the disk write when the on-disk data was written by a newer plugin
+    // version: persisting our older shape would downgrade schemaVersion and could
+    // corrupt fields a newer version reshaped. Listeners STILL fire so the
+    // in-memory change reaches the observers/status bar for this session - else a
+    // toggle in read-only mode would mutate state but never repaint, appearing dead.
+    if (!this.futureSchema) {
+      await this.plugin.saveData(this.settings);
     }
-    await this.plugin.saveData(this.settings);
     if (notify) for (const cb of this.listeners) cb();
   }
 
