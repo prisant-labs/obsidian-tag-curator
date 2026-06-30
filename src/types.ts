@@ -99,7 +99,6 @@ export interface TagCuratorSettings {
   // reuse this field for properties / autocomplete / the Settings Scopes section.
   scopeEnabled: Record<string, boolean>;
   previewMode: boolean;
-  debugLog: boolean;
   sidecarDebounceMs: number;
   // First-run welcome modal (D-008). False on a fresh install, true once dismissed.
   // Schema v3 added this; migration from v2 defaults it to false (so existing BRAT
@@ -144,7 +143,6 @@ export const DEFAULT_SETTINGS: TagCuratorSettings = {
     pane: { lastSeen: false, source: false, rule: false },
     settings: { lastSeen: true, source: true, rule: true },
   },
-  debugLog: false,
   sidecarDebounceMs: 5000,
 };
 

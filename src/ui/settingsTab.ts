@@ -803,16 +803,6 @@ export class TagCuratorSettingTab extends PluginSettingTab {
         });
       });
 
-    new Setting(panel).setName('Troubleshooting').setHeading();
-    new Setting(panel)
-      .setName('Debug logging')
-      .setDesc('Verbose console output for troubleshooting.')
-      .addToggle((t) =>
-        t.setValue(s.debugLog).onChange(async (v) => {
-          await this.plugin.settingsManager.update({ debugLog: v });
-        }),
-      );
-
     new Setting(panel).setName('Mode (advanced)').setHeading();
     new Setting(panel)
       .setName('Mode')
