@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { RuleEngine } from '../src/engine/ruleEngine';
-import { Rule, TagMeta, TagOverride } from '../src/types';
+import { Action, Rule, TagMeta, TagOverride } from '../src/types';
 
 function rule(overrides: Partial<Rule> = {}): Rule {
   return {
@@ -229,5 +229,44 @@ describe('RuleEngine.countCurated (status-bar count, scope-independent)', () => 
 
   it('returns 0 for an empty metadata map', () => {
     expect(RuleEngine.countCurated(new Map(), [rule()], {})).toBe(0);
+  });
+});
+
+describe('RuleEngine.resolveDecoration (single hidden/flagged/marked decision)', () => {
+  it('returns null when nothing matches (shown)', () => {
+    expect(RuleEngine.resolveDecoration(null, false)).toBeNull();
+    expect(RuleEngine.resolveDecoration(null, true)).toBeNull();
+  });
+
+  it('returns null for an always-show override in both modes (kept visible)', () => {
+    const eff = RuleEngine.resolveVisibility('t', undefined, [], { t: 'show' }).effective;
+    expect(RuleEngine.resolveDecoration(eff, false)).toBeNull();
+    expect(RuleEngine.resolveDecoration(eff, true)).toBeNull();
+  });
+
+  it('marks a flag-action match in both modes (preview-independent)', () => {
+    const eff = RuleEngine.getRuleAttribution('t', undefined, [rule({ action: 'flag' })]).effective;
+    expect(RuleEngine.resolveDecoration(eff, false)).toBe('marked');
+    expect(RuleEngine.resolveDecoration(eff, true)).toBe('marked');
+  });
+
+  it('hides a hide-action match normally and flags it in preview', () => {
+    const eff = RuleEngine.getRuleAttribution('t', undefined, [rule({ action: 'hide' })]).effective;
+    expect(RuleEngine.resolveDecoration(eff, false)).toBe('hidden');
+    expect(RuleEngine.resolveDecoration(eff, true)).toBe('flagged');
+  });
+
+  it('degrades a deferred show-only / group action to the hide branch', () => {
+    for (const action of ['show-only', 'group'] as Action[]) {
+      const eff = RuleEngine.getRuleAttribution('t', undefined, [rule({ action })]).effective;
+      expect(RuleEngine.resolveDecoration(eff, false)).toBe('hidden');
+      expect(RuleEngine.resolveDecoration(eff, true)).toBe('flagged');
+    }
+  });
+
+  it('hides an always-hide override normally and flags it in preview', () => {
+    const eff = RuleEngine.resolveVisibility('t', undefined, [], { t: 'hide' }).effective;
+    expect(RuleEngine.resolveDecoration(eff, false)).toBe('hidden');
+    expect(RuleEngine.resolveDecoration(eff, true)).toBe('flagged');
   });
 });

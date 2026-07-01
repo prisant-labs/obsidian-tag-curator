@@ -14,6 +14,12 @@ import {
 import { TagMatcher } from './matchers';
 
 /**
+ * The single decoration decision for a resolved tag (null = shown). Consumed by
+ * the observers, the tag table, and the status-bar count so all three agree.
+ */
+export type Decoration = 'hidden' | 'flagged' | 'marked';
+
+/**
  * Build an AttributedMatch that represents a per-tag override (D-015) rather
  * than a rule. Carries the overrideReason discriminator so callers can tell the
  * effective reason is an always-show / always-hide pin, while still returning
@@ -185,6 +191,26 @@ export class RuleEngine {
    */
   static isEffectivelyHidden(effective: AttributedMatch | null): boolean {
     return effective !== null && effective.overrideReason !== 'always-show';
+  }
+
+  /**
+   * The single hidden/flagged/marked decision for a resolved tag; null = shown.
+   * - not effectively hidden (no match, or an always-show override) -> null
+   * - action 'flag' -> 'marked' (persistent, preview-independent)
+   * - otherwise (hide; deferred show-only / group degrade here) ->
+   *   'flagged' in preview mode, 'hidden' normally
+   *
+   * This is the one place the flag action lives: it replaces the duplicated
+   * `isEffectivelyHidden(...) ? (previewMode ? 'flagged' : 'hidden')` branch that
+   * ObserverBase, TagListModel, and the status-bar count each carried.
+   */
+  static resolveDecoration(
+    effective: AttributedMatch | null,
+    previewMode: boolean,
+  ): Decoration | null {
+    if (!RuleEngine.isEffectivelyHidden(effective)) return null;
+    if (effective!.action === 'flag') return 'marked';
+    return previewMode ? 'flagged' : 'hidden';
   }
 
   /**
