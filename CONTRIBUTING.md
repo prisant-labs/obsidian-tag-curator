@@ -33,7 +33,7 @@ Tag Visibility is **display-only**. It decorates how tags render by toggling CSS
 ## Testing your change in Obsidian
 
 1. `npm run build` (or leave `npm run dev` running).
-2. Copy `main.js`, `manifest.json`, and `styles.css` into your test vault at `.obsidian/plugins/tag-curator/` (the folder matches the manifest `id`).
+2. Copy `main.js`, `manifest.json`, and `styles.css` into your test vault at `.obsidian/plugins/tag-visibility/` (the folder matches the manifest `id`).
 3. Do a **full app reload** (`Ctrl+R` / `Cmd+R`). A plugin off/on toggle does not refresh injected CSS, so a CSS change needs a full reload.
 
 For an install-from-GitHub loop, [BRAT](https://github.com/TfTHacker/obsidian42-brat) works against tagged releases.
