@@ -1,6 +1,6 @@
 # Testing Guide
 
-How to verify Tag Visibility before tagging a release. The **v1.0 manual smoke matrix** below is the current gate; the detailed v0.1 checklist that follows it remains valid for the surfaces it covers (welcome modal, state banner, Settings tabs, rule editor, schema migrations, file safety) and is folded in by reference.
+How to verify Tag Visibility before tagging a release. The **v1.0 manual smoke matrix** below is the current gate. The detailed v0.1 checklist that follows it is retained as historical reference only: it predates the v1.0 UI, and its specifics (Settings tabs, commands, schema numbers, rule actions) are stale. Gate a release on the v1.0 matrix, not the v0.1 checklist.
 
 ## Local Testing Setup
 
@@ -17,8 +17,8 @@ How to verify Tag Visibility before tagging a release. The **v1.0 manual smoke m
 3. Build the plugin: `npm run build`
 4. Copy artifacts to the test vault:
    ```bash
-   mkdir -p /path/to/test-vault/.obsidian/plugins/obsidian-tag-visibility
-   cp main.js manifest.json styles.css /path/to/test-vault/.obsidian/plugins/obsidian-tag-visibility/
+   mkdir -p /path/to/test-vault/.obsidian/plugins/tag-visibility
+   cp main.js manifest.json styles.css /path/to/test-vault/.obsidian/plugins/tag-visibility/
    ```
 5. Reload plugins in Obsidian settings (toggle off and on)
 6. Enable Tag Visibility
@@ -31,16 +31,16 @@ How to verify Tag Visibility before tagging a release. The **v1.0 manual smoke m
 
 ## v1.0 manual BRAT smoke matrix
 
-Walk this before tagging v1.0. It is the current gate; the v0.1 checklist further down still applies to the surfaces it covers and is folded in by reference. Run on a real BRAT install (not just a local copy) so the release-asset path is exercised. Several cells need specific companions or content, noted inline.
+Walk this before tagging v1.0. It is the current gate. (The v0.1 checklist further down is historical only; see the note above.) Run on a real BRAT install (not just a local copy) so the release-asset path is exercised. Several cells need specific companions or content, noted inline.
 
 ### A. The Tag Visibility panel and the live loop
 
-- [ ] **Open the panel.** Run "Tag Visibility: Open the panel". The Tag Visibility panel opens with the tag table, filter chips, the inline rule editor, and bulk actions. Zero console errors (Ctrl+Shift+I).
+- [ ] **Open the panel.** Run "Tag Visibility: Open the panel". The Tag Visibility panel opens with the tag table, filter chips, and bulk actions (rules are edited in Settings > Custom rules, not in the panel). Zero console errors (Ctrl+Shift+I).
 - [ ] **Open beside the tag pane.** Run "Tag Visibility: Open beside the tag pane". The panel and the native tag pane appear side by side as a split, arranged in one move.
-- [ ] **Live reaction.** With the two panes visible, create or edit a rule in the panel (for example a regex that matches a hex-code tag). The affected-tags list in the panel updates as you type, AND the native tag pane reacts live (matched tags hide, or flag in preview mode) without closing or reopening anything.
-- [ ] **Per-row diagnostics.** On an affected row, use "why is this hidden?" and confirm it names the exact preset, rule, or override responsible.
-- [ ] **Bulk actions.** Select several tags and confirm hide / unhide / flag / add description / send to Tag Wrangler operate on the selection.
-- [ ] **Launcher closes Settings.** Open Settings, go to General, click "Open Tag Visibility": Settings closes and the pane is visible in the right sidebar (not hidden behind a modal). Repeat with "Open beside the tag pane".
+- [ ] **Live reaction.** With the panel and tag pane visible, add or edit a rule in Settings > Custom rules (for example a regex that matches a hex-code tag). The editor's live preview lists affected tags as you type; on save, the panel's tag table and the native tag pane both react (matched tags hide, or flag in preview mode) without closing or reopening anything.
+- [ ] **Per-row diagnostics.** On an affected row, use "why is this affected?" and confirm it names the exact preset, rule, or override responsible.
+- [ ] **Bulk actions.** Select several tags and confirm hide / unhide / mark reviewed / send to Tag Wrangler operate on the selection.
+- [ ] **Launchers reveal the panel.** Open the panel from the ribbon icon, the command palette ("Open the panel" and "Open beside the tag pane"), and the status-bar click; each time it becomes visible in the sidebar (not hidden behind a modal). Settings has no open-panel button.
 
 ### B. Each scope hides/flags
 
@@ -59,7 +59,7 @@ Hiding a tag should, by default, hide it consistently across all four scopes. Co
 
 ### D. Per-scope kill switches
 
-- [ ] In **Settings, then Scopes**, toggle each scope off one at a time. Confirm that scope's decorations clear immediately on its surface while the other scopes keep working and the plugin stays enabled.
+- [ ] In **Settings > Scopes & integrations**, toggle each scope off one at a time. Confirm that scope's decorations clear immediately on its surface while the other scopes keep working and the plugin stays enabled.
 - [ ] Toggle the scope back on; decorations re-apply without a reload.
 
 ### E. Panic disable clears everything
@@ -71,7 +71,7 @@ Hiding a tag should, by default, hide it consistently across all four scopes. Co
 
 - [ ] **Uninstall restores everything.** Disable, then uninstall the plugin; every tag is visible again across every surface. No `.md` file was modified.
 - [ ] **NN absent is a silent no-op.** In a vault without Notebook Navigator, the NN scope does nothing and logs nothing at non-debug levels; no errors.
-- [ ] **Honest status bar.** The status bar shows a truthful count for the current state (hidden count / `(preview): N flagged` / `off`) and is scope-independent. Click it to open the panel filtered to hidden.
+- [ ] **Honest status bar.** The status bar shows a truthful count for the current state: `N tags hidden` (plus a separate flagged count when a flag rule is active), `N would be hidden` in preview mode, or `off`. It is scope-independent. Click it to open the panel filtered to hidden.
 
 ### G. Environment sweep
 
@@ -87,6 +87,10 @@ Sample cells A-F across these environments before tagging:
 | 6 | Empty vault (0 notes) | Win11 desktop | Default | None |
 
 If any cell fails, fix and re-run that cell before tagging.
+
+---
+
+> **Historical (v0.1), superseded.** Everything below predates the v1.0 UI and is retained for reference only. It describes tabs, commands, columns, rule actions, and schema numbers that no longer match the shipped plugin (for example: an 8-tab Settings layout with Profiles/Aliases, `open-tag-list` commands, a "First seen" column, show-only/group actions, a per-rule Scope dropdown, a debug-logging toggle, and `schemaVersion: 3`). Do NOT use it to gate a release; the v1.0 smoke matrix above is the current gate.
 
 ## What v0.1 ships
 
@@ -217,7 +221,7 @@ In both hosts:
 
 ### 12. Schema migrations
 
-Reset the test vault's `.obsidian/plugins/tag-curator/data.json` to each state and verify clean migration:
+Reset the test vault's `.obsidian/plugins/tag-visibility/data.json` to each state and verify clean migration:
 
 - [ ] **No file** → loads with defaults, writes `schemaVersion: 3` on first save.
 - [ ] **`{schemaVersion: 1, dryRun: true, ...}`** → loads with `previewMode: true`, `seenWelcomeModal: false`, `schemaVersion: 3`.
@@ -236,7 +240,7 @@ Only relevant if Tag Wrangler is installed in the test vault.
 ### 14. File safety
 
 - [ ] No `.md` files in the vault are modified during any of the above.
-- [ ] No `.obsidian/` files are touched outside of `plugins/tag-curator/data.json` and `plugins/tag-curator/tags.json`.
+- [ ] No `.obsidian/` files are touched outside of `plugins/tag-visibility/data.json` and `plugins/tag-visibility/tags.json`.
 - [ ] Disable the plugin in Community Plugins: every tag becomes visible again immediately.
 - [ ] Uninstall the plugin: every tag is visible, the plugin's data folder remains until the user removes it.
 - [ ] Re-enable after a disable: previously-hidden tags hide again without a reload.
