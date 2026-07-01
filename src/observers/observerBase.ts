@@ -1,6 +1,6 @@
 import { App, Plugin } from 'obsidian';
 import { Rule, RuleAttribution, TagMeta, TagOverride } from '../types';
-import { RuleEngine } from '../engine/ruleEngine';
+import { Decoration, RuleEngine } from '../engine/ruleEngine';
 
 /**
  * Shared lifecycle for DOM observers that decorate tag rows in some host surface
@@ -22,7 +22,9 @@ export interface ObservedRow {
   tag: string;
 }
 
-export type DecorationMode = 'hidden' | 'flagged';
+// The decoration a row can carry. Equals the engine's Decoration decision so the
+// observer and the engine never drift; null (shown) is handled in apply().
+export type DecorationMode = Decoration;
 
 export abstract class ObserverBase {
   protected app: App;
@@ -118,13 +120,14 @@ export abstract class ObserverBase {
       const normalized = tag.startsWith('#') ? tag.slice(1) : tag;
       const meta = this.metadata.get(normalized);
       const { effective } = this.resolveRow(normalized, meta);
-      // An always-show override keeps the row visible (beats every rule); any
-      // other effective match hides it, or flags it in preview mode.
-      const hides = RuleEngine.isEffectivelyHidden(effective);
-      if (hides) {
-        // isEffectivelyHidden guarantees effective is non-null; the assertion
+      // resolveDecoration is the single hidden/flagged/marked decision: null when
+      // shown (no match, or an always-show override); 'marked' for a flag rule in
+      // either mode; 'hidden' / 'flagged' for a hide rule (flagged in preview).
+      const deco = RuleEngine.resolveDecoration(effective, this.previewMode);
+      if (deco) {
+        // A non-null decoration guarantees effective is non-null; the assertion
         // lets TypeScript know without duplicating the null check inline.
-        this.applyDecoration(el, effective!.ruleId, this.previewMode ? 'flagged' : 'hidden');
+        this.applyDecoration(el, effective!.ruleId, deco);
       } else {
         this.clearDecoration(el);
       }

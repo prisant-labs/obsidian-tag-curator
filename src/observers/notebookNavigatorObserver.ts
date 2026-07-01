@@ -5,6 +5,7 @@ import { DecorationMode, ObservedRow, ObserverBase } from './observerBase';
 // and are the only classes/attrs this observer adds or removes.
 const HIDDEN_CLASS = 'tc-nn-hidden';
 const FLAG_CLASS = 'tc-nn-flagged';
+const MARK_CLASS = 'tc-nn-marked';
 const RULE_ATTR = 'data-tc-nn-rule';
 
 // Notebook Navigator's leaf view type. Used for getLeavesOfType; if NN ever
@@ -136,29 +137,23 @@ export class NotebookNavigatorObserver extends ObserverBase {
     ruleId: string,
     mode: DecorationMode,
   ): void {
-    if (mode === 'hidden') {
-      el.classList.add(HIDDEN_CLASS);
-      el.classList.remove(FLAG_CLASS);
-      el.setAttribute('aria-hidden', 'true');
-      el.setAttribute(RULE_ATTR, ruleId);
-    } else {
-      el.classList.add(FLAG_CLASS);
-      el.classList.remove(HIDDEN_CLASS);
-      el.removeAttribute('aria-hidden');
-      el.setAttribute(RULE_ATTR, ruleId);
-    }
+    el.classList.toggle(HIDDEN_CLASS, mode === 'hidden');
+    el.classList.toggle(FLAG_CLASS, mode === 'flagged');
+    el.classList.toggle(MARK_CLASS, mode === 'marked');
+    if (mode === 'hidden') el.setAttribute('aria-hidden', 'true');
+    else el.removeAttribute('aria-hidden');
+    el.setAttribute(RULE_ATTR, ruleId);
   }
 
   protected clearDecoration(el: HTMLElement): void {
-    el.classList.remove(HIDDEN_CLASS);
-    el.classList.remove(FLAG_CLASS);
+    el.classList.remove(HIDDEN_CLASS, FLAG_CLASS, MARK_CLASS);
     el.removeAttribute('aria-hidden');
     el.removeAttribute(RULE_ATTR);
   }
 
   protected findDecorated(root: HTMLElement): HTMLElement[] {
     return Array.from(
-      root.querySelectorAll<HTMLElement>(`.${HIDDEN_CLASS}, .${FLAG_CLASS}`),
+      root.querySelectorAll<HTMLElement>(`.${HIDDEN_CLASS}, .${FLAG_CLASS}, .${MARK_CLASS}`),
     );
   }
 }

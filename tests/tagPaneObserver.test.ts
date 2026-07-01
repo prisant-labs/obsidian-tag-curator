@@ -7,6 +7,7 @@ import { Rule, TagMeta } from '../src/types';
 
 const HIDDEN_CLASS = 'tag-curator-hidden';
 const FLAG_CLASS = 'tag-curator-flagged';
+const MARK_CLASS = 'tag-curator-marked';
 const TAG_ATTR = 'data-tag-curator-rule';
 const TAG_VIEW_TYPE = 'tag';
 
@@ -299,6 +300,39 @@ describe('TagPaneObserver preview mode', () => {
     expect(row.classList.contains(HIDDEN_CLASS)).toBe(true);
     expect(row.classList.contains(FLAG_CLASS)).toBe(false);
     expect(row.getAttribute('aria-hidden')).toBe('true');
+  });
+});
+
+describe('TagPaneObserver flag action', () => {
+  it('marks a flag-rule tag (visible), not hidden, in normal mode', async () => {
+    const container = makeTagPane(['t']);
+    document.body.appendChild(container);
+    const { app } = makeApp([container]);
+    const obs = new TagPaneObserver(app as never, new Plugin());
+    obs.setRules([rule({ action: 'flag' })]);
+    obs.attachAll();
+    await flushRaf();
+
+    const row = container.querySelector('.tag-pane-tag') as HTMLElement;
+    expect(row.classList.contains(MARK_CLASS)).toBe(true);
+    expect(row.classList.contains(HIDDEN_CLASS)).toBe(false);
+    expect(row.hasAttribute('aria-hidden')).toBe(false); // marked stays visible
+    expect(row.getAttribute(TAG_ATTR)).toBe('r');
+  });
+
+  it('keeps the flag mark in preview mode (preview-independent)', async () => {
+    const container = makeTagPane(['t']);
+    document.body.appendChild(container);
+    const { app } = makeApp([container]);
+    const obs = new TagPaneObserver(app as never, new Plugin());
+    obs.setRules([rule({ action: 'flag' })]);
+    obs.setPreviewMode(true);
+    obs.attachAll();
+    await flushRaf();
+
+    const row = container.querySelector('.tag-pane-tag') as HTMLElement;
+    expect(row.classList.contains(MARK_CLASS)).toBe(true);
+    expect(row.classList.contains(FLAG_CLASS)).toBe(false);
   });
 });
 
