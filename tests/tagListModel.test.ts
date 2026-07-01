@@ -16,6 +16,17 @@ function hideRule(tag: string): Rule {
     action: 'hide',  };
 }
 
+function flagRule(tag: string): Rule {
+  return {
+    id: 'f-' + tag,
+    name: 'flag ' + tag,
+    enabled: true,
+    priority: 50,
+    match: { type: 'list', list: [tag] },
+    action: 'flag',
+  };
+}
+
 function source(
   metas: TagMeta[],
   settings: Partial<TagCuratorSettings> = {},
@@ -40,6 +51,20 @@ describe('TagListModel.allRows', () => {
       source([meta('drop')], { customRules: [hideRule('drop')], previewMode: true }),
     );
     expect(model.allRows()[0].visibility).toBe('flagged');
+  });
+
+  it('marks a flag-rule tag with marked visibility (visible, not hidden)', () => {
+    const model = new TagListModel(
+      source([meta('flagme')], { customRules: [flagRule('flagme')] }),
+    );
+    expect(model.allRows()[0].visibility).toBe('marked');
+  });
+
+  it('keeps a flag-rule tag marked in preview mode (preview-independent)', () => {
+    const model = new TagListModel(
+      source([meta('flagme')], { customRules: [flagRule('flagme')], previewMode: true }),
+    );
+    expect(model.allRows()[0].visibility).toBe('marked');
   });
 
   it('attaches every matching rule name to the row', () => {
@@ -119,6 +144,14 @@ describe('TagListModel filtering and search', () => {
     );
     model.setFilter('flagged');
     expect(model.rows().map((r) => r.meta.tag)).toEqual(['drop']);
+  });
+
+  it('flagged chip also keeps marked (flag-rule) rows, not just flagged', () => {
+    const model = new TagListModel(
+      source([meta('keep'), meta('flagme')], { customRules: [flagRule('flagme')] }),
+    );
+    model.setFilter('flagged');
+    expect(model.rows().map((r) => r.meta.tag)).toEqual(['flagme']);
   });
 
   it('shown chip keeps only rows whose visibility is shown', () => {

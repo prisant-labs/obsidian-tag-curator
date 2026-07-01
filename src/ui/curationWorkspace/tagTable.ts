@@ -472,6 +472,7 @@ export class TagTable {
     const tr = this.rowsLayer.createDiv({ cls: 'tct-row' });
     if (row.visibility === 'hidden') tr.addClass('tct-row-hidden');
     if (row.visibility === 'flagged') tr.addClass('tct-row-flagged');
+    if (row.visibility === 'marked') tr.addClass('tct-row-marked');
     for (const col of this.activeCols()) {
       this.renderCell(tr, col, row);
     }
