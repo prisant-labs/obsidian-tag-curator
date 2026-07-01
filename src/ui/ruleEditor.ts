@@ -273,7 +273,12 @@ export class RuleEditor {
       this.label(actionRow, 'Action');
       const ctl = this.control(actionRow);
       const sel = ctl.createEl('select', { cls: 'tcr-select tight' });
-      for (const a of ['hide', 'flag', 'show-only', 'group'] as Action[]) {
+      // 1.0 ships hide + flag. show-only (used internally by the always-show
+      // override) and group are deferred, so they are not offered here. A stored
+      // rule carrying a deferred action still loads and resolves - it degrades to
+      // the hide branch (see RuleEngine.resolveDecoration); the dropdown just
+      // shows no selected option for it until the user picks hide or flag.
+      for (const a of ['hide', 'flag'] as Action[]) {
         const opt = sel.createEl('option', { value: a, text: a });
         if (draft.action === a) opt.selected = true;
       }
