@@ -185,9 +185,9 @@ export class RuleEngine {
    * resolveVisibility match is non-null AND is not an always-show override
    * (which keeps the tag visible as the safety net and beats every rule).
    *
-   * This is the single source of truth used by countCurated, TagListModel, and
-   * ObserverBase. Centralizing here ensures all three surfaces stay in sync
-   * without duplicating the condition.
+   * This is the single source of truth used by countByIntent, resolveDecoration,
+   * TagListModel, and ObserverBase. Centralizing here ensures every surface stays
+   * in sync without duplicating the condition.
    */
   static isEffectivelyHidden(effective: AttributedMatch | null): boolean {
     return effective !== null && effective.overrideReason !== 'always-show';
@@ -214,19 +214,22 @@ export class RuleEngine {
   }
 
   /**
-   * Count the tags the engine curates (would hide) over a metadata map, scope-
-   * independent. A tag counts when isEffectivelyHidden returns true for its
-   * resolveVisibility result. This is the hidden count in normal mode and the
-   * flagged count in preview mode (the matched SET is the same; preview only
-   * changes how those tags are decorated). Pure: no DOM, no dependence on
-   * which surfaces are toggled on.
+   * Split the curated tags by intent over a metadata map: how many a hide-type
+   * action would hide vs how many a flag action marks. Scope- and preview-
+   * independent - the buckets are intrinsic to rules + overrides; preview only
+   * changes how each tag is painted, never which bucket it lands in. A tag counts
+   * when isEffectivelyHidden is true for its resolveVisibility result; a flag-
+   * action effective match counts as flag, everything else (hide, always-hide,
+   * and the deferred show-only / group actions that degrade to hide) as hide.
+   * Pure: no DOM, no dependence on which surfaces are toggled on.
    */
-  static countCurated(
+  static countByIntent(
     meta: Map<string, TagMeta>,
     rules: Rule[],
     overrides: Record<string, TagOverride>,
-  ): number {
-    let count = 0;
+  ): { hide: number; flag: number } {
+    let hide = 0;
+    let flag = 0;
     for (const tagMeta of meta.values()) {
       const { effective } = RuleEngine.resolveVisibility(
         tagMeta.tag,
@@ -234,10 +237,10 @@ export class RuleEngine {
         rules,
         overrides,
       );
-      if (RuleEngine.isEffectivelyHidden(effective)) {
-        count += 1;
-      }
+      if (!RuleEngine.isEffectivelyHidden(effective)) continue;
+      if (effective!.action === 'flag') flag += 1;
+      else hide += 1;
     }
-    return count;
+    return { hide, flag };
   }
 }

@@ -453,16 +453,18 @@ export default class TagCuratorPlugin extends Plugin {
   }
 
   /**
-   * Count the tags the engine curates (would hide), independent of any scope's
-   * DOM. Mirrors how TagListModel and ObserverBase decide a tag is hidden: its
-   * effective match is non-null AND is not an always-show override (which keeps
-   * the tag visible as the safety net). The SAME set is the "hidden" count in
-   * normal mode and the "flagged" count in preview mode, so the status bar is
-   * correct whether or not individual scopes (tag-pane, NN, properties,
-   * autocomplete) are toggled. Pure given settings + tag metadata; no DOM.
+   * Split the curated tags by intent (hide vs flag), independent of any scope's
+   * DOM. Mirrors how TagListModel and ObserverBase decide a tag is decorated: its
+   * effective match is non-null AND is not an always-show override (the safety
+   * net that keeps a tag visible). The SAME buckets hold in normal and preview
+   * mode - preview only repaints them - so the status bar is correct whether or
+   * not individual scopes (tag-pane, NN, properties, autocomplete) are toggled.
+   * Pure given settings + tag metadata; no DOM.
    */
-  private countCurated(settings: ReturnType<SettingsManager['get']>): number {
-    return RuleEngine.countCurated(
+  private countByIntent(
+    settings: ReturnType<SettingsManager['get']>,
+  ): { hide: number; flag: number } {
+    return RuleEngine.countByIntent(
       this.tagMetaManager.all(),
       resolveActiveRules(settings),
       settings.overrides,
@@ -470,12 +472,13 @@ export default class TagCuratorPlugin extends Plugin {
   }
 
   /**
-   * Public accessor for the scope-independent engine count, used by the
-   * Settings "Hidden now" stat card (and any future surface that needs the same
-   * number). Always equals the status-bar count.
+   * Public accessor for the scope-independent hide count, used by the Settings
+   * "Hidden now" stat card. Counts only true hides: a flag rule marks a tag but
+   * does not hide it, so it is excluded here (and shown separately in the status
+   * bar). Equals the status bar's hidden figure.
    */
   curatedCount(): number {
-    return this.countCurated(this.settingsManager.get());
+    return this.countByIntent(this.settingsManager.get()).hide;
   }
 
   private refreshStatusBar(): void {
@@ -486,14 +489,19 @@ export default class TagCuratorPlugin extends Plugin {
       return;
     }
     // Count from the engine over tag metadata, not from one scope's DOM, so
-    // toggling the tag-pane scope off no longer zeroes the count.
-    const curated = this.countCurated(settings);
+    // toggling the tag-pane scope off no longer zeroes the count. Split by intent:
+    // a flag rule marks tags without hiding them, so it reads as a separate figure
+    // (shown only when nonzero, so the wording is unchanged when no flag rules
+    // exist). In preview the hide set is not hidden yet, so it reads "would be
+    // hidden", reserving "flagged" for the flag-action count.
+    const { hide, flag } = this.countByIntent(settings);
+    const flagSuffix = flag > 0 ? ` · ${flag} flagged` : '';
     if (settings.previewMode) {
-      this.statusBarEl.setText(`Tag Visibility (preview): ${curated} flagged`);
+      const h = hide === 1 ? '1 tag would be hidden' : `${hide} tags would be hidden`;
+      this.statusBarEl.setText(`Tag Visibility (preview): ${h}${flagSuffix}`);
       return;
     }
-    this.statusBarEl.setText(
-      curated === 1 ? 'Tag Visibility: 1 tag hidden' : `Tag Visibility: ${curated} tags hidden`,
-    );
+    const h = hide === 1 ? '1 tag hidden' : `${hide} tags hidden`;
+    this.statusBarEl.setText(`Tag Visibility: ${h}${flagSuffix}`);
   }
 }
