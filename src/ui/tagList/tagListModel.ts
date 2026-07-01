@@ -90,12 +90,15 @@ export class TagListModel {
       case 'shown':
         return row.visibility === 'shown';
       case 'hidden':
-        return row.visibility !== 'shown';
+        // Hide-intent only: 'hidden' in normal mode, 'flagged' is that same hide
+        // painted amber in preview. A flag action ('marked') stays visible and
+        // belongs under the Flagged chip, not here (#4 intent partition).
+        return row.visibility === 'hidden' || row.visibility === 'flagged';
       case 'flagged':
-        // "Decorated but visible": preview flagged (would be hidden) OR a flag
-        // rule's persistent mark. The hidden chip (!== 'shown') already covers
-        // marked too, since a marked tag is not shown-plain.
-        return row.visibility === 'flagged' || row.visibility === 'marked';
+        // The flag action's persistent mark only. Hide-intent tags (including the
+        // preview 'flagged' paint) live under Hidden, so every curated tag lands
+        // in exactly one of Visible / Hidden / Flagged.
+        return row.visibility === 'marked';
       case 'orphans':
         return row.meta.count <= 1;
       case 'frontmatter':

@@ -130,3 +130,37 @@ export class WorkspaceLeaf {
     // no-op
   }
 }
+
+// --- Menu / icons ---
+// No-op stubs so modules importing them (e.g. rowMenu) resolve in tests. The
+// menu's DOM behavior is a manual-test concern; unit tests exercise the pure
+// decision functions (which items to build) instead.
+
+export function setIcon(_el: HTMLElement, _icon: string): void {
+  // no-op
+}
+
+export class MenuItem {
+  setTitle(_title: string): this {
+    return this;
+  }
+  setIcon(_icon: string): this {
+    return this;
+  }
+  onClick(_cb: (evt?: unknown) => unknown): this {
+    return this;
+  }
+}
+
+export class Menu {
+  addItem(cb: (item: MenuItem) => void): this {
+    cb(new MenuItem());
+    return this;
+  }
+  addSeparator(): this {
+    return this;
+  }
+  showAtMouseEvent(_evt: MouseEvent): void {
+    // no-op
+  }
+}
