@@ -244,24 +244,28 @@ export class RuleEditor {
     });
 
     this.section(edit, 'Type', (sec) => {
-      const cards = sec.createDiv({ cls: 'tcr-type-cards' });
+      // A single dropdown + one-line byline (2b): the three full cards crowded
+      // the section and pushed the Match row down. The byline shows the selected
+      // type's help text; switching type re-renders so the Match inputs follow.
       const types: Array<[MatchType, string, string]> = [
         ['regex', 'Pattern match', 'A regex against the tag name'],
         ['frequency', 'Count threshold', "Compare the tag's note-count"],
         ['list', 'Specific tags', 'An explicit list of tags'],
       ];
-      for (const [t, cardTitle, desc] of types) {
-        const c = cards.createDiv({ cls: 'tcr-type-card' });
-        if (draft.match.type === t) c.addClass('on');
-        c.setAttribute('aria-pressed', draft.match.type === t ? 'true' : 'false');
-        c.createDiv({ cls: 'tcr-type-card-title', text: cardTitle });
-        c.createDiv({ cls: 'tcr-type-card-desc', text: desc });
-        makeActivatable(c, () => {
-          if (draft.match.type === t) return;
-          draft.match = blankCriteriaFor(t);
-          this.render();
-        });
+      const sel = sec.createEl('select', { cls: 'tcr-select tight' });
+      sel.setAttribute('aria-label', 'Match type');
+      for (const [t, cardTitle] of types) {
+        const opt = sel.createEl('option', { value: t, text: cardTitle });
+        if (draft.match.type === t) opt.selected = true;
       }
+      const desc = types.find(([t]) => t === draft.match.type)?.[2] ?? '';
+      sec.createDiv({ cls: 'tcr-type-byline', text: desc });
+      sel.addEventListener('change', () => {
+        const t = sel.value as MatchType;
+        if (t === draft.match.type) return;
+        draft.match = blankCriteriaFor(t);
+        this.render();
+      });
     });
 
     this.section(edit, 'Match', (sec) => {

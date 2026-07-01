@@ -495,6 +495,14 @@ export class TagTable {
       case 'name': {
         const nameCell = tr.createDiv({ cls: 'tct-cell tct-cell-name' });
         nameCell.createSpan({ cls: 'tct-tagname', text: '#' + row.meta.tag });
+        if (row.visibility === 'marked') {
+          // #3: recoloring the name alone reads as too subtle, so marked
+          // (flag-rule) rows also carry a small flag glyph next to the name.
+          const flag = nameCell.createSpan({ cls: 'tct-flag-mark' });
+          flag.setAttribute('aria-label', 'Flagged');
+          flag.setAttribute('title', 'Flagged');
+          setIcon(flag, 'flag');
+        }
         if (row.meta.reviewed) {
           const mark = nameCell.createSpan({ cls: 'tct-reviewed-mark' });
           mark.setAttribute('aria-label', 'Reviewed');

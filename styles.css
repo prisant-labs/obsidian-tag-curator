@@ -619,29 +619,13 @@ settings:
   outline: none;
   border-bottom-color: var(--interactive-accent);
 }
-.tcr-type-cards {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 8px;
-}
-.tcr-type-card {
-  border: 1px solid var(--background-modifier-border);
-  border-radius: 8px;
-  padding: 9px 11px;
-  cursor: pointer;
-}
-.tcr-type-card.on {
-  border-color: var(--interactive-accent);
-  background: var(--background-modifier-hover);
-}
-.tcr-type-card-title {
-  font-weight: 600;
-  font-size: 12.5px;
-}
-.tcr-type-card-desc {
-  font-size: 11px;
+/* Type selector (2b): a single dropdown + one-line byline replaced the three
+   cards, which crowded the section and pushed the Match row down. The byline
+   shows the selected match type's help text. */
+.tcr-type-byline {
+  margin-top: 6px;
+  font-size: 11.5px;
   color: var(--text-muted);
-  margin-top: 3px;
   line-height: 1.4;
 }
 .tcst-more-link:hover {
@@ -923,6 +907,9 @@ settings:
   color: var(--text-normal);
   font: inherit;
   font-size: 13px;
+  /* 2a: give descenders room so an option like "flag" is not clipped at the
+     baseline (the tight action select showed the 'g' cut off). */
+  line-height: 1.4;
 }
 .tcr-select.tight,
 .tcr-input.tight {
@@ -1618,6 +1605,19 @@ settings:
   width: 15px;
   height: 15px;
 }
+/* 1a: keep the eye icon centered over the dot column below it. The sort arrow is
+   taken out of flow so its width (and margin) does not push the centered eye to
+   the left of the dot. */
+.tct-head-row .tct-cell-visible {
+  position: relative;
+}
+.tct-head-row .tct-cell-visible .tct-sort-arrow {
+  position: absolute;
+  right: 2px;
+  top: 50%;
+  transform: translateY(-50%);
+  margin-left: 0;
+}
 
 /* Scroll viewport + spacer for virtualization. */
 .tct-scroll {
@@ -1665,6 +1665,10 @@ settings:
   color: var(--tag-curator-mark-color);
 }
 .tct-src {
+  /* 5a: inline-block so the chip's padding + border count in its box and are not
+     clipped by the cell's overflow:hidden (the bottom border was being cut). */
+  display: inline-block;
+  line-height: 1.4;
   font-size: 10.5px;
   color: var(--text-faint);
   border: 1px solid var(--divider-color);
@@ -2048,3 +2052,7 @@ settings:
 /* Reviewed-state row marker in the tag name cell */
 .tct-reviewed-mark { margin-left: 6px; color: var(--text-success); opacity: 0.7; }
 .tct-reviewed-mark svg { width: 13px; height: 13px; }
+/* #3: flag glyph on marked (flag-rule) rows - the name recolor alone was too
+   subtle. Uses the shared mark color so the icon and name read as one signal. */
+.tct-flag-mark { margin-left: 6px; color: var(--tag-curator-mark-color); display: inline-flex; vertical-align: middle; }
+.tct-flag-mark svg { width: 13px; height: 13px; }
