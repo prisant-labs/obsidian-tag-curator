@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { Plugin } from 'obsidian';
 import { SettingsManager } from '../src/storage/settings';
+import { RuleEngine } from '../src/engine/ruleEngine';
+import { resolveActiveRules } from '../src/engine/presets';
 import { DEFAULT_SETTINGS, Rule, SCHEMA_VERSION } from '../src/types';
 
 function pluginWith(data: unknown): Plugin {
@@ -624,6 +626,47 @@ describe('SettingsManager.setPaneEnabled', () => {
     expect((plugin.data as { paneEnabled: boolean }).paneEnabled).toBe(false);
     await mgr.setPaneEnabled(true);
     expect(mgr.get().paneEnabled).toBe(true);
+  });
+});
+
+describe('SettingsManager.load - legacy per-rule scope is inert (P1-02 orphan)', () => {
+  // A v10 data.json whose custom rule still carries a per-rule `scopes` field -
+  // synced from a build before P1-02, or hand-edited. Per-rule scope was never
+  // enforced (resolveVisibility is scope-agnostic), so the stray key must be
+  // inert: the rule still resolves and hides globally, and load neither bumps the
+  // schema nor throws. Locks the inert-orphan contract the 2026-06-30 adversarial
+  // review questioned; this fails if a future change ever makes `scopes` filter
+  // rule application.
+  it('loads a custom rule with a stray scopes field and still hides globally', async () => {
+    const data = {
+      schemaVersion: SCHEMA_VERSION,
+      enabled: true,
+      customRules: [
+        {
+          id: 'legacy',
+          name: 'legacy scoped',
+          enabled: true,
+          priority: 100,
+          match: { type: 'list', list: ['secret'] },
+          action: 'hide',
+          // Stray subset that, were scope enforced, would exclude the tag pane.
+          scopes: ['notebook-navigator'],
+        },
+      ],
+    };
+    const mgr = new SettingsManager(pluginWith(data));
+    await mgr.load();
+    const settings = mgr.get();
+    expect(settings.schemaVersion).toBe(SCHEMA_VERSION); // no spurious bump
+    const rules = resolveActiveRules(settings);
+    const attribution = RuleEngine.resolveVisibility(
+      'secret',
+      undefined,
+      rules,
+      settings.overrides,
+    );
+    // Scope-agnostic: the rule hides 'secret' regardless of its stray scopes.
+    expect(RuleEngine.isEffectivelyHidden(attribution.effective)).toBe(true);
   });
 });
 
