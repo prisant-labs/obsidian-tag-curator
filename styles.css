@@ -26,6 +26,12 @@
    * class-toggle swaps this to 700 by adding the tag-curator-flag-bold body
    * class; the default leaves flagged names at their normal weight. */
   --tag-curator-flag-weight: inherit;
+  /* Marked tag highlight color (the flag action: a persistent accent shown in
+   * both normal and preview mode). A distinct hue from the amber flag color, so
+   * a flag-rule mark never reads as a would-be-hidden preview. */
+  --tag-curator-mark-color: var(--text-accent);
+  /* Background wash behind a marked row / pill / suggestion. */
+  --tag-curator-mark-bg: var(--background-modifier-hover);
 }
 
 /* The tag-curator-flag-bold body class is added by Style Settings' class-toggle
@@ -56,6 +62,18 @@ settings:
     description: Render flagged tag names in bold for extra emphasis in preview mode.
     type: class-toggle
     default: false
+  - id: tag-curator-mark-color
+    title: Marked tag color
+    description: Color for tags a flag rule marks (shown in both normal and preview mode).
+    type: variable-color
+    format: hex
+    default: '#7f6df2'
+  - id: tag-curator-mark-bg
+    title: Marked tag background
+    description: Background wash behind a marked row, pill, or suggestion.
+    type: variable-color
+    format: hex
+    default: '#3a3a3a'
 
 */
 
@@ -1643,6 +1661,9 @@ settings:
   color: var(--tag-curator-flag-color);
   font-weight: var(--tag-curator-flag-weight);
 }
+.tct-row-marked .tct-tagname {
+  color: var(--tag-curator-mark-color);
+}
 .tct-src {
   font-size: 10.5px;
   color: var(--text-faint);
@@ -1670,9 +1691,9 @@ settings:
   font-size: 12px;
 }
 
-/* Visibility dot: shown = green, hidden = medium gray, flagged = amber (items
- * 5 + 11). Gray (not blue) reads as "suppressed" and keeps the three states
- * visually distinct. */
+/* Visibility dot: shown = green, hidden = medium gray, flagged = amber, marked =
+ * accent (items 5 + 11). Gray (not blue) reads as "suppressed" and keeps the
+ * states visually distinct. */
 .tct-vis-dot {
   display: inline-block;
   width: 9px;
@@ -1688,6 +1709,9 @@ settings:
 }
 .tct-vis-flagged {
   background: var(--tag-curator-flag-color);
+}
+.tct-vis-marked {
+  background: var(--tag-curator-mark-color);
 }
 
 /* Renders a literal vertical-ellipsis glyph (item 7), so font-size sizes it. */
@@ -1886,6 +1910,17 @@ settings:
   font-weight: var(--tag-curator-flag-weight);
 }
 
+/* Mark (flag action): a persistent accent so the user sees which NN rows a flag
+ * rule marks, in both normal and preview mode (never hidden). */
+.nn-tag.tc-nn-marked {
+  background: var(--tag-curator-mark-bg);
+  box-shadow: inset 2px 0 0 0 var(--tag-curator-mark-color);
+  border-radius: 4px;
+}
+.nn-tag.tc-nn-marked .nn-navitem-name {
+  color: var(--tag-curator-mark-color);
+}
+
 /* -----------------------------------------------------------------
  * Properties panel tag-pill decoration (plan Phase 6).
  * plugin-owned classes only (tc-prop-*); core Obsidian's
@@ -1912,6 +1947,17 @@ settings:
 .multi-select-pill.tc-prop-flagged .multi-select-pill-content {
   color: var(--tag-curator-flag-color);
   font-weight: var(--tag-curator-flag-weight);
+}
+
+/* Mark (flag action): a persistent accent so the user sees which tag pills a
+ * flag rule marks, in both normal and preview mode (never hidden). */
+.multi-select-pill.tc-prop-marked {
+  background: var(--tag-curator-mark-bg);
+  box-shadow: inset 2px 0 0 0 var(--tag-curator-mark-color);
+  border-radius: 4px;
+}
+.multi-select-pill.tc-prop-marked .multi-select-pill-content {
+  color: var(--tag-curator-mark-color);
 }
 
 /* -----------------------------------------------------------------
@@ -1946,6 +1992,17 @@ settings:
   font-weight: var(--tag-curator-flag-weight);
 }
 
+/* Mark (flag action): a persistent accent so the user sees which tag suggestions
+ * a flag rule marks, in both normal and preview mode (never hidden). */
+.suggestion-item.tc-ac-marked {
+  background: var(--tag-curator-mark-bg);
+  box-shadow: inset 2px 0 0 0 var(--tag-curator-mark-color);
+  border-radius: 4px;
+}
+.suggestion-item.tc-ac-marked .suggestion-content {
+  color: var(--tag-curator-mark-color);
+}
+
 /* -----------------------------------------------------------------
  * Core tag pane decoration (the original, primary scope).
  * plugin-owned classes only (tag-curator-*); Obsidian's
@@ -1969,6 +2026,17 @@ settings:
 .tag-pane-tag.tag-curator-flagged .tag-pane-tag-text {
   color: var(--tag-curator-flag-color);
   font-weight: var(--tag-curator-flag-weight);
+}
+
+/* Mark (flag action): a persistent accent so the user sees which rows a flag
+ * rule marks, in both normal and preview mode (never hidden). */
+.tag-pane-tag.tag-curator-marked {
+  background: var(--tag-curator-mark-bg);
+  box-shadow: inset 2px 0 0 0 var(--tag-curator-mark-color);
+  border-radius: 4px;
+}
+.tag-pane-tag.tag-curator-marked .tag-pane-tag-text {
+  color: var(--tag-curator-mark-color);
 }
 
 /* Help tab: compact command table */
