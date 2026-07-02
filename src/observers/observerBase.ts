@@ -80,17 +80,26 @@ export abstract class ObserverBase {
   }
 
   /**
+   * MutationObserver init for this surface. childList + subtree catches rows
+   * mounting/unmounting; characterData catches virtualized panes recycling a
+   * row by mutating its text in place (without it a recycled row keeps the
+   * prior tag's decoration). apply() only touches classes/attributes, never
+   * text or children, so the default set cannot self-trigger a loop. Surfaces
+   * whose host REWRITES class attributes in place (React reconciliation in
+   * Notebook Navigator) override this to watch class mutations too.
+   */
+  protected observerInit(): MutationObserverInit {
+    return { childList: true, subtree: true, characterData: true };
+  }
+
+  /**
    * Start observing a container, decorate it once, and register cleanup.
    * Idempotent: observing the same container twice is a no-op.
    */
   protected observeContainer(containerEl: HTMLElement): void {
     if (this.observers.has(containerEl)) return;
     const obs = new MutationObserver(() => this.scheduleApply());
-    // characterData catches virtualized panes (the core tag pane, Notebook
-    // Navigator) recycling a row by mutating its text in place; without it a
-    // recycled row keeps the prior tag's decoration. apply() only touches
-    // classes/attributes, never text, so this cannot self-trigger a loop.
-    obs.observe(containerEl, { childList: true, subtree: true, characterData: true });
+    obs.observe(containerEl, this.observerInit());
     this.observers.set(containerEl, obs);
     this.containers.add(containerEl);
     this.plugin.register(() => {

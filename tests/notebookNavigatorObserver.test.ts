@@ -361,6 +361,46 @@ describe('NotebookNavigatorObserver clear-on-unload', () => {
   });
 });
 
+/**
+ * Mutation delivery + the coalesced apply: MutationObserver callbacks fire on
+ * a task boundary in happy-dom, then scheduleApply queues a (stubbed,
+ * microtask) rAF pass, and re-decoration may fire one follow-on pass. Flush
+ * all three.
+ */
+async function flushMutations(): Promise<void> {
+  await new Promise((resolve) => setTimeout(resolve, 0));
+  await flushRaf();
+  await flushRaf();
+}
+
+describe('NotebookNavigatorObserver survives host re-renders (React className wipe)', () => {
+  it('re-decorates a row whose class attribute was rewritten in place', async () => {
+    const { pane, scroller } = makeNnPane([['photo', 0]]);
+    document.body.appendChild(pane);
+    const { app } = makeApp([pane]);
+    const obs = new NotebookNavigatorObserver(app as never, new Plugin());
+    obs.setRules([rule({ id: 'hide-photo' })]);
+    obs.attachAll();
+    await flushRaf();
+
+    const row = rowFor(scroller, 'photo');
+    expect(row.classList.contains(HIDDEN_CLASS)).toBe(true);
+
+    // Simulate NN's React reconciliation on click/selection: it rewrites the
+    // row's className from its own vDOM, wiping foreign classes IN PLACE (an
+    // attribute mutation - no childList or characterData change fires).
+    row.className = 'nn-navitem nn-tag nn-selected';
+    expect(row.classList.contains(HIDDEN_CLASS)).toBe(false);
+
+    await flushMutations();
+
+    expect(row.classList.contains(HIDDEN_CLASS)).toBe(true);
+    expect(row.getAttribute(RULE_ATTR)).toBe('hide-photo');
+    // NN's own classes are preserved by the repair.
+    expect(row.classList.contains('nn-selected')).toBe(true);
+  });
+});
+
 describe('NotebookNavigatorObserver dim-in-place (Approach A)', () => {
   it('keeps hidden rows aria-visible: dimmed and struck through, not removed', async () => {
     const { pane, scroller } = makeNnPane([['photo', 0]]);

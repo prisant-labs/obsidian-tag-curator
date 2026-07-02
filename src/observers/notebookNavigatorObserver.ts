@@ -89,6 +89,26 @@ export class NotebookNavigatorObserver extends ObserverBase {
     this.observeContainer(scroller);
   }
 
+  /**
+   * NN is React-rendered: clicking or selecting a row makes React rewrite the
+   * row's className from its own vDOM, wiping the tc-nn-* classes IN PLACE -
+   * an attribute mutation that childList/characterData watching never sees,
+   * so the wiped row stayed undecorated until some unrelated DOM churn.
+   * Watch class attribute mutations too, so a wipe triggers a re-apply pass.
+   * Loop-safe: the filter surfaces only class changes, and classList.toggle
+   * emits no mutation record when the class is already in the desired state,
+   * so a re-decoration pass over an already-correct tree is mutation-silent.
+   */
+  protected observerInit(): MutationObserverInit {
+    return {
+      childList: true,
+      subtree: true,
+      characterData: true,
+      attributes: true,
+      attributeFilter: ['class'],
+    };
+  }
+
   protected findRows(root: HTMLElement): ObservedRow[] {
     const rows = root.querySelectorAll<HTMLElement>(NN_TAG_ROW_SELECTOR);
     return Array.from(rows).map((row) => ({
@@ -132,27 +152,50 @@ export class NotebookNavigatorObserver extends ObserverBase {
     return own;
   }
 
+  /**
+   * IDEMPOTENT WRITES ONLY. Because this observer watches attribute mutations
+   * (observerInit above), every write in the decorate path must be a true
+   * no-op when the DOM is already in the desired state - a write that fires a
+   * mutation record on an unchanged value (setAttribute does, per spec) would
+   * re-trigger the observer forever. Guarding on the current value makes a
+   * re-decoration pass over an already-correct tree mutation-silent under any
+   * MutationObserver implementation.
+   */
+  private setClass(el: HTMLElement, cls: string, on: boolean): void {
+    if (el.classList.contains(cls) !== on) el.classList.toggle(cls, on);
+  }
+
+  private setAttr(el: HTMLElement, name: string, value: string): void {
+    if (el.getAttribute(name) !== value) el.setAttribute(name, value);
+  }
+
+  private removeAttr(el: HTMLElement, name: string): void {
+    if (el.hasAttribute(name)) el.removeAttribute(name);
+  }
+
   protected applyDecoration(
     el: HTMLElement,
     ruleId: string,
     mode: DecorationMode,
   ): void {
-    el.classList.toggle(HIDDEN_CLASS, mode === 'hidden');
-    el.classList.toggle(FLAG_CLASS, mode === 'flagged');
-    el.classList.toggle(MARK_CLASS, mode === 'marked');
+    this.setClass(el, HIDDEN_CLASS, mode === 'hidden');
+    this.setClass(el, FLAG_CLASS, mode === 'flagged');
+    this.setClass(el, MARK_CLASS, mode === 'marked');
     // Hidden NN rows are dimmed + struck through, not display:none (NN's
     // committed-offset virtualizer would keep the empty slot anyway), so they
     // remain visible interactive content and must never be aria-hidden. The
-    // removeAttribute also cleans the attribute off rows decorated by older
-    // builds that hid via display:none.
-    el.removeAttribute('aria-hidden');
-    el.setAttribute(RULE_ATTR, ruleId);
+    // removal also cleans the attribute off rows decorated by older builds
+    // that hid via display:none.
+    this.removeAttr(el, 'aria-hidden');
+    this.setAttr(el, RULE_ATTR, ruleId);
   }
 
   protected clearDecoration(el: HTMLElement): void {
-    el.classList.remove(HIDDEN_CLASS, FLAG_CLASS, MARK_CLASS);
-    el.removeAttribute('aria-hidden');
-    el.removeAttribute(RULE_ATTR);
+    this.setClass(el, HIDDEN_CLASS, false);
+    this.setClass(el, FLAG_CLASS, false);
+    this.setClass(el, MARK_CLASS, false);
+    this.removeAttr(el, 'aria-hidden');
+    this.removeAttr(el, RULE_ATTR);
   }
 
   protected findDecorated(root: HTMLElement): HTMLElement[] {
