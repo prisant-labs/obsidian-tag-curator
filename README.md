@@ -170,7 +170,7 @@ You can also open it from the ribbon icon or the status bar.
 A scope is a place in Obsidian where tags appear and where Tag Visibility can act. v1.0 covers the four surfaces where tags actually render:
 
 - **Tag pane** - Obsidian's native tag list.
-- **Notebook Navigator** - the tag tree in the Notebook Navigator plugin, when present. Runtime interop only; a silent no-op when Notebook Navigator is absent.
+- **Notebook Navigator** - the tag tree in the Notebook Navigator plugin, when present. Hidden tags are dimmed and struck through there (its virtualized list reserves each row's space, so removing rows would leave permanent gaps). Runtime interop only; a silent no-op when Notebook Navigator is absent.
 - **Properties** - frontmatter tags rendered in the Properties panel.
 - **Autocomplete** - the tag suggestions you get while typing, so you are not offered a tag you just hid.
 

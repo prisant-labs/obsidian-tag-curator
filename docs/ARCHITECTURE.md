@@ -153,6 +153,11 @@ The base owns: a registry of observed containers, a `MutationObserver` per conta
 
 Each scope has an independent kill switch, so a single misbehaving surface can be turned off without disabling the plugin. The effective enabled state of a scope is `globalEnable AND scopeKillSwitch`.
 
+Two surfaces override pieces of the base contract:
+
+- **Notebook Navigator watches class-attribute mutations.** NN is React-rendered: selecting a row makes React rewrite the row's `className` from its own vDOM, wiping the `tc-nn-*` classes in place - an attribute-only mutation that `childList`/`characterData` watching never sees. `NotebookNavigatorObserver` overrides the base's `observerInit()` hook to add `attributes: true, attributeFilter: ['class']`, and its decorate path uses strictly idempotent writes (every class/attribute write is guarded on the current value). That guard is load-bearing: `setAttribute` queues a mutation record even when the value is unchanged, so an unguarded write under attribute watching would re-trigger the observer forever. A re-decoration pass over an already-correct tree is mutation-silent.
+- **Autocomplete detects tag suggestions by typing context.** Obsidian 1.12.x's tag suggester strips the leading `#` before rendering, so items are bare names and the legacy "text starts with `#`" signal never fires there. The observer's second signal reads the active editor: if the text before the cursor ends in a `#token` that is not inside an unclosed wikilink (`[[note#head` opens the heading suggester, which must never be touched), the open popup belongs to the tag suggester and its items are tags. Public Editor API only, wrapped so any failure reads as "not a tag context"; the legacy `#`-prefix signal is kept for older builds.
+
 ## Decoration lifecycle
 
 ```mermaid

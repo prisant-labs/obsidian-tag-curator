@@ -47,9 +47,9 @@ Walk this before tagging v1.0. It is the current gate. (The v0.1 checklist furth
 Hiding a tag should, by default, hide it consistently across all four scopes. Confirm each surface reacts:
 
 - [ ] **Tag pane.** A hidden tag disappears (or flags in preview mode) in the native tag pane, and its space is reclaimed: the list packs with no blank band where the tag was, and un-hiding restores the row's height.
-- [ ] **Notebook Navigator.** Requires a real Notebook Navigator vault (>= 2.0.0). A hidden tag is **dimmed and struck through** (still clickable) in NN's tag tree; a flagged tag shows the flag accent. With NN absent, this scope is a **silent no-op** (no errors, nothing logged at non-debug levels).
+- [ ] **Notebook Navigator.** Requires a real Notebook Navigator vault (>= 2.0.0). A hidden tag is **dimmed and struck through** (still clickable) in NN's tag tree; a flagged tag shows the flag accent. **Click a dimmed tag**: the strikethrough survives selection (a one-frame blink is fine; staying lost is a failure). With NN absent, this scope is a **silent no-op** (no errors, nothing logged at non-debug levels).
 - [ ] **Properties.** Requires a note with frontmatter `tags:`. Open that note's Properties panel and confirm a hidden tag is hidden/flagged there.
-- [ ] **Autocomplete.** In the editor, type `#` and start a hidden tag's name; confirm the hidden tag is not offered as a suggestion.
+- [ ] **Autocomplete.** In the editor, type `#` and start a hidden tag's name; confirm the hidden tag is not offered as a suggestion (suggestions render as bare names on Obsidian 1.12+; detection is context-based). Then type `[[` + a note name + `#`: heading suggestions must be unaffected, even for headings that look like hidden tags.
 
 ### C. Per-tag overrides hold across surfaces
 

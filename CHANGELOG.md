@@ -35,6 +35,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - The panel is titled "Tag Visibility"; rule editing is name-first with type cards and an anchored "New rule" action.
 - Panic disable now removes display effects across all four scopes in one shot, not just the tag pane.
 
+### Fixed
+
+- **Autocomplete suppression works on Obsidian 1.12+.** The editor's tag suggester now renders suggestions as bare names (no leading `#`), which silently defeated the old prefix-based detection - hidden tags reappeared in the popup. Tag suggestions are now also recognized by typing context (the cursor sitting in a `#token`, with wikilink/heading contexts excluded), so suppression works on both old and new suggestion markup.
+- **Notebook Navigator decorations survive clicks and selection.** NN re-renders rows on selection and rewrites their classes in place, which used to strip the dim + strikethrough from the clicked row (and re-rendered neighbors) until unrelated redraws restored it. The observer now watches class rewrites and re-applies within a frame.
+
 ### Migration
 
 - Settings schema advances to **v10**, automatic and additive. Early steps introduce the per-tag `overrides` store (defaulting to `{}`) and per-scope enables; later steps add the opt-in pane state (`paneEnabled`), per-surface column preferences, and move the reviewed flag into durable settings (`reviewedTags`). Migrations are one-way and guarded; writes use the existing atomic write-temp-then-rename. No user action required.
@@ -44,6 +49,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - On very large vaults the core tag pane can briefly show a stale glyph or a blank region right after a vault edit, or while scrolling fast through a dense hidden block, until the plugin's next pass (a frame or so later) re-decorates the rows and repairs the pane's height model. Cosmetic and self-healing; normal vaults are unaffected, and the panel and Properties scope are never affected.
 - Enabling the plugin or running a full reindex scans the whole vault. On very large vaults (tens of thousands of files) this can take roughly 10 to 15 seconds. A chunked, incremental scan is planned for 1.1.
 - The status bar item is desktop-only, because Obsidian does not render a status bar on mobile. Every display scope still works on mobile.
+- For a few seconds after startup on very large vaults, the status bar can read "0 tags hidden" while tags are already visibly hidden: the count comes from the tag index, which is still being built, while the display scopes act on rendered rows immediately. It corrects itself when the first scan completes.
 
 ## [0.1.0] - 2026-05-14
 
