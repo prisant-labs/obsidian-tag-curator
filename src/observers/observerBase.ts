@@ -113,6 +113,7 @@ export abstract class ObserverBase {
   protected apply(root: HTMLElement): void {
     if (!this.enabled) {
       this.clearWithin(root);
+      this.afterApply(root);
       return;
     }
     for (const { el, tag } of this.findRows(root)) {
@@ -132,7 +133,17 @@ export abstract class ObserverBase {
         this.clearDecoration(el);
       }
     }
+    this.afterApply(root);
   }
+
+  /**
+   * Post-pass hook, called after every apply pass over a container - including
+   * passes taken while disabled (which clear instead of decorate). Surfaces
+   * that must reconcile host-owned state with the decorations they just
+   * changed override this; the core tag pane uses it for its virtualizer
+   * coherence sweep. Default: no-op.
+   */
+  protected afterApply(_root: HTMLElement): void {}
 
   /**
    * Resolve a single row's visibility. The default delegates to the shared
