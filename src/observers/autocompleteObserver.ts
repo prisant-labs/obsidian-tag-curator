@@ -29,15 +29,26 @@ const RULE_ATTR = 'data-tc-ac-rule';
  *   - Each suggestion is a `.suggestion-item`; its visible text lives in
  *     `.suggestion-content` (falling back to the item's own textContent).
  *
- * DISTINGUISHING TAG SUGGESTIONS (conservative heuristic). The SAME
+ * DISTINGUISHING TAG SUGGESTIONS (two conservative signals). The SAME
  * `.suggestion-container` is reused for file links, headings, aliases, and so
- * on, so we must act ONLY on tag suggestions. The single most stable, version
- * independent signal is that the core editor tag autocomplete renders the tag
- * text with a leading '#' (e.g. `#draft`), whereas file / heading / link
- * suggestions never do. We therefore treat an item as a tag suggestion only
- * when its trimmed text starts with '#'. This is deliberately conservative: a
- * suggestion we cannot confirm is a tag is left untouched (we would rather miss
- * suppressing a tag than wrongly hide a file/heading suggestion).
+ * on, so we must act ONLY on tag suggestions. Two signals, either sufficient:
+ *
+ *   1. LEGACY PREFIX: older Obsidian builds rendered tag suggestions with a
+ *      leading '#' (e.g. `#draft`); file / heading / link suggestions never
+ *      have one. An item whose trimmed text starts with '#' is a tag.
+ *   2. TYPING CONTEXT (Obsidian 1.12.x): the core tag suggester now strips
+ *      the leading '#' before rendering (its getSuggestions slices it off),
+ *      so items are bare names and signal 1 never fires. Instead we read the
+ *      active editor: if the text before the cursor ends in a '#token' that
+ *      is NOT inside an unclosed wikilink (typing `[[note#head` opens the
+ *      HEADING suggester), the open popup belongs to the tag suggester and
+ *      every item in it is a tag. Uses only public Editor API surface
+ *      (workspace.activeEditor.editor, getCursor, getLine), wrapped so any
+ *      failure means "not a tag context" rather than a throw.
+ *
+ * Both signals are deliberately conservative: a suggestion we cannot confirm
+ * is a tag is left untouched (we would rather miss suppressing a tag than
+ * wrongly hide a file/heading suggestion).
  *
  * KEYBOARD-FOCUS CAVEAT (accepted for v1.0): hiding a suggestion item via CSS
  * `display:none` removes it visually, but Obsidian's own suggestion controller
@@ -52,10 +63,16 @@ const SUGGESTION_CONTAINER_SELECTOR = '.suggestion-container';
 const SUGGESTION_ITEM_SELECTOR = '.suggestion-item';
 const SUGGESTION_CONTENT_SELECTOR = '.suggestion-content';
 
+interface EditorLike {
+  getCursor(): { line: number; ch: number };
+  getLine(line: number): string;
+}
+
 interface ObserverApp {
   workspace: {
     onLayoutReady: (cb: () => void) => void;
     on: (event: string, cb: () => void) => unknown;
+    activeEditor?: { editor?: EditorLike } | null;
   };
 }
 
@@ -121,11 +138,36 @@ export class AutocompleteObserver extends ObserverBase {
    * normally zero, and a few dozen at most while a popup is open - so the body
    * observer's apply cost is bounded by the popup contents, not the whole page.
    */
+  /**
+   * True when the active editor's cursor sits at the end of a '#token' that is
+   * not inside an unclosed wikilink - i.e. the open suggestion popup belongs
+   * to the core tag suggester and its (bare-name) items are tags. Any missing
+   * piece (no active editor, no cursor, host API drift) reads as false: not a
+   * tag context, leave the popup untouched.
+   */
+  private isTagTypingContext(): boolean {
+    try {
+      const app = this.app as unknown as ObserverApp;
+      const editor = app.workspace.activeEditor?.editor;
+      if (!editor) return false;
+      const cursor = editor.getCursor();
+      const before = editor.getLine(cursor.line).slice(0, cursor.ch);
+      // `[[note#head` opens the HEADING suggester; never treat it as tags.
+      if (/\[\[[^\]]*$/.test(before)) return false;
+      return /#[^\s#]*$/.test(before);
+    } catch {
+      return false;
+    }
+  }
+
   protected findRows(root: HTMLElement): ObservedRow[] {
     const containers = root.querySelectorAll<HTMLElement>(
       SUGGESTION_CONTAINER_SELECTOR,
     );
     const out: ObservedRow[] = [];
+    // Resolved once per pass: with a popup open, the editor state is stable
+    // for the duration of the pass.
+    const inTagContext = this.isTagTypingContext();
     for (const container of Array.from(containers)) {
       const items = container.querySelectorAll<HTMLElement>(
         SUGGESTION_ITEM_SELECTOR,
@@ -133,13 +175,13 @@ export class AutocompleteObserver extends ObserverBase {
       for (const item of Array.from(items)) {
         const contentEl = item.querySelector(SUGGESTION_CONTENT_SELECTOR) ?? item;
         const text = (contentEl.textContent ?? '').trim();
-        // Conservative tag-suggestion test: only act on items whose text begins
-        // with '#'. File / heading / link suggestions never do, so they are
-        // left untouched. Pass the text case-preserved (trim only); the base
-        // apply() strips the leading '#'. The engine is CASE-SENSITIVE, so we
-        // must NOT lowercase - that would make the same tag behave differently
-        // in autocomplete vs the tag pane.
-        if (!text.startsWith('#')) continue;
+        if (!text) continue;
+        // Signal 1 (legacy prefix) or signal 2 (typing context) - see the
+        // DOM-contract comment above. Pass the text case-preserved (trim
+        // only); the base apply() strips a leading '#'. The engine is
+        // CASE-SENSITIVE, so we must NOT lowercase - that would make the same
+        // tag behave differently in autocomplete vs the tag pane.
+        if (!text.startsWith('#') && !inTagContext) continue;
         out.push({ el: item, tag: text });
       }
     }
