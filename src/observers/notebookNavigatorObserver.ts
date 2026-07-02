@@ -140,8 +140,12 @@ export class NotebookNavigatorObserver extends ObserverBase {
     el.classList.toggle(HIDDEN_CLASS, mode === 'hidden');
     el.classList.toggle(FLAG_CLASS, mode === 'flagged');
     el.classList.toggle(MARK_CLASS, mode === 'marked');
-    if (mode === 'hidden') el.setAttribute('aria-hidden', 'true');
-    else el.removeAttribute('aria-hidden');
+    // Hidden NN rows are dimmed + struck through, not display:none (NN's
+    // committed-offset virtualizer would keep the empty slot anyway), so they
+    // remain visible interactive content and must never be aria-hidden. The
+    // removeAttribute also cleans the attribute off rows decorated by older
+    // builds that hid via display:none.
+    el.removeAttribute('aria-hidden');
     el.setAttribute(RULE_ATTR, ruleId);
   }
 

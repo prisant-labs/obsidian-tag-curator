@@ -1897,9 +1897,18 @@ settings:
  * outside; no NN source is referenced.
  * ----------------------------------------------------------------- */
 
-/* Hide: collapse the row to zero height inside NN's virtualizer. */
+/* Hide (dim-in-place): NN's virtualizer positions rows at committed offsets
+ * inside a fixed-height container, so a display:none row leaves a permanent
+ * blank slot - at scale, whole dead bands. Hidden rows are therefore dimmed
+ * and struck through instead: visible, clickable, clearly suppressed, and the
+ * tree stays fully packed. The strikethrough targets the name span only so
+ * the count badge stays legible. */
 .nn-tag.tc-nn-hidden {
-  display: none !important;
+  opacity: 0.45;
+}
+.nn-tag.tc-nn-hidden .nn-navitem-name {
+  text-decoration: line-through;
+  text-decoration-thickness: 1px;
 }
 
 /* Flag (preview mode): a plugin-owned highlight so the user can see

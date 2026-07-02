@@ -374,7 +374,7 @@ export class TagCuratorSettingTab extends PluginSettingTab {
     // Notebook Navigator - a plugin surface Tag Visibility can control; gated on detection.
     const nnHandle = detectNotebookNavigator(this.app);
     const nnDisabled = nnHandle.status !== 'ready';
-    let nnDesc = 'Hide and flag in the Notebook Navigator tag tree (runtime-interop only).';
+    let nnDesc = 'Dim and strike through hidden tags (and accent flagged ones) in the Notebook Navigator tag tree (runtime-interop only).';
     if (nnHandle.status !== 'ready' && nnHandle.status !== 'absent') {
       nnDesc += ' Requires Notebook Navigator ' + MIN_API_VERSION + ' or newer.';
     }

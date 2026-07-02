@@ -360,3 +360,23 @@ describe('NotebookNavigatorObserver clear-on-unload', () => {
     expect(row.hasAttribute(RULE_ATTR)).toBe(false);
   });
 });
+
+describe('NotebookNavigatorObserver dim-in-place (Approach A)', () => {
+  it('keeps hidden rows aria-visible: dimmed and struck through, not removed', async () => {
+    const { pane, scroller } = makeNnPane([['photo', 0]]);
+    document.body.appendChild(pane);
+    const { app } = makeApp([pane]);
+    const obs = new NotebookNavigatorObserver(app as never, new Plugin());
+    obs.setRules([rule()]);
+    obs.attachAll();
+    await flushRaf();
+
+    const row = rowFor(scroller, 'photo');
+    expect(row.classList.contains(HIDDEN_CLASS)).toBe(true);
+    // NN's committed-offset virtualizer keeps the row's slot forever, so the
+    // shipped hidden treatment is dim + strikethrough: the row stays visible
+    // and interactive. aria-hidden on visible interactive content would be an
+    // accessibility violation, so the hidden mode must NOT set it here.
+    expect(row.hasAttribute('aria-hidden')).toBe(false);
+  });
+});
