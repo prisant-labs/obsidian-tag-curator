@@ -36,7 +36,7 @@ Tag Visibility can always tell you *why* a tag is affected: every row in the pan
 
 *For engineers. The full reference, with the module map and sequence diagrams, lives in [ARCHITECTURE.md](ARCHITECTURE.md).*
 
-**The prime directive: decorate, never mutate.** Every design choice follows from one rule - the plugin must not modify the vault's notes - so it works entirely at the rendered-DOM layer. To hide a tag, an observer adds a plugin-owned class (for example `.tag-curator-hidden`) to the rendered row, and CSS collapses it. Nothing leaves the document model and no note is rewritten.
+**The prime directive: decorate, never mutate.** Every design choice follows from one rule - the plugin must not modify the vault's notes - so it works entirely at the rendered-DOM layer. To hide a tag, an observer adds a plugin-owned class (for example `.tag-curator-hidden`) to the rendered row, and CSS collapses it. (One nuance: Notebook Navigator's tree reserves each row's slot no matter what, so hidden rows there are dimmed and struck through in place rather than collapsed.) Nothing leaves the document model and no note is rewritten.
 
 **Four layers:**
 
@@ -51,7 +51,7 @@ Tag Visibility can always tell you *why* a tag is affected: every row in the pan
 
 **Why it is safe to trust:** hiding is class-based, never DOM removal, so the node stays in the document. Panic disable directly disables every observer (each clears its own decoration), then brute-force sweeps the document for any straggler in the plugin's class namespaces, so it works even if a scope's observer is wedged. On unload, every observer detaches and the document is swept clean. And it never patches Obsidian's `metadataCache` - the in-memory index of tags, links, and frontmatter that powers search and queries - so Dataview, Tasks, and Bases, which read from that cache, always see your real, full tag set. This is verifiable, not a promise: every write the plugin makes targets its own two files (`data.json` and `tags.json`), and it calls no note-editing API at all - `vault.modify`, `fileManager.renameFile`, `processFrontMatter`, and the like are simply absent from the source. Renaming a tag, the one operation that edits notes, is delegated to the separate Tag Wrangler plugin and runs only on your explicit action.
 
-**The honest dependency.** Because it decorates *rendered* rows, Tag Visibility depends on the DOM structure and CSS class names of Obsidian's surfaces (and of Notebook Navigator), which are not a guaranteed public API. An Obsidian update could change that markup and require a selector fix in the plugin. Even then the failure mode is cosmetic - a tag might not hide correctly - and never touches your notes; disabling the plugin restores everything.
+**The honest dependency.** Because it decorates *rendered* rows, Tag Visibility depends on the DOM structure and CSS class names of Obsidian's surfaces (and of Notebook Navigator), which are not a guaranteed public API. An Obsidian update could change that markup and require a selector fix in the plugin. The core tag pane goes one step further: to release a hidden row's space immediately, the plugin re-measures affected rows through the pane's own virtualizer machinery - also not a public API, also feature-detected on every use; if it changes, the plugin silently falls back to letting the pane reclaim space on its next natural redraw. In every case the failure mode is cosmetic - a tag might not hide correctly or its space might linger - and never touches your notes; disabling the plugin restores everything.
 
 ## FAQ
 
@@ -70,7 +70,7 @@ Every tag comes back immediately. Because nothing was ever written to your files
 Open the Tag Visibility panel (run **Tag Visibility: Open the panel** from the command palette), find the tag's row, and pin it to **always-show** - it beats every rule. Or run **Tag Visibility: Panic disable** to clear all effects at once.
 
 **Does it work on mobile?**
-Yes. One rough edge: on a very large vault, a tag you have hidden may briefly flash into view while you scroll a long list, then disappear again as the list redraws. It is cosmetic, it is a known limitation we are tracking (see [CHANGELOG.md](../CHANGELOG.md)), and it never affects your notes.
+Yes. One rough edge: on a very large vault, a tag you have hidden may briefly flash into view while you scroll a long list, then disappear again as the plugin's next pass (a frame or so later) catches it. It is cosmetic and self-healing (see Known limitations in [CHANGELOG.md](../CHANGELOG.md)), and it never affects your notes.
 
 **Does it send my data anywhere?**
 No. Tag Visibility makes zero network requests and has no telemetry. Nothing is fetched, and nothing is sent.

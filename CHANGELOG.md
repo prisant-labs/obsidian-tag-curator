@@ -17,7 +17,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - **Per-tag overrides**: always-show and always-hide, a persisted per-tag decision that beats every rule. Always-show wins over everything (the safety net); always-hide beats every rule but yields to always-show. Overrides resolve ahead of rules, and the rule editor's preview accordion exposes per-row override pins.
 - **Flag as a rule action**: besides hiding, a rule can flag its matched tags with a persistent accent mark (visible in both normal and preview mode, distinct from the amber preview highlight); the rule editor offers Hide and Flag.
 - **Four scopes, each independently kill-switchable**: tag pane, Notebook Navigator, Properties, and Autocomplete. Hiding a tag hides it consistently across all four by default; each scope has its own kill switch so a single misbehaving surface can be turned off without disabling the plugin.
-- **Notebook Navigator scope** via runtime interop only (no source coupling; Notebook Navigator is GPL-3.0, Tag Visibility is Apache-2.0). A silent no-op when Notebook Navigator is absent.
+- **Hidden tags release their space in the core tag pane immediately**: after every decoration pass the plugin re-measures affected rows through the pane's own virtualizer (a model-DOM coherence sweep), so the list packs the moment rules change and heights restore when they are removed. Feature-detected against Obsidian internals; if a future Obsidian changes them, the sweep silently stands down and the pane reclaims space on its next natural redraw instead.
+- **Notebook Navigator scope** via runtime interop only (no source coupling; Notebook Navigator is GPL-3.0, Tag Visibility is Apache-2.0). A silent no-op when Notebook Navigator is absent. Hidden tags are **dimmed and struck through** in the tree rather than removed: the tree's virtualizer reserves every row's slot, so removal would leave permanent blank bands; dimming keeps the tree packed with the suppression visible (and the rows clickable).
 - **Properties scope**: the same hide/flag treatment for frontmatter tags rendered in the Properties panel.
 - **Autocomplete scope**: hidden tags stop being suggested in the editor's tag autocomplete, so junk does not creep back.
 - **Filtering**: one-click filter chips (relocated below the search bar): All, a **Visible** (shown-only) filter, Hidden, Flagged, Orphans, Frontmatter, Inline, and Unreviewed, plus a by-rule dropdown. A column selector and per-surface columns tailor the table to each host.
@@ -40,7 +41,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Known limitations
 
-- On very large vaults (thousands of tags) Obsidian virtualizes the core tag pane. In the densest regions a hidden tag can briefly leave a stale glyph or a gap until the pane re-renders. Normal vaults hide cleanly, and the panel and Properties scope are unaffected. A virtualizer-aware fix is planned for 1.1.
+- On very large vaults the core tag pane can briefly show a stale glyph or a blank region right after a vault edit, or while scrolling fast through a dense hidden block, until the plugin's next pass (a frame or so later) re-decorates the rows and repairs the pane's height model. Cosmetic and self-healing; normal vaults are unaffected, and the panel and Properties scope are never affected.
 - Enabling the plugin or running a full reindex scans the whole vault. On very large vaults (tens of thousands of files) this can take roughly 10 to 15 seconds. A chunked, incremental scan is planned for 1.1.
 - The status bar item is desktop-only, because Obsidian does not render a status bar on mobile. Every display scope still works on mobile.
 

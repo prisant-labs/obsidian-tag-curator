@@ -4,7 +4,7 @@ Tag Visibility is a **display-only** Obsidian plugin: it changes how tags *rende
 
 ## The prime directive: decorate, never mutate
 
-Every architectural choice follows from one rule: **the plugin must not modify the vault's notes.** It therefore works entirely at the rendered-DOM layer. To hide a tag, an observer adds a plugin-owned class (for example `.tag-curator-hidden`) to the rendered row, and a CSS rule collapses it with `display: none`. Nothing is removed from the document model, no note is rewritten, and the only persisted state is the plugin's own config plus a metadata sidecar. That single constraint is what makes the plugin fully reversible.
+Every architectural choice follows from one rule: **the plugin must not modify the vault's notes.** It therefore works entirely at the rendered-DOM layer. To hide a tag, an observer adds a plugin-owned class (for example `.tag-curator-hidden`) to the rendered row, and a CSS rule collapses it with `display: none`. (Notebook Navigator's tree is the one exception: its virtualizer reserves each row's slot regardless, so hidden rows there are dimmed and struck through in place instead of collapsed - see Virtualization below.) Nothing is removed from the document model, no note is rewritten, and the only persisted state is the plugin's own config plus a metadata sidecar. That single constraint is what makes the plugin fully reversible.
 
 ## Layers
 
@@ -200,7 +200,7 @@ Two files, deliberately split to avoid write races:
 Obsidian virtualizes large surfaces (the tag pane and Notebook Navigator's tree) by recycling a small pool of row elements and mutating their text in place as you scroll. Two consequences shape the design:
 
 1. The shared `MutationObserver` watches `characterData`, so when a recycled row's text changes the observer re-evaluates and re-decorates it. Without this a recycled row would keep the prior tag's decoration.
-2. On very large vaults (thousands of tags) the core tag pane can still leave a brief stale glyph or gap in the densest regions until the pane re-renders. This is a known limitation tracked for a virtualizer-aware fix; see the Known limitations section of [CHANGELOG.md](../CHANGELOG.md).
+2. Virtualizers position rows from a cached height model, not from the DOM alone, so hiding a row via CSS leaves its modeled height behind - an invisible row whose space stays reserved. `TagPaneObserver` therefore runs a **model-DOM coherence sweep** after every apply pass: any row whose display state disagrees with the pane's cached `info.hidden` is re-measured through the pane's own `measure()`, then the virtual display refreshes once. The sweep is idempotent (coherent rows are skipped, so passes converge instead of ping-ponging with the host) and feature-detects undocumented internals verified on Obsidian 1.12.7; if those internals ever drift, it silently stands down and the pane reclaims space on its next natural redraw. Notebook Navigator's virtualizer commits row offsets up front inside a fixed-height container and cannot be re-measured from outside, which is why its hidden rows dim in place instead of collapsing. Residual cosmetics (a brief stale glyph or blank region until the next pass) are listed under Known limitations in [CHANGELOG.md](../CHANGELOG.md).
 
 ## See also
 
